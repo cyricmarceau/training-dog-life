@@ -1751,8 +1751,8 @@ function renderMap(xp,km){
     friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fnode,w:fw});
     others+=`<g class="friend" data-fk="${esc(k)}" transform="translate(${fx.toFixed(1)} ${fy.toFixed(1)})"><title>${esc(v.name)} · ${esc(where)}</title>
       <ellipse cx="0" cy="17" rx="7" ry="2.5" fill="rgba(0,0,0,.5)"/>
-      ${tokenFig(lookOf(k),col,.8)}${photoBadge(k,col,.8)}
-      <g transform="translate(0 ${photoOf(k)?-54:-21})"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
+      ${photoOf(k)?photoCoin(k,col,.8):tokenFig(lookOf(k),col,.8)}
+      <g transform="translate(0 -21)"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
   // jeton du joueur : jeton de chien enragé
   tokPos=[px,py];
@@ -1760,8 +1760,8 @@ function renderMap(xp,km){
   const from=prevTok||[px,py];
   const tok=`<g class="tok" id="tok" style="transform:translate(${from[0]}px,${from[1]-20}px)"><g class="bob">
     <ellipse cx="0" cy="22" rx="9" ry="3" fill="rgba(0,0,0,.5)"/>
-    ${tokenFig(lookOf(keyOf(me)),myColor(),1)}${photoBadge(keyOf(me),myColor(),1)}</g>
-    <g transform="translate(0 ${photoOf(keyOf(me))?-67:-27})"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
+    ${photoOf(keyOf(me))?photoCoin(keyOf(me),myColor(),1):tokenFig(lookOf(keyOf(me)),myColor(),1)}</g>
+    <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
   $("map").innerHTML=MAP_BG+
     `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
      <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
@@ -2720,6 +2720,8 @@ function shrinkPhoto(file,S=192){return new Promise((res,rej)=>{if(!file||!/^ima
     g.fillStyle="#000";g.fillRect(0,0,S,S);g.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);URL.revokeObjectURL(url);
     let q=.75,d=c.toDataURL("image/jpeg",q);while(d.length>60000&&q>.3){q-=.1;d=c.toDataURL("image/jpeg",q)}res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("load"))};img.src=url})}
+function photoCoin(k,col,sc){const p=photoOf(k),id="ph-"+slug(k),r=15.5*1.25*sc;
+  return `<g class="phcoin"><clipPath id="${id}"><circle r="${r-1.6*sc}"/></clipPath><circle r="${r+1.2*sc}" fill="#0c0606"/><image href="${p}" x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/><circle r="${r-.8*sc}" fill="none" stroke="${col}" stroke-width="${3*sc}"/></g>`}
 function photoBadge(k,col,sc){const p=photoOf(k);if(!p)return "";const id="ph-"+slug(k),r=13*sc,cy=-46*sc,cx=5*sc;
   return `<g class="phb"><clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><circle cx="${cx}" cy="${cy}" r="${r+2}" fill="${col}" stroke="#0c0606"/><image href="${p}" x="${cx-r}" y="${cy-r}" width="${2*r}" height="${2*r}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/></g>`}
 function photoPickHtml(id,p){return `<label class="photopick"><input type="file" accept="image/*" id="${id}" hidden><span class="phprev">${okPhoto(p)?`<img src="${p}" alt="">`:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg>`}</span><span class="phtxt"><b>${okPhoto(p)?"Changer la photo":"Ajouter une photo"}</b><small>Elle s'affiche sur la carte et sur ta fiche</small></span></label>${okPhoto(p)?`<button type="button" class="linkbtn" data-phdel="${id}">Retirer la photo</button>`:""}`}
