@@ -1367,13 +1367,13 @@ function leg(x,y,a,len,lower,bend){ // upper + lower segment
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
   ctx.beginPath();ctx.arc(fx,fy,2.6,0,7);ctx.fill();
 }
-let _hLast=0;
+let _hLast=0,hPh=0,hOff=0;
 function draw(now){
   if(now-_hLast<31){if(houndVis&&!document.hidden)requestAnimationFrame(draw);else houndRun=false;return}_hLast=now;
   const dt=Math.min(.05,(now-t0)/1000);t0=now;
   boost=Math.max(0,boost-dt*0.6);
   const speed=(hound.active?1.7:1)+boost*2.2, time=now/1000;
-  const ph=time*9*speed; // cycle de galop
+  hPh=(hPh+dt*9*speed)%(Math.PI*2000);const ph=hPh; // cycle de galop (accumulé : pas de saut quand la vitesse change)
   const ground=H-34;
   // ciel
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#120303");g.addColorStop(.7,"#2a0606");g.addColorStop(1,"#4a0b05");
@@ -1388,7 +1388,7 @@ function draw(now){
   // sol + fissures de lave
   ctx.fillStyle="#0d0303";ctx.fillRect(0,ground,W,H-ground);
   ctx.strokeStyle="rgba(255,106,26,.55)";ctx.lineWidth=1.5;
-  const off=(time*260*speed)%120;
+  hOff=(hOff+dt*260*speed)%120;const off=hOff;
   for(let x=-off;x<W+120;x+=120){ctx.beginPath();ctx.moveTo(x,ground+8);ctx.lineTo(x+30,ground+14);ctx.lineTo(x+55,ground+10);ctx.lineTo(x+80,ground+20);ctx.stroke()}
 
   // chien
