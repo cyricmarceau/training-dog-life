@@ -914,7 +914,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       </div>
       <form id="authForm" class="cform" novalidate>
         <label class="fl">Nom de gladiateur<input id="cName" maxlength="24" required autocomplete="username" placeholder="Ex. : Cyric"></label>
-        <label class="fl">Mot de passe<input id="cPass" type="password" minlength="6" required autocomplete="current-password" placeholder="6 caractères minimum"></label>
+        <label class="fl">Mot secret<input id="cPass" type="password" minlength="6" required autocomplete="current-password" placeholder="6 caractères minimum"></label>
         <fieldset class="fl" id="colorField" hidden><legend>Ta couleur sur la carte</legend><div class="sws"><label class="sw"><input type="radio" name="cCol" value="#ff6a1a" checked><i style="background:#ff6a1a"></i></label><label class="sw"><input type="radio" name="cCol" value="#6aa6ff"><i style="background:#6aa6ff"></i></label><label class="sw"><input type="radio" name="cCol" value="#5aff9a"><i style="background:#5aff9a"></i></label><label class="sw"><input type="radio" name="cCol" value="#c77dff"><i style="background:#c77dff"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff7ab8"><i style="background:#ff7ab8"></i></label><label class="sw"><input type="radio" name="cCol" value="#40e0d0"><i style="background:#40e0d0"></i></label><label class="sw"><input type="radio" name="cCol" value="#e6e66a"><i style="background:#e6e66a"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff4a3a"><i style="background:#ff4a3a"></i></label></div></fieldset>
         <p class="cmsg" id="cMsg" role="alert"></p>
         <button class="btn" type="submit" id="cBtn">Se connecter</button>
@@ -1087,7 +1087,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
           <h5 class="lh">Inviter tes amis à créer un compte</h5>
           <ol>
             <li>Envoie l'adresse de ce site à tes amis.</li>
-            <li>Ils cliquent sur <b>Créer un personnage</b>, choisissent un nom de gladiateur, un mot de passe et une couleur.</li>
+            <li>Ils cliquent sur <b>Créer un personnage</b>, choisissent un nom de gladiateur, un mot secret et une couleur.</li>
             <li>C'est tout : ils apparaissent sur la carte et dans le clan.</li>
           </ol>
         </div>
@@ -2226,15 +2226,15 @@ document.addEventListener("click",async e=>{
   if(!aCol)return;
   try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Couleur changée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render();$("punchMsg").textContent="Impossible de changer la couleur."}});
 const AUTH_ERR={"auth/email-already-in-use":"Ce nom de gladiateur est déjà pris. Choisis-en un autre ou connecte-toi.",
-  "auth/weak-password":"Le mot de passe doit avoir au moins 6 caractères.",
-  "auth/invalid-credential":"Nom ou mot de passe incorrect.","auth/wrong-password":"Nom ou mot de passe incorrect.","auth/user-not-found":"Aucun gladiateur à ce nom. Crée un compte.",
+  "auth/weak-password":"Le mot secret doit avoir au moins 6 caractères.",
+  "auth/invalid-credential":"Nom ou mot secret incorrect.","auth/wrong-password":"Nom ou mot secret incorrect.","auth/user-not-found":"Aucun gladiateur à ce nom. Crée un personnage.",
   "auth/too-many-requests":"Trop d'essais. Attends quelques minutes puis réessaie.","auth/network-request-failed":"Pas de connexion Internet.",
   "auth/operation-not-allowed":"La connexion par mot de passe n'est pas activée dans Firebase (voir le guide, étape 3)."};
 $("authForm").addEventListener("submit",async e=>{e.preventDefault();
   const name=$("cName").value.trim().replace(/\s+/g," ").slice(0,24),pass=$("cPass").value,msg=$("cMsg");msg.textContent="";
   if(name.length<2){msg.textContent="Le nom doit avoir au moins 2 caractères.";return}
   if(!/[a-z0-9]/i.test(slug(keyOf(name)))){msg.textContent="Le nom doit contenir au moins une lettre ou un chiffre.";return}
-  if(pass.length<6){msg.textContent="Le mot de passe doit avoir au moins 6 caractères.";return}
+  if(pass.length<6){msg.textContent="Le mot secret doit avoir au moins 6 caractères.";return}
   $("cBtn").disabled=true;
   try{
     if(signup){
