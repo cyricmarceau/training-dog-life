@@ -1403,6 +1403,7 @@ window.TDL_FIREBASE_CONFIG={apiKey:"demo"};
   window.TDL_FIREBASE_CONFIG={apiKey:"artifact"};
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
 (function(){
 /* ================= Chien des enfers (canvas, temps réel) ================= */
@@ -1621,6 +1622,7 @@ function render(){try{checkMyDeath()}catch(_){}try{if(!$("chatP").hidden)renderC
   active=mine.find(isOpen)||null; hound.active=!!active;
   $("meName").textContent=me;
   let ri=0;RANKS.forEach((r,i)=>{if(xp>=r[0])ri=i});const next=RANKS[ri+1];
+  {const rk="tdl_rank_"+keyOf(me),pv=LS.get(rk);if(pv!=null&&pv!==""&&ri>+pv){celebrate("rank");$("punchMsg").textContent=`Nouveau rang : ${RANKS[ri][1]} !`}if(pv!==String(ri))LS.set(rk,String(ri))}
   $("rankName").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("xpfill").style.width=(next?((xp-RANKS[ri][0])/(next[0]-RANKS[ri][0]))*100:100)+"%";
   $("shopTab").hidden=false;$("bagTab").hidden=false;try{renderShop()}catch(_){}
@@ -2301,7 +2303,15 @@ const MUS=(()=>{
 
 function tone(f,t,d,type="square",v=.05){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+d);o.connect(g).connect(actx.destination);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+d+.02)}catch(e){}}
 /* Fanfare de victoire originale, style JRPG (cuivres synthétiques) */
-function victoryTheme(){
+/* ================= Célébrations (canvas-confetti, licence ISC) ================= */
+function celebrate(kind,x,y){try{const C=window.confetti;if(!C||reduce)return;const base={zIndex:200,disableForReducedMotion:true,ticks:220};
+  const fire=["#ff6a1a","#ffb347","#ffe08a","#b3141b","#c9a24a"];
+  if(kind==="boss"){C({...base,particleCount:140,spread:110,startVelocity:48,origin:{y:.62},colors:fire,shapes:["circle","square","star"]});
+    const end=Date.now()+1500;(function side(){C({...base,particleCount:5,angle:60,spread:55,origin:{x:0,y:.8},colors:fire});C({...base,particleCount:5,angle:120,spread:55,origin:{x:1,y:.8},colors:fire});if(Date.now()<end)requestAnimationFrame(side)})()}
+  else if(kind==="rank"){C({...base,particleCount:160,spread:130,startVelocity:40,origin:{y:.3},colors:["#ffe08a","#c9a24a","#fff3e6","#ff9d2e"],shapes:["star"],scalar:1.25})}
+  else if(kind==="leg"){C({...base,particleCount:100,spread:90,startVelocity:34,origin:{x:Math.min(1,Math.max(0,(x||innerWidth/2)/innerWidth)),y:Math.min(1,Math.max(0,(y||innerHeight/2)/innerHeight))},colors:["#ff9d2e","#ffcf4a","#fff3c0","#ff6a1a"],shapes:["star","circle"]})}
+}catch(_){}}
+function victoryTheme(){celebrate("boss");
   /* Applaudissements de foule (synthèse originale) */
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){return}
   const A=actx,t0=A.currentTime+.05,DUR=3.2,master=A.createGain(),soft=A.createBiquadFilter();master.gain.value=.2;soft.type="lowpass";soft.frequency.value=2400;master.connect(soft).connect(A.destination);
@@ -2370,7 +2380,7 @@ function playChest(title,items,equip){
       await Promise.all(strips.map(sr=>new Promise(r=>{
         const t0=performance.now(),end=sr.n*H,ease=t=>1-Math.pow(1-t,4);
         const step=now=>{const t=Math.min(1,(now-t0)/sr.dur);sr.strip.style.transform=`translateY(${-end*ease(t)}px)`;
-          if(t<1)requestAnimationFrame(step);else{sr.reel.classList.add("done");const r2=sr.reel.getBoundingClientRect();burst(18,r2.left+r2.width/2,r2.top+r2.height/2);
+          if(t<1)requestAnimationFrame(step);else{sr.reel.classList.add("done");const r2=sr.reel.getBoundingClientRect();if(sr.reel.classList.contains("legendaire"))celebrate("leg",r2.left+r2.width/2,r2.top+r2.height/2);burst(18,r2.left+r2.width/2,r2.top+r2.height/2);
             tone(sr.it.r==="legendaire"?1568:sr.it.r==="epique"?1319:1047,0,.25,"triangle",.06);
             const d=document.createElement("div");d.className="r-"+sr.it.r;d.innerHTML=`${esc(sr.it.n)}<small>${esc(sr.it.d)}</small>`;names.appendChild(d);r()}};
         requestAnimationFrame(step)})));
