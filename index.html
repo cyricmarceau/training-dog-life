@@ -910,7 +910,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       <h2 id="authTitle">Entre dans le sanctuaire</h2>
       <div class="authtabs" role="tablist">
         <button type="button" role="tab" id="tabLogin" aria-selected="true">Se connecter</button>
-        <button type="button" role="tab" id="tabSignup" aria-selected="false">Créer un compte</button>
+        <button type="button" role="tab" id="tabSignup" aria-selected="false">Créer un personnage</button>
       </div>
       <form id="authForm" class="cform" novalidate>
         <label class="fl">Nom de gladiateur<input id="cName" maxlength="24" required autocomplete="username" placeholder="Ex. : Cyric"></label>
@@ -1087,7 +1087,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
           <h5 class="lh">Inviter tes amis à créer un compte</h5>
           <ol>
             <li>Envoie l'adresse de ce site à tes amis.</li>
-            <li>Ils cliquent sur <b>Créer un compte</b>, choisissent un nom de gladiateur, un mot de passe et une couleur.</li>
+            <li>Ils cliquent sur <b>Créer un personnage</b>, choisissent un nom de gladiateur, un mot de passe et une couleur.</li>
             <li>C'est tout : ils apparaissent sur la carte et dans le clan.</li>
           </ol>
         </div>
@@ -2204,7 +2204,7 @@ function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);
 function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forEach(id=>$(id).hidden=id!==which);$("gate").hidden=false;
   $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true}
 function setAuthMode(up){signup=up;$("tabLogin").setAttribute("aria-selected",String(!up));$("tabSignup").setAttribute("aria-selected",String(up));
-  $("colorField").hidden=!up;$("cBtn").textContent=up?"Créer mon compte":"Se connecter";$("authTitle").textContent=up?"Crée ton compte":"Entre dans le sanctuaire";
+  $("colorField").hidden=!up;$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
   $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent=""}
 $("tabLogin").addEventListener("click",()=>setAuthMode(false));
 $("tabSignup").addEventListener("click",()=>setAuthMode(true));
