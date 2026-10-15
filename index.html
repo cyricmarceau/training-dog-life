@@ -1337,7 +1337,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
         <button type="button" data-act="quick">Rapide<small>90 % · 8 END</small></button>
         <button type="button" data-act="normal">Normale<small>75 % · 14 END</small></button>
         <button type="button" data-act="heavy">Lourde<small>50 % ×1,8 · 24 END</small></button>
-        <button type="button" data-act="taunt">Provoquer</button>
+        <button type="button" data-act="taunt">Provoquer<small>attire le boss · −25 % préc.</small></button>
         <button type="button" data-act="rest">Repos<small>+30 END</small></button>
         <button type="button" data-act="potion">Potion</button>
       </div>
@@ -2614,7 +2614,7 @@ async function act(a){
   if(a==="adv"){m.pos=Math.min(f.boss.pos-1,mPos(m)+2);m.end=Math.min(100,m.end+4);flog(`${m.name} avance.`,"me")}
   else if(a==="back"){m.pos=Math.max(0,mPos(m)-1);m.end=Math.min(100,m.end+12);flog(`${m.name} recule et reprend son souffle.`,"me")}
   else if(a in COST){m.end-=COST[a];anim("fig-"+f.team.indexOf(m),"lunge");hitBoss(m,a)}
-  else if(a==="taunt"){f.boss.taunt=true;m.end=Math.min(100,m.end+8);f.crowd=Math.min(100,f.crowd+15);flog(`${m.name} provoque ${f.b.n}. La foule hurle !`,"me")}
+  else if(a==="taunt"){f.boss.taunt=m.key;m.end=Math.min(100,m.end+8);f.crowd=Math.min(100,f.crowd+15);flog(`${m.name} provoque ${f.b.n} et attire sa colère. La foule hurle !`,"me")}
   else if(a==="rest"){m.end=Math.min(100,m.end+30);m.hp=Math.min(m.max,m.hp+Math.round(m.max*.04));flog(`${m.name} se repose.`,"me");popNum("fig-"+F.team.indexOf(m),"+30 END","end")}
   else if(a==="potion"){m.potion=false;m.hp=Math.min(m.max,m.hp+50);flog(`${m.name} boit la Potion de sang : +50 PV.`,"heal");popNum("fig-"+F.team.indexOf(m),"+50","heal");sparks("fig-"+F.team.indexOf(m),10,"#5aff6a")}
   arenaRender();await wait(380);
@@ -2633,7 +2633,8 @@ async function alliesTurn(){const f=F;
 async function bossTurn(){const f=F;if(f.boss.hp<=0)return;setTurn("boss");await wait(400);const reach=bossReach(f);
   if(f.crowd>=100){f.crowd=30;const alive=f.team.filter(m=>m.alive);alive.forEach(m=>m.hp=Math.min(m.max,m.hp+Math.round(m.max*.2)));flog("La foule lance des offrandes : +20 % PV à l'équipe !","heal");alive.forEach(m=>popNum("fig-"+f.team.indexOf(m),"+"+Math.round(m.max*.2),"heal"));tone(784,0,.2,"triangle",.05)}
   if(!reach.length){if(!f.team.some(m=>m.alive))return;f.boss.pos=Math.max(closestPos(f)+1,f.boss.pos-2);flog(`${f.b.n} s'approche.`,"bo");arenaRender();await wait(300);return}
-  const t=reach[(Math.random()*reach.length)|0],enr=f.boss.hp<f.boss.max*.3,heavy=Math.random()<(enr?.45:.25);
+  const tg=typeof f.boss.taunt==="string"&&reach.find(m=>m.key===f.boss.taunt);if(tg&&f.team.filter(m=>m.alive).length>1)flog(`${f.b.n} ne voit plus que ${tg.name} et fonce sur lui !`,"bo");
+  const t=tg||reach[(Math.random()*reach.length)|0],enr=f.boss.hp<f.boss.max*.3,heavy=Math.random()<(enr?.45:.25);
   const acc=(heavy?.6:.8)-(f.boss.taunt?.25:0);f.boss.taunt=false;
   anim("fig-boss","lungeL");await wait(200);
   const tid="fig-"+f.team.indexOf(t);
@@ -3110,7 +3111,7 @@ function mpMember(S,m,a){
     else{const crit=Math.random()<.1,d=Math.round(roll(m.atk)*MULT[a]*(crit?1.5:1));S.boss.hp-=d;S.crowd=Math.min(100,S.crowd+(a==="heavy"?14:a==="normal"?8:5));ev.dmg=d;ev.crit=crit;
       mpLog(S,`${crit?"CRITIQUE ! ":""}${m.name} frappe (${a==="quick"?"rapide":a==="heavy"?"lourde":"normale"}) : ${d} dégâts.`,"me");
       const ex=bootHit(m,d,a,x=>{S.boss.hp-=x;ev.dmg+=x});if(ex)mpLog(S,`${m.name} · ${BOOTS[m.bt].n} : ${ex}`,"heal")}}
-  else if(a==="taunt"){S.boss.taunt=true;m.end=Math.min(100,m.end+8);S.crowd=Math.min(100,S.crowd+15);mpLog(S,`${m.name} provoque ${b.n}. La foule hurle !`,"me")}
+  else if(a==="taunt"){S.boss.taunt=m.key;m.end=Math.min(100,m.end+8);S.crowd=Math.min(100,S.crowd+15);mpLog(S,`${m.name} provoque ${b.n} et attire sa colère. La foule hurle !`,"me")}
   else if(a==="potion"&&m.potion){m.potion=false;m.hp=Math.min(m.max,m.hp+50);ev.heal="+50";mpLog(S,`${m.name} boit la Potion de sang : +50 PV.`,"heal")}
   else{ev.kind="rest";m.end=Math.min(100,m.end+30);m.hp=Math.min(m.max,m.hp+Math.round(m.max*.04));ev.heal="+30 END";mpLog(S,`${m.name} se repose.`,"me")}
   return ev}
@@ -3118,7 +3119,8 @@ function mpAI(S,m){const dist=S.boss.pos-mPos(m);return mpMember(S,m,dist>1?"adv
 function mpBoss(S){const b=BOSSES[S.bi],reach=bossReach(S);const ev={actor:"boss",kind:"boss"};
   if(S.crowd>=100){S.crowd=30;S.team.filter(m=>m.alive).forEach(m=>m.hp=Math.min(m.max,m.hp+Math.round(m.max*.2)));mpLog(S,"La foule lance des offrandes : +20 % PV à l'équipe !","heal");ev.crowd=true}
   if(!reach.length){if(!S.team.some(m=>m.alive))return ev;S.boss.pos=Math.max(closestPos(S)+1,S.boss.pos-2);mpLog(S,`${b.n} s'approche.`,"bo");ev.move=true;return ev}
-  const t=reach[(Math.random()*reach.length)|0],enr=S.boss.hp<S.boss.max*.3,heavy=Math.random()<(enr?.45:.25),acc=(heavy?.6:.8)-(S.boss.taunt?.25:0);
+  const tg=typeof S.boss.taunt==="string"&&reach.find(m=>m.key===S.boss.taunt);if(tg&&S.team.filter(m=>m.alive).length>1)mpLog(S,`${b.n} ne voit plus que ${tg.name} et fonce sur lui !`,"bo");
+  const t=tg||reach[(Math.random()*reach.length)|0],enr=S.boss.hp<S.boss.max*.3,heavy=Math.random()<(enr?.45:.25),acc=(heavy?.6:.8)-(S.boss.taunt?.25:0);
   S.boss.taunt=false;ev.target=t.key;ev.heavy=heavy;
   const bdf=Math.random()>acc?"miss":bootDef(t);
   if(bdf==="miss"){ev.miss=true;mpLog(S,`${b.n} rate ${t.name}.`,"miss")}
