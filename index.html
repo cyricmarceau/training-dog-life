@@ -974,7 +974,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
         <button type="button" role="tab" id="tabSignup" aria-selected="false">Créer un personnage</button>
       </div>
       <form id="authForm" class="cform" novalidate>
-        <label class="fl">Nom de gladiateur<input id="cName" maxlength="24" required autocomplete="username" placeholder="Ex. : Cyric"></label>
+        <label class="fl" id="nameField">Nom de gladiateur<input id="cName" maxlength="24" autocomplete="username" placeholder="Ex. : Cyric"></label>
         <label class="fl">Mot secret<input id="cPass" type="password" minlength="6" required autocomplete="current-password" placeholder="6 caractères minimum"></label>
         <fieldset class="fl" id="colorField" hidden><legend>Ton personnage</legend>
           <div class="lookbox"><svg class="lookprev" id="lookPrev" viewBox="0 0 160 220" aria-label="Aperçu de ton personnage"></svg><div class="lookopts" id="lookOpts"></div></div>
@@ -2345,6 +2345,7 @@ async function deleteMyAccount(){const k=keyOf(me),sl=slug(k);let ok=true;
   try{if(pCol)await pCol.doc(sl).delete()}catch(_){ok=false}
   try{if(rCol)for(const r of Object.values(raids))if(r&&(r.members||[]).includes(k)){const m=(r.members||[]).filter(x=>x!==k);if(m.length)await rCol.doc("b"+r.boss).set({...r,members:m,helpers:(r.helpers||[]).filter(x=>x!==k),leader:m.includes(r.leader)?r.leader:m[0]});else await rCol.doc("b"+r.boss).delete()}}catch(_){}
   try{if(aCol&&uid)await aCol.doc(uid).delete()}catch(_){ok=false}
+  try{const sid=LS.get("tdl_sid");if(sCol&&sid)await sCol.doc(sid).delete();LS.set("tdl_sid","")}catch(_){}
   try{LS.set("tdl_player_"+k,"");LS.set("tdl_name","");LS.set(chatSeenKey(),"")}catch(_){}
   try{const u=auth&&auth.currentUser;if(u&&u.delete)await u.delete();else if(auth)await auth.signOut()}catch(_){try{await auth.signOut()}catch(__){}}
   return ok}
@@ -2395,6 +2396,9 @@ let uid=null,accounts={},aCol=null,myAcc=null,auth=null,signup=false,creating=fa
 const ACC_COLS=["#ff6a1a","#6aa6ff","#5aff9a","#c77dff","#ff7ab8","#40e0d0","#e6e66a","#ff4a3a"];
 const EMAIL_DOMAIN="joueurs.trainingdoglife.app";
 const emailOf=name=>`${slug(keyOf(name))}@${EMAIL_DOMAIN}`;
+let sCol=null,needName=false,probing=false;
+async function secretId(pass){const t="tdl-secret:"+pass;try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=0;for(const c of t)h=(h*31+c.charCodeAt(0))|0;return"h"+(h>>>0).toString(16)+t.length}}
+async function saveSecret(pass,name,id){if(!sCol)return;const sid=await secretId(pass);try{await sCol.doc(sid).set({email:emailOf(name),name,uid:id,at:Date.now()});LS.set("tdl_sid",sid)}catch(_){}}
 function myColor(){return(myAcc&&myAcc.color)||"#ff6a1a"}
 function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);return a&&a.color||fallback}
 function showAuthChoice(){$("authChoice").hidden=false;$("authPane").hidden=true}
@@ -2403,7 +2407,8 @@ function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forE
   $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true}
 function setAuthMode(up){signup=up;$("tabLogin").setAttribute("aria-selected",String(!up));$("tabSignup").setAttribute("aria-selected",String(up));
   $("colorField").hidden=!up;if(up)try{renderSignupLook()}catch(_){}$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
-  $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent=""}
+  $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent="";
+  needName=false;$("nameField").hidden=!up;$("cPass").placeholder=up?"6 caractères minimum · il te servira à te reconnecter":"Ton mot secret"}
 $("tabLogin").addEventListener("click",()=>setAuthMode(false));
 $("tabSignup").addEventListener("click",()=>setAuthMode(true));
 $("goSignup").addEventListener("click",()=>openAuthPane(true));
@@ -2446,12 +2451,16 @@ const AUTH_ERR={"auth/email-already-in-use":"Ce nom de gladiateur est déjà pri
   "auth/operation-not-allowed":"La connexion par mot de passe n'est pas activée dans Firebase (voir le guide, étape 3)."};
 $("authForm").addEventListener("submit",async e=>{e.preventDefault();
   const name=$("cName").value.trim().replace(/\s+/g," ").slice(0,24),pass=$("cPass").value,msg=$("cMsg");msg.textContent="";
-  if(name.length<2){msg.textContent="Le nom doit avoir au moins 2 caractères.";return}
-  if(!/[a-z0-9]/i.test(slug(keyOf(name)))){msg.textContent="Le nom doit contenir au moins une lettre ou un chiffre.";return}
+  const withName=signup||needName;
+  if(withName&&name.length<2){msg.textContent="Le nom doit avoir au moins 2 caractères.";return}
+  if(withName&&!/[a-z0-9]/i.test(slug(keyOf(name)))){msg.textContent="Le nom doit contenir au moins une lettre ou un chiffre.";return}
   if(pass.length<6){msg.textContent="Le mot secret doit avoir au moins 6 caractères.";return}
   $("cBtn").disabled=true;
   try{
     if(signup){
+      if(sCol){const d=await sCol.doc(await secretId(pass)).get();
+        if(d.exists){let alive=false;probing=true;try{await auth.signInWithEmailAndPassword(d.data().email,pass);alive=true;await auth.signOut()}catch(_){}await new Promise(r=>setTimeout(r,60));probing=false;
+          if(alive){msg.textContent="Ce mot secret est déjà pris par un autre gladiateur. Choisis-en un autre.";$("cBtn").disabled=false;return}}}
       creating=true;
       const cred=await auth.createUserWithEmailAndPassword(emailOf(name),pass);
       try{await cred.user.updateProfile({displayName:name})}catch(_){}
@@ -2460,10 +2469,16 @@ $("authForm").addEventListener("submit",async e=>{e.preventDefault();
       await aCol.doc(uid).set(myAcc);accounts[uid]=myAcc;
       player=normPlayer({});delete playersAll[keyOf(name)];LS.set("tdl_player_"+keyOf(name),"");
       try{if(pCol)await pCol.doc(slug(keyOf(name))).set({name,key:keyOf(name),items:[],bosses:[],loot:{},chests:[],unequip:[],lootOff:{},xpOff:0,kmOff:0,deaths:0})}catch(_){}
+      await saveSecret(pass,name,uid);
       creating=false;
       enter(name);$("punchMsg").textContent=`Bienvenue dans le clan, ${name} ! 🔥`;
+    }else if(!needName){
+      const d=sCol?await sCol.doc(await secretId(pass)).get():null;
+      if(!d||!d.exists){needName=true;$("nameField").hidden=false;msg.textContent="Mot secret inconnu. Si ton gladiateur date d'avant, entre aussi son nom une fois.";$("cBtn").disabled=false;setTimeout(()=>$("cName").focus(),30);return}
+      LS.set("tdl_sid",d.id);await auth.signInWithEmailAndPassword(d.data().email,pass);
     }else{
-      await auth.signInWithEmailAndPassword(emailOf(name),pass);
+      const cred=await auth.signInWithEmailAndPassword(emailOf(name),pass);
+      await saveSecret(pass,name,cred&&cred.user?cred.user.uid:uid);needName=false;
     }
   }catch(err){creating=false;msg.textContent=AUTH_ERR[err&&err.code]||"Ça n'a pas fonctionné. Réessaie dans un instant."}
   $("cBtn").disabled=false});
@@ -2765,7 +2780,7 @@ showGate("gateLoading");
   if(!window.firebase||!cfg||!cfg.apiKey||/COLLE/.test(cfg.apiKey)){showGate("gateSetup");return}
   let db;
   try{firebase.initializeApp(cfg);db=firebase.firestore();auth=firebase.auth()}catch(e){showGate("gateSetup");return}
-  aCol=db.collection("accounts");
+  aCol=db.collection("accounts");sCol=db.collection("secrets");
   let subscribed=false;
   function subscribe(){
     if(subscribed)return;subscribed=true;
@@ -2784,7 +2799,7 @@ showGate("gateLoading");
     rCol=db.collection("raids");
     rCol.onSnapshot(snap=>{raids={};snap.docs.forEach(d=>{raids[d.id]=d.data()});scheduleRender()},()=>{rCol=null});
   }
-  auth.onAuthStateChanged(async u=>{
+  auth.onAuthStateChanged(async u=>{if(probing)return;
     if(!u){uid=null;myAcc=null;setAuthMode(false);showGate("gateAuth");return}
     uid=u.uid;subscribe();
     if(creating)return;
