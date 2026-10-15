@@ -732,6 +732,9 @@ header.top{padding-block:16px 14px;border-bottom:0}
 @keyframes dust{to{opacity:0;transform:translateY(-6px)}}
 #map .node.passed .ring{animation:npass .6s ease-out}
 @keyframes npass{40%{stroke:#ffe08a;stroke-width:5}}
+#map .coin{animation:coinb 1.6s ease-in-out infinite alternate}
+@keyframes coinb{to{transform:translate(13px,-17px)}}
+#map .coinpop{font-size:12px;fill:#ffd34a}
 #map .kmpop{font:800 15px var(--body);fill:#ffe08a;stroke:#1a0603;stroke-width:3;paint-order:stroke;animation:kmpop 1.8s ease-out forwards;pointer-events:none}
 @keyframes kmpop{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
 .itl.stat{color:#8ab4ff;font-weight:800;font-size:16px}
@@ -829,6 +832,36 @@ body{padding-block:0 210px}
 .wnav{display:inline-flex;align-items:center;gap:6px;min-width:0}
 .wbtn{flex:none;width:30px;height:30px;border:1px solid #5a3a30;border-radius:4px;background:#1a0f0d;color:#ffe08a;font:700 18px/1 var(--body);cursor:pointer;padding:0}
 .wbtn:disabled{opacity:.3;cursor:default}
+.shoptab{position:fixed;right:0;top:46%;z-index:23;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid #c9a24a;border-right:0;border-radius:6px 0 0 6px;
+  background:linear-gradient(180deg,#3a250e,#1a1006);color:#ffe08a;cursor:pointer;box-shadow:-4px 4px 14px rgba(0,0,0,.6)}
+.shoptab[hidden]{display:none}
+.bagtab{top:calc(46% + 96px)}
+.shoptab svg{width:22px;height:22px}.shoptab span{writing-mode:vertical-rl;transform:rotate(180deg);font:800 12px/1 var(--body);letter-spacing:.25em}
+.shoptab:hover{background:linear-gradient(180deg,#5a3a14,#2a1808)}
+.shopp{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);z-index:29;display:flex;flex-direction:column;background:linear-gradient(180deg,#1c140c,#0d0906);border-left:2px solid #6b5a30;box-shadow:-12px 0 40px rgba(0,0,0,.75)}
+.shopp[hidden]{display:none}
+.shopgold{display:flex;align-items:baseline;gap:8px;padding:10px 16px;border-bottom:1px solid #3a2a14;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-dim)}
+.shopgold b{font:800 24px/1 var(--mono);color:#ffd34a;letter-spacing:0;margin-left:auto}
+.shoptabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #3a2a14}
+.shoptabs button{padding:11px 6px;background:#140d07;border:0;color:var(--bone-dim);font:800 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.shoptabs button[aria-selected="true"]{background:#2a1a0c;color:#ffe08a;box-shadow:inset 0 -3px 0 #c9a24a}
+.shopbody{flex:1;overflow-y:auto;padding:12px 14px}
+.shopnote{margin:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));font-size:11px;color:var(--bone-dim);border-top:1px solid #3a2a14}
+.srow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;margin-bottom:6px;background:#140d07;border:1px solid #3a2a14}
+.srow .sic{width:44px;height:44px;display:grid;place-items:center;background:#0a0604;border:1px solid #2a1a0c}.srow .sic svg{width:30px;height:30px}
+.srow b{display:block;font-size:14px}.srow small{display:block;font-size:12px;color:var(--bone-dim)}
+.srow .btn{padding:9px 10px;font-size:12px;white-space:nowrap}
+.srow.feat{border-color:#c9a24a;background:linear-gradient(90deg,#2a1a0c,#140d07)}
+.price{font:800 13px/1 var(--mono);color:#ffd34a}
+.sh{margin:6px 0 8px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c9a24a}
+.dgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;padding:6px;background:#0a0604;border:2px solid #3a2a14;margin-bottom:10px}
+.dcell{position:relative;aspect-ratio:1;display:grid;place-items:center;background:repeating-linear-gradient(45deg,#120c08 0 4px,#0e0906 4px 8px);border:1px solid #2a1a0c;cursor:pointer;padding:0}
+.dcell svg{width:70%;height:70%}.dcell.dvoid{cursor:default}
+.dcell.on{box-shadow:inset 0 0 0 2px #3f6a2a}.dcell.sel{outline:2px solid #ffe08a;outline-offset:-2px}
+.dcell b{position:absolute;right:2px;bottom:1px;font:800 10px/1 var(--mono);color:#fff3e6;text-shadow:0 0 3px #000}
+.dcell.commun{border-color:#5a5048}.dcell.rare{border-color:#2a4a7a}.dcell.epique{border-color:#5a2a7a}.dcell.legendaire{border-color:#8a5a10}
+.sdet{padding:10px;background:#140d07;border:1px solid #3a2a14}
+.sdet .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .burger:hover{border-color:var(--ember)}.burger:hover span{background:#ffe08a}
 .dback{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:25;animation:dfade .2s ease-out}
 @keyframes dfade{from{opacity:0}}
@@ -1135,6 +1168,15 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
     <div class="dzbtns one"><button type="button" class="btn" id="dzOk" disabled>Retour à la connexion</button></div>
   </div>
 </div>
+<button type="button" class="shoptab" id="shopTab" hidden aria-controls="shopP"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#c9a24a" stroke="#7a5a20" stroke-width="1.5"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#3a2a10" stroke-width="1.6" fill="none"/></svg><span>SHOP</span></button>
+<button type="button" class="shoptab bagtab" id="bagTab" hidden aria-controls="shopP"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l2 12H5Z" fill="#7a4a24" stroke="#3a1a10" stroke-width="1.4"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#c9a24a" stroke-width="1.6"/><path d="M9 13h6" stroke="#c9a24a" stroke-width="1.4"/></svg><span>SAC</span></button>
+<aside class="shopp" id="shopP" aria-label="Boutique" hidden>
+  <div class="dhead"><span>Forge de Griswold</span><button type="button" class="dclose" id="shopClose" aria-label="Fermer la boutique">✕</button></div>
+  <div class="shopgold"><span>Ta bourse</span><b id="shopGold">0</b><small>or</small></div>
+  <div class="shoptabs" role="tablist"><button type="button" role="tab" id="stBuy" aria-selected="true">Acheter</button><button type="button" role="tab" id="stSell" aria-selected="false">Ton sac · Vendre</button></div>
+  <div class="shopbody" id="shopBody"></div>
+  <p class="shopnote">1 case franchie sur la carte = 1 pièce d'or. Vendre au marchand rapporte la moitié du prix.</p>
+</aside>
 <aside class="chatp" id="chatP" aria-label="Chat du clan" hidden>
   <div class="dhead"><span>Chat du clan</span><button type="button" class="dclose" id="chatClose" aria-label="Fermer le chat">✕</button></div>
   <ol class="chatlist" id="chatList" aria-live="polite"></ol>
@@ -1409,6 +1451,66 @@ document.addEventListener("click",e=>{const b=e.target.closest("#wPrev,#wNext");
   const w=Math.max(0,Math.min(WORLDS.length-1,mapWorldInView()+(b.id==="wNext"?1:-1)));
   sc.scrollTo({left:(w+.5)/WORLDS.length*sc.scrollWidth-sc.clientWidth/2,behavior:reduce?"auto":"smooth"})});
 (()=>{const sc=document.querySelector(".mapscroll");if(sc)sc.addEventListener("scroll",()=>{if(!sc._t)sc._t=requestAnimationFrame(()=>{sc._t=0;updateWorldTitle()})},{passive:true})})();
+/* ================= Boutique (style Diablo 1) ================= */
+const SHOP_PRICE={croc:2,cuir:2,cendre:4,coeur:4,griffe:8,corne:20,potion:5,epee:12,bouclier:12};
+const sellPrice=k=>Math.max(1,Math.floor((SHOP_PRICE[k]||0)/2));
+const bossGold=bi=>0;
+/* 1 case franchie sur la carte = 1 pièce d'or */
+function casesOf(){if(!me)return 0;const c=charOf(keyOf(me)),pr=progressOf(c.km,player.bosses);return pr.idx}
+function goldOf(){if(!me)return 0;return Math.max(0,casesOf()+(player.gold||0))}
+function dayFeat(){const d=Math.floor(Date.now()/864e5),pool=["griffe","cendre","coeur","corne","griffe"];return pool[d%pool.length]}
+let shopTab="buy",shopSel=null;
+function itemInfo(k){if(ITEMS[k])return{n:ITEMS[k].n,d:ITEMS[k].d,icon:ICON[k],r:RARE_OF[k]||"rare",map:true};const v=LOOT[k];return{n:v.n,d:[v.atk?`+${v.atk} ATQ`:"",v.hp?`+${v.hp} PV`:""].filter(Boolean).join(" · "),icon:LOOT_ICON[k],r:v.r,map:false}}
+function priceNow(k){return k===dayFeat()?Math.max(1,Math.round(SHOP_PRICE[k]*.75)):SHOP_PRICE[k]}
+function renderShop(){if($("shopP").hidden)return;const g=goldOf();$("shopGold").textContent=g.toLocaleString("fr-CA");
+  $("stBuy").setAttribute("aria-selected",String(shopTab==="buy"));$("stSell").setAttribute("aria-selected",String(shopTab==="sell"));
+  const B=$("shopBody");
+  if(shopTab==="buy"){const f=dayFeat();
+    const row=(k,feat)=>{const i=itemInfo(k),pr=priceNow(k),owned=i.map&&player.items.includes(k);
+      return `<div class="srow ${feat?"feat":""}"><div class="sic"><svg viewBox="0 0 24 24" aria-hidden="true">${i.icon}</svg></div><div><b class="r-${i.r}">${esc(i.n)}</b><small>${esc(i.d)} · <span class="rar" style="color:${GEM[i.r]}">${RLAB[i.r]}</span></small>
+        <span class="price">${feat&&pr<SHOP_PRICE[k]?`<s style="opacity:.5">${SHOP_PRICE[k]}</s> `:""}${pr.toLocaleString("fr-CA")} or</span></div>
+        <button type="button" class="btn ${g<pr||owned?"ghost":""}" data-buy="${k}" ${g<pr||owned?"disabled":""}>${owned?"Possédé":"Acheter"}</button></div>`};
+    B.innerHTML=`<h5 class="sh">✦ Article du jour · rabais</h5>${row(f,true)}<h5 class="sh">Armes et armures</h5>${["epee","bouclier","potion"].map(k=>row(k)).join("")}
+      <h5 class="sh">Reliques</h5>${["croc","cuir","cendre","coeur","griffe","corne"].filter(k=>k!==f).map(k=>row(k)).join("")}`;
+  }else{
+    const cells=[];player.items.forEach(k=>cells.push({k,n:1,on:!(player.unequip||[]).includes(k)}));
+    Object.entries(player.loot||{}).forEach(([k,n])=>{if(n>0)cells.push({k,n,on:n-((player.lootOff||{})[k]||0)>0})});
+    const total=Math.max(24,Math.ceil((cells.length+1)/6)*6);let h=`<h5 class="sh">Ton sac · ${cells.length} objet${cells.length>1?"s":""} différent${cells.length>1?"s":""}</h5><div class="dgrid">`;
+    for(let i=0;i<total;i++){const c=cells[i];if(!c){h+=`<div class="dcell dvoid"></div>`;continue}const inf=itemInfo(c.k);
+      h+=`<button type="button" class="dcell ${inf.r} ${c.on?"on":""} ${shopSel===c.k?"sel":""}" data-ssel="${c.k}" title="${esc(inf.n)}"><svg viewBox="0 0 24 24" aria-hidden="true">${inf.icon}</svg>${c.n>1?`<b>${c.n}</b>`:""}</button>`}
+    h+=`</div>`;
+    if(shopSel&&cells.some(c=>c.k===shopSel)){const c=cells.find(x=>x.k===shopSel),inf=itemInfo(shopSel),eq=inf.map?(c.on?1:0):c.n-((player.lootOff||{})[shopSel]||0);
+      h+=`<div class="sdet"><b class="r-${inf.r}">${esc(inf.n)}</b>${c.n>1?` ×${c.n}`:""}<small style="display:block;color:var(--bone-dim)">${esc(inf.d)} · ${eq} équipé${eq>1?"s":""}</small>
+        <div class="acts">${inf.map?`<button type="button" class="btn ghost" data-tog="${shopSel}">${c.on?"Ranger au sac":"Équiper"}</button>`:`<button type="button" class="btn ghost" data-lm="${shopSel}" data-d="-1" ${eq?"":"disabled"}>− Retirer un</button><button type="button" class="btn ghost" data-lm="${shopSel}" data-d="1" ${eq<c.n?"":"disabled"}>+ Équiper un</button>`}
+        <button type="button" class="btn" data-sell="${shopSel}">Vendre${c.n>1?" un":""} · ${sellPrice(shopSel)} or</button></div></div>`}
+    else h+=`<p class="pplsub" style="margin:0">${cells.length?"Touche un objet pour l'équiper, le ranger ou le vendre.":"Ton sac est vide. Les coffres, le gym et la boutique te donnent des objets."}</p>`;
+    B.innerHTML=h}}
+function openShop(){$("shopP").hidden=false;renderShop();try{tone(660,0,.06,"triangle",.04);tone(880,.07,.08,"triangle",.04)}catch(_){}}
+function closeShop(){$("shopP").hidden=true}
+$("shopTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="buy")closeShop();else{shopTab="buy";openShop()}});
+$("bagTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="sell")closeShop();else{shopTab="sell";openShop()}});
+$("shopClose").addEventListener("click",closeShop);
+$("stBuy").addEventListener("click",()=>{shopTab="buy";renderShop()});
+$("stSell").addEventListener("click",()=>{shopTab="sell";renderShop()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("shopP").hidden&&$("itip").hidden)closeShop()});
+document.addEventListener("click",async e=>{
+  const sel=e.target.closest("[data-ssel]");if(sel){shopSel=sel.dataset.ssel;renderShop();return}
+  if(e.target.closest("#shopP [data-tog],#shopP [data-lm]")){setTimeout(renderShop,80);return}
+  const b=e.target.closest("[data-buy]");
+  if(b&&!b.disabled){const k=b.dataset.buy,pr=priceNow(k);if(goldOf()<pr)return;const before=stats();
+    player.gold=(player.gold||0)-pr;
+    if(ITEMS[k]){if(!player.items.includes(k))player.items.push(k);player.unequip=(player.unequip||[]).filter(x=>x!==k)}
+    else{player.loot=player.loot||{};player.loot[k]=(player.loot[k]||0)+1}
+    try{await savePlayer()}catch(_){}render();renderShop();tone(988,0,.08,"square",.04);tone(1319,.08,.12,"square",.04);
+    try{equipFlash(before,stats(),[itemInfo(k).n],[k])}catch(_){}$("punchMsg").textContent=`Acheté : ${itemInfo(k).n} · −${pr} or`;return}
+  const sl=e.target.closest("[data-sell]");
+  if(sl){const k=sl.dataset.sell,pr=sellPrice(k);
+    if(ITEMS[k]){player.items=player.items.filter(x=>x!==k);player.unequip=(player.unequip||[]).filter(x=>x!==k)}
+    else{const n=(player.loot||{})[k]||0;if(n<=0)return;player.loot[k]=n-1;player.lootOff=player.lootOff||{};if((player.lootOff[k]||0)>player.loot[k])player.lootOff[k]=player.loot[k];if(!player.loot[k])shopSel=null}
+    if(ITEMS[k])shopSel=null;
+    player.gold=(player.gold||0)+pr;try{await savePlayer()}catch(_){}render();renderShop();tone(523,0,.06,"triangle",.05);tone(784,.06,.1,"triangle",.05);
+    $("punchMsg").textContent=`Vendu : ${itemInfo(k).n} · +${pr} or`}
+});
 let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
 function render(){try{checkMyDeath()}catch(_){}
 
@@ -1420,7 +1522,8 @@ function render(){try{checkMyDeath()}catch(_){}
   let ri=0;RANKS.forEach((r,i)=>{if(xp>=r[0])ri=i});const next=RANKS[ri+1];
   $("rankName").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("xpfill").style.width=(next?((xp-RANKS[ri][0])/(next[0]-RANKS[ri][0]))*100:100)+"%";
-  $("thName").textContent=me;$("thRank").textContent=`Rang ${ri+1} · ${RANKS[ri][1]} · ${xp.toLocaleString("fr-CA")} XP`;$("thXp").style.width=$("xpfill").style.width;
+  $("shopTab").hidden=false;$("bagTab").hidden=false;try{renderShop()}catch(_){}
+  $("thName").textContent=me;$("thRank").textContent=`Rang ${ri+1} · ${RANKS[ri][1]} · ${goldOf().toLocaleString("fr-CA")} or`;$("thXp").style.width=$("xpfill").style.width;
   {const c=myColor();$("thDot").style.background=c;$("thDot").style.color=c}
   $("xpmeta").textContent=`${xp.toLocaleString("fr-CA")} XP · `+(next?`${(next[0]-xp).toLocaleString("fr-CA")} XP avant ${next[1]}`:"rang maximal");
   const ws=weekStart();
@@ -1533,7 +1636,7 @@ const slug=k=>k.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"an
 function loadPlayerLocal(){try{player=normPlayer(JSON.parse(LS.get("tdl_player_"+keyOf(me))||"null"))}catch(e){player=normPlayer()}}
 async function savePlayer(){
   player.name=me;player.key=keyOf(me);
-  if(pCol){await pCol.doc(slug(keyOf(me))).set({name:me,key:keyOf(me),items:player.items,bosses:player.bosses,loot:player.loot||{},chests:player.chests||[],unequip:player.unequip||[],lootOff:player.lootOff||{},xpOff:player.xpOff||0,kmOff:player.kmOff||0,deaths:player.deaths||0})}
+  if(pCol){await pCol.doc(slug(keyOf(me))).set({name:me,key:keyOf(me),items:player.items,bosses:player.bosses,loot:player.loot||{},chests:player.chests||[],unequip:player.unequip||[],lootOff:player.lootOff||{},xpOff:player.xpOff||0,kmOff:player.kmOff||0,deaths:player.deaths||0,gold:player.gold||0})}
   else LS.set("tdl_player_"+keyOf(me),JSON.stringify(player));
 }
 function progressOf(km,bosses){
@@ -1599,6 +1702,7 @@ function nodeSvg(n,i,pr){
   else{const beat=player.bosses.includes(n.boss);const big=!!n.big;const w=big?22:17;const sos=raidOf(n.boss);
     inner=`<path class="ring" d="M${-w} 14V${-6}h5v-6h5v6h${w*2-20}v-6h5v6h5V14Z" fill="${beat?"#2a1210":"#3a0505"}" stroke="${beat?"#6fae5a":"#b3141b"}" stroke-width="2"/><path d="M-5 14v-9a5 5 0 0 1 10 0v9" fill="#0c0303"/>${beat?'':'<circle cx="-3" cy="-1" r="1.5" fill="#ff6a1a"/><circle cx="3" cy="-1" r="1.5" fill="#ff6a1a"/>'}${big?'<path d="M-22 -12l-4-10 8 6M22 -12l4-10-8 6" fill="#c9a24a"/>':''}`}
   if(n.t==="boss"&&raidOf(n.boss))inner+=`<g class="sosb" transform="translate(${n.big?20:16} -20)"><circle r="9" fill="#ff3a2a" stroke="#fff3e6" stroke-width="1.5"/><text y="3.5" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="Alegreya Sans,sans-serif">SOS</text></g>`;
+  if(!reached&&n.t!=="start")inner+=`<g class="coin" transform="translate(13 -14)"><circle r="5" fill="#ffd34a" stroke="#7a5a20" stroke-width="1.2"/><path d="M0-2.5v5" stroke="#7a5a20" stroke-width="1.2"/></g>`;
   return `<g class="node${selNode===i?" sel":""}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(n.n)}" transform="translate(${n.x} ${n.y})">${inner}</g>`;
 }
 
@@ -1824,7 +1928,8 @@ async function walkMap(fromKm,toKm){
     const tt=$("tok");if(tt){tt.style.transition="none";tt.style.transform=`translate(${x}px,${y-20}px)`;tt.classList.add("walking")}
     camFX=x;setVB(boxAt([x,y]));
     if(now-lastDust>110){lastDust=now;const m=$("map");if(m){const g=document.createElementNS("http://www.w3.org/2000/svg","circle");g.setAttribute("cx",x+(Math.random()*6-3));g.setAttribute("cy",y+2);g.setAttribute("r",2.5+Math.random()*2);g.setAttribute("class","dust");m.appendChild(g);setTimeout(()=>g.remove(),900)}}
-    while(passed<nodes.length&&i>=passed+1){const n=document.querySelector(`#map .node[data-i="${nodes[passed]}"]`);if(n){n.classList.add("passed");tone(520+passed*60,0,.08,"triangle",.04)}passed++}
+    while(passed<nodes.length&&i>=passed+1){const n=document.querySelector(`#map .node[data-i="${nodes[passed]}"]`);if(n){n.classList.add("passed");tone(988,0,.06,"square",.035);tone(1319,.05,.08,"square",.035);n.querySelector(".coin")?.remove();
+      const m=$("map"),nd=NODES[nodes[passed]];if(m&&nd){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",nd.x+12);tx.setAttribute("y",nd.y-18);tx.setAttribute("class","kmpop coinpop");tx.setAttribute("text-anchor","middle");tx.textContent="+1 or";m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}passed++}
     if(k<1)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
   const tt=$("tok");if(tt)tt.classList.remove("walking");
   walkHold=null;prevTok=null;render();
@@ -2006,7 +2111,7 @@ async function checkNewChests(){
 
 /* ================= Combat d'arène (Swords & Sandals) · permadeath · équipe ================= */
 const isAct=p=>p.type!=="death"&&p.type!=="victory";
-function normPlayer(v){v=v||{};return{chests:Array.isArray(v.chests)?[...v.chests]:NODES.map((n,i)=>n.t==="item"&&(v.items||[]).includes(n.item)?i:-1).filter(i=>i>=0),unequip:[...(v.unequip||[])],lootOff:{...(v.lootOff||{})},items:[...(v.items||[])],bosses:[...(v.bosses||[])],loot:{...(v.loot||{})},xpOff:+v.xpOff||0,kmOff:+v.kmOff||0,deaths:+v.deaths||0}}
+function normPlayer(v){v=v||{};return{chests:Array.isArray(v.chests)?[...v.chests]:NODES.map((n,i)=>n.t==="item"&&(v.items||[]).includes(n.item)?i:-1).filter(i=>i>=0),unequip:[...(v.unequip||[])],lootOff:{...(v.lootOff||{})},items:[...(v.items||[])],bosses:[...(v.bosses||[])],loot:{...(v.loot||{})},xpOff:+v.xpOff||0,kmOff:+v.kmOff||0,deaths:+v.deaths||0,gold:+v.gold||0}}
 /* index des punchs terminés par joueur (reconstruit seulement quand la liste change) */
 let _li={src:null,n:-1,sig:"",closed:new Map(),open:[]};
 function lifeIndex(){const last=punches.length?punches[punches.length-1]:null,sig=last?(last.id||"")+":"+(last.end||0):"";
@@ -2404,7 +2509,7 @@ function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);
 function showAuthChoice(){$("authChoice").hidden=false;$("authPane").hidden=true}
 function openAuthPane(up){setAuthMode(up);$("authChoice").hidden=true;$("authPane").hidden=false;setTimeout(()=>$("cName").focus(),30)}
 function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forEach(id=>$(id).hidden=id!==which);$("gate").hidden=false;if(which==="gateAuth")showAuthChoice();
-  $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true}
+  $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true;$("shopTab").hidden=true;$("bagTab").hidden=true;$("shopP").hidden=true}
 function setAuthMode(up){signup=up;$("tabLogin").setAttribute("aria-selected",String(!up));$("tabSignup").setAttribute("aria-selected",String(up));
   $("colorField").hidden=!up;if(up)try{renderSignupLook()}catch(_){}$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
   $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent="";
@@ -2674,6 +2779,7 @@ function playEv(d){const ev=d.ev;if(!ev)return;const idx=key=>d.team.findIndex(m
 async function mpSelf(S){const k=keyOf(me),fk="tdl_fin_"+k+"_"+S.bi+"_"+S.at;if(mpFinished["s"+S.at]||LS.get(fk))return;
   const m=S.team.find(x=>x.key===k);if(!m)return;mpFinished["s"+S.at]=1;LS.set(fk,"1");
   if(S.result!=="win"||!m.alive)return;
+  player.gold=(player.gold||0)+bossGold(S.bi);
   if(!player.bosses.includes(S.bi)){player.bosses=[...player.bosses,S.bi];$("punchMsg").textContent=`${BOSSES[S.bi].n} est vaincu : la route est ouverte !`}
   else{const rw=rollLoot(1)[0];player.loot=player.loot||{};player.loot[rw]=(player.loot[rw]||0)+1;$("punchMsg").textContent=`Renfort récompensé : ${LOOT[rw].n}.`}
   try{await savePlayer()}catch(_){}
