@@ -990,6 +990,14 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .cr-copy{font-size:10px;letter-spacing:.08em;color:var(--bone-dim);opacity:.7;margin-top:6px}
 .cdead{font-style:normal;font-size:11px;font-weight:700;color:#ff4a3a;margin-left:5px;letter-spacing:.04em}.chatp li.dead b{text-decoration:line-through;text-decoration-color:rgba(255,74,58,.6)}
 .mapwrap.animoff *,.mapwrap.animoff *::before,.mapwrap.animoff *::after{animation-play-state:paused!important}
+.invmodal[hidden]{display:none}
+.invmodal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));background:rgba(0,0,0,.72)}
+.invbox{width:min(380px,100%);background:linear-gradient(180deg,#24120e,#120807);border:2px solid #c9a24a;border-radius:6px;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center;animation:vsPop .35s ease-out}
+.invbox h3{margin:0 0 6px;font-family:var(--display);font-weight:400;font-size:26px;color:#ff6a1a}
+.invbox p{margin:0 0 12px;color:var(--bone)}
+.invbar{height:5px;background:#2a1210;border-radius:3px;overflow:hidden;margin-bottom:14px}.invbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#b3141b,#ffb347);transition:width 1s linear}
+.invacts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.lobl .st{font-size:12px;font-weight:800;letter-spacing:.04em}.lobl .st.yes{color:#5aff9a}.lobl .st.no{color:#ff5a4a}.lobl .st.wait{color:#ffb347}
 </style>
 </head>
 <body>
@@ -1304,6 +1312,10 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
   </div>
 </div>
 
+<div class="invmodal" id="invite" hidden role="alertdialog" aria-modal="true" aria-labelledby="invT">
+  <div class="invbox"><h3 id="invT">Invitation au combat</h3><p id="invTxt"></p><div class="invbar"><i id="invBar"></i></div>
+    <div class="invacts"><button class="btn" type="button" id="invYes">⚔ Accepter</button><button class="btn ghost" type="button" id="invNo">Refuser</button></div></div>
+</div>
 <div class="fight" id="fight" hidden>
   <div class="fightbox" role="dialog" aria-modal="true" aria-labelledby="fTitle">
     <h3 id="fTitle">Combat</h3>
@@ -2582,11 +2594,41 @@ const mPos=m=>m.pos==null?1:m.pos;
 function bossReach(f){return f.team.filter(m=>m.alive&&f.boss.pos-mPos(m)<=1)}
 function closestPos(f){const a=f.team.filter(m=>m.alive);return a.length?Math.max(...a.map(mPos)):0}
 let lobbyOff={};
+/* ===== Invitations : un joueur sur la même case doit accepter avant d'entrer dans l'arène ===== */
+const INV_MS=30000,ansKey=x=>"ans_"+slug(x);
+function invState(d){const acc=[],dec=[],wait=[];(d.invited||[]).forEach(x=>{const a=d[ansKey(x)];(a==="yes"?acc:a==="no"?dec:wait).push(x)});return{acc,dec,wait}}
+const invLive=d=>d&&d.status==="invite"&&Date.now()<(d.expires||0)+8000;
+let invHostBi=null,invLaunching=false,invDeclined={};
+async function invStart(){const f=F,k=keyOf(me),now=Date.now(),others=f.team.filter(m=>m.key!==k).map(m=>m.key);
+  const S={bi:f.bi,status:"invite",host:k,hostName:me,at:now,expires:now+INV_MS,invited:others,hb:now};
+  fights["b"+f.bi]=S;invHostBi=f.bi;F.wait=true;renderLobby();sfx("open");
+  try{await fCol.doc("b"+f.bi).set(S)}catch(_){$("punchMsg").textContent="Impossible d'envoyer l'invitation."}}
+async function invLaunch(bi,solo){if(invLaunching)return;const d=fights["b"+bi],k=keyOf(me);if(!d||d.status!=="invite"||d.host!==k)return;invLaunching=true;
+  const acc=solo?[]:invState(d).acc;F=buildF(bi,false,[k,...acc]);invHostBi=null;
+  try{await mpStart()}finally{invLaunching=false}}
+async function invCancel(bi){const d=fights["b"+bi];invHostBi=null;if(d&&d.status==="invite"&&d.host===keyOf(me)&&fCol){fights["b"+bi]={bi,status:"cancel",at:Date.now()};try{await fCol.doc("b"+bi).set({bi,status:"cancel",at:Date.now()})}catch(_){}}}
+async function invAnswer(yes){const d=Object.values(fights).find(x=>invLive(x)&&(x.invited||[]).includes(keyOf(me)));$("invite").hidden=true;if(!d||!fCol)return;
+  if(!yes)invDeclined[d.bi+":"+d.at]=1;else{delete mpDismissed[d.bi+":"+d.at]}
+  try{await fCol.doc("b"+d.bi).update({[ansKey(keyOf(me))]:yes?"yes":"no"})}catch(_){}
+  $("punchMsg").textContent=yes?`Tu as accepté : le combat commence dès que ${d.hostName||"l'hôte"} lance l'arène.`:"Invitation refusée.";sfx(yes?"join":"sell")}
+$("invYes").addEventListener("click",()=>invAnswer(true));$("invNo").addEventListener("click",()=>invAnswer(false));
+function invTick(){if(!me)return;const k=keyOf(me);
+  /* invité */
+  const d=Object.values(fights).find(x=>invLive(x)&&(x.invited||[]).includes(k)&&!x[ansKey(k)]&&!invDeclined[x.bi+":"+x.at]&&Date.now()<x.expires);
+  if(d&&!deathHandled){if($("invite").hidden){$("invTxt").innerHTML=`<b>${esc(d.hostName||nameOf(d.host))}</b> t'invite à combattre <b>${esc(BOSSES[d.bi].n)}</b> avec lui.<br><small>☠ Permadeath : si tu tombes, ton personnage meurt.</small>`;$("invite").hidden=false;sfx("join");$("invYes").focus()}
+    $("invBar").style.width=Math.max(0,(d.expires-Date.now())/INV_MS*100)+"%"}
+  else $("invite").hidden=true;
+  /* hôte */
+  const h=Object.values(fights).find(x=>x&&x.status==="invite"&&x.host===k);
+  if(h){const st=invState(h);if((!st.wait.length||Date.now()>h.expires)&&st.acc.length&&!invLaunching)invLaunch(h.bi);
+    if(F&&F.wait&&F.bi===h.bi&&!$("fight").hidden)renderLobby()}}
+setInterval(invTick,1000);
+
 function lobbyCands(bi){const k=keyOf(me),r=raidOf(bi),el=eligible(bi);
   return [...new Set([k,...atBoss(bi),...((r&&r.members)||[])])].filter(x=>x===k||el(x))}
-function buildF(bi,training){
+function buildF(bi,training,keys){
   const k=keyOf(me),off=lobbyOff[bi]||{};
-  let team=training?[k]:lobbyCands(bi).filter(x=>x===k||!off[x]);
+  let team=keys?[...keys]:training?[k]:lobbyCands(bi).filter(x=>x===k||!off[x]);
   if(!team.includes(k))team=[k,...team];
   const b=BOSSES[bi],scale=1+.6*(team.length-1);
   return{bi,b,training,over:false,crowd:20,busy:false,
@@ -2613,6 +2655,14 @@ function renderLobby(){
     $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
     $("fEnter").textContent=F.training?"Commencer l'entraînement":"Entrer dans l'arène";
   }else{
+    {const iv=fights["b"+bi];if(F.wait&&iv&&iv.status==="invite"&&iv.host===k){const st=invState(iv),left=Math.max(0,Math.ceil((iv.expires-Date.now())/1000));
+      $("fLobby").hidden=false;$("fLobbyBtn").hidden=true;
+      $("fLobbyList").innerHTML=[k,...iv.invited].map(x=>{const a=x===k?"yes":iv[ansKey(x)]||"wait",col=colorOf(x,"#a8988a");
+        return `<li class="${a==="yes"?"ready":""}"><i style="background:${col}"></i><span class="ln"><b>${esc(nameOf(x))}${x===k?" (toi)":""}</b><small>${x===k?"hôte":"invité"}</small></span><em class="st ${a}">${a==="yes"?"✔ Accepté":a==="no"?"✘ Refusé":"⏳ En attente"}</em></li>`}).join("");
+      $("fLobbyHint").textContent=st.wait.length&&left>0?`Invitation envoyée. Les joueurs ont ${left} s pour accepter. Le combat commence dès que tout le monde a répondu.`:st.acc.length?"Lancement du combat…":"Personne n'a accepté. Tu peux combattre seul ou annuler.";
+      $("fPrepTeam").innerHTML=[k,...st.acc].map(x=>{const c=charOf(x),s2=statsFrom(c.pl,c.xp);return `<li><b>${esc(nameOf(x))}</b> · ${s2.hp} PV · ${s2.atk} ATQ</li>`}).join("");
+      $("fEnter").textContent=st.acc.length?`Commencer maintenant (${1+st.acc.length})`:"Combattre seul";$("fFlee").textContent="Annuler l'invitation";return}
+      if(F.wait){F.wait=false;$("fFlee").textContent="Pas maintenant"}}
     const off=lobbyOff[bi]=lobbyOff[bi]||{},cands=lobbyCands(bi),here=atBoss(bi),beat=player.bosses.includes(bi);
     F=buildF(bi,false);
     $("fLobby").hidden=false;
@@ -2625,7 +2675,9 @@ function renderLobby(){
       cands.length>1?"Tu combats seul. Touche un nom pour l'ajouter à l'équipe.":"Personne d'autre n'est devant ce boss : tu combats seul.";
     $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
     {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===k)){$("fLobbyHint").textContent=`Combat en cours : ${fd.team.filter(m=>m.alive).map(m=>m.name).join(", ")}. Entre pour les rejoindre dans l'arène.`;$("fEnter").textContent="Rejoindre le combat";$("fPrepBoss").textContent=`${F.b.n} · ${Math.max(0,fd.boss.hp)}/${fd.boss.max} PV`;return}}
-    $("fEnter").textContent=al.length?`Combattre à ${F.team.length} (avec ${al.join(", ")})`:"Entrer dans l'arène seul";
+    $("fEnter").textContent=al.length?`Inviter ${al.join(", ")} au combat`:"Entrer dans l'arène seul";
+    if(al.length)$("fLobbyHint").textContent=`${al.join(", ")} ${al.length>1?"recevront":"recevra"} une invitation et ${al.length>1?"devront":"devra"} accepter avant d'entrer dans l'arène. Touche un nom pour le retirer.`;
+    {const iv=fights["b"+bi];if(invLive(iv)&&iv.host!==k){$("fLobbyHint").textContent=`${iv.hostName||"Un joueur"} prépare un combat ici (invitations en cours).`}}
   }
   $("fPrepBoss").textContent=`${F.b.n} · ${F.boss.max} PV${F.team.length>1?` (renforcé pour ${F.team.length})`:""} · ${F.b.atk} ATQ`;
 }
@@ -2771,10 +2823,13 @@ async function endFight(won){const f=F;arenaRender();$("fTurn").className="turnb
 }
 document.addEventListener("click",e=>{const t=e.target.closest("[data-train]");if(t)openFight(+t.dataset.train,{training:true})});
 $("fEnter").addEventListener("click",()=>{if(F&&!F.training)F=buildF(F.bi,false);
-  if(F&&!F.training&&fCol){const fd=fights["b"+F.bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===keyOf(me))){mpJoin(F.bi);return}mpStart();return}$("fFigs").dataset.n="";$("fFx").innerHTML="";$("fPrep").hidden=true;$("fPlay").hidden=false;$("fLog").innerHTML="";$("fResult").hidden=true;$("fActs").hidden=false;$("fClose").hidden=true;
+  if(F&&!F.training&&fCol){const fd=fights["b"+F.bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===keyOf(me))){mpJoin(F.bi);return}
+    if(fd&&fd.status==="invite"&&fd.host===keyOf(me)){const st=invState(fd);if(st.acc.length)invLaunch(F.bi);else invLaunch(F.bi,true);return}
+    if(invLive(fd)&&fd.host!==keyOf(me)){$("fLobbyHint").textContent=`${fd.hostName||"Un joueur"} prépare déjà un combat ici. Attends sa fin.`;return}
+    if(F.team.length>1){invStart();return}mpStart();return}$("fFigs").dataset.n="";$("fFx").innerHTML="";$("fPrep").hidden=true;$("fPlay").hidden=false;$("fLog").innerHTML="";$("fResult").hidden=true;$("fActs").hidden=false;$("fClose").hidden=true;
   setTimeout(()=>{const m=F&&F.team.find(x=>x.me);if(m&&m.alive)setTurn(m.key)},50);flog(F.training?`Entraînement contre ${F.b.n}. Rien n'est en jeu.`:`Les portes de l'arène s'ouvrent. ${F.b.n} entre sous les huées.`,"");arenaRender();
   if(!F.team.find(m=>m.me).alive)autoPlay()});
-$("fFlee").addEventListener("click",()=>{$("fight").hidden=true;F=null});
+$("fFlee").addEventListener("click",()=>{if(F&&F.wait)invCancel(F.bi);$("fight").hidden=true;F=null});
 $("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;try{localStorage.setItem("tdl_mpdis",JSON.stringify(mpDismissed))}catch(_){}if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render();chestsLater()});
 $("fActs").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b&&!b.disabled)act(b.dataset.act)});
 document.addEventListener("click",async e=>{const r=e.target.closest("[data-raid]");if(!r)return;r.disabled=true;
