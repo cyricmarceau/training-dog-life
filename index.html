@@ -960,6 +960,16 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 @keyframes gemb{from{transform:translateY(0);opacity:0}30%{opacity:1}to{transform:translateY(-34px);opacity:0}}
 .grune{animation:reye 1.8s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.gemb,.grune{animation:none}}
+#map .dog .dl{transform-box:fill-box;transform-origin:50% 0;animation:dogleg .34s ease-in-out infinite alternate}
+#map .dog .dl.f1,#map .dog .dl.b2{animation-delay:-.17s}
+#map .dog .dl.f2{animation-delay:-.08s}#map .dog .dl.b1{animation-delay:-.25s}
+#map .dog .dbody{animation:dogrun .34s ease-in-out infinite alternate}
+#map .dog .dtail{transform-box:fill-box;transform-origin:100% 100%;animation:dogtail .34s ease-in-out infinite alternate}
+#map .tok.walking .dog .dl,#map .tok.hopping .dog .dl,#map .tok.walking .dog .dbody,#map .tok.hopping .dog .dbody,#map .tok.walking .dog .dtail,#map .tok.hopping .dog .dtail{animation-duration:.17s}
+@keyframes dogleg{from{transform:rotate(32deg)}to{transform:rotate(-32deg)}}
+@keyframes dogrun{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-2px) rotate(2deg)}}
+@keyframes dogtail{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
+@media (prefers-reduced-motion:reduce){#map .dog .dl,#map .dog .dbody,#map .dog .dtail{animation:none}}
 </style>
 </head>
 <body>
@@ -1459,16 +1469,17 @@ document.addEventListener("click",e=>{const b=e.target.closest("#wPrev,#wNext");
   sc.scrollTo({left:(w+.5)/WORLDS.length*sc.scrollWidth-sc.clientWidth/2,behavior:reduce?"auto":"smooth"})});
 (()=>{const sc=document.querySelector(".mapscroll");if(sc)sc.addEventListener("scroll",()=>{if(!sc._t)sc._t=requestAnimationFrame(()=>{sc._t=0;updateWorldTitle()})},{passive:true})})();
 /* ================= Boutique (style Diablo 1) ================= */
-const SHOP_PRICE={croc:2,cuir:2,cendre:4,coeur:4,griffe:8,corne:20,potion:5,epee:12,bouclier:12};
+const SHOP_PRICE={potion:3,epee:6,bouclier:6};const RPRICE={commun:1,rare:2,epique:4,legendaire:8};
+const SLOT_ORDER=["Arme","Bouclier","Casque","Armure","Gants","Anneau","Amulette","Ceinture","Talisman"];
 const sellPrice=k=>Math.max(1,Math.floor((SHOP_PRICE[k]||0)/2));
 const bossGold=bi=>0;
 /* 1 case franchie sur la carte = 1 pièce d'or */
 function casesOf(){if(!me)return 0;const c=charOf(keyOf(me)),pr=progressOf(c.km,player.bosses);return pr.idx}
 function goldOf(){if(!me)return 0;return Math.max(0,casesOf()+(player.gold||0))}
-function dayFeat(){const d=Math.floor(Date.now()/864e5),pool=["griffe","cendre","coeur","corne","griffe"];return pool[d%pool.length]}
+function dayFeat(){const d=Math.floor(Date.now()/864e5),pool=Object.keys(LOOT).filter(k=>LOOT[k].r!=="commun");return pool[d%pool.length]}
 let shopTab="buy",shopSel=null;
 function itemInfo(k){if(ITEMS[k])return{n:ITEMS[k].n,d:ITEMS[k].d,icon:ICON[k],r:RARE_OF[k]||"rare",map:true};const v=LOOT[k];return{n:v.n,d:[v.atk?`+${v.atk} ATQ`:"",v.hp?`+${v.hp} PV`:""].filter(Boolean).join(" · "),icon:LOOT_ICON[k],r:v.r,map:false}}
-function priceNow(k){return k===dayFeat()?Math.max(1,Math.round(SHOP_PRICE[k]*.75)):SHOP_PRICE[k]}
+function priceNow(k){return k===dayFeat()?Math.max(1,Math.floor(SHOP_PRICE[k]*.5)):SHOP_PRICE[k]}
 function renderShop(){if($("shopP").hidden)return;const g=goldOf();$("shopGold").textContent=g.toLocaleString("fr-CA");
   $("stBuy").setAttribute("aria-selected",String(shopTab==="buy"));$("stSell").setAttribute("aria-selected",String(shopTab==="sell"));
   const B=$("shopBody");
@@ -1477,8 +1488,7 @@ function renderShop(){if($("shopP").hidden)return;const g=goldOf();$("shopGold")
       return `<div class="srow ${feat?"feat":""}"><div class="sic"><svg viewBox="0 0 24 24" aria-hidden="true">${i.icon}</svg></div><div><b class="r-${i.r}">${esc(i.n)}</b><small>${esc(i.d)} · <span class="rar" style="color:${GEM[i.r]}">${RLAB[i.r]}</span></small>
         <span class="price">${feat&&pr<SHOP_PRICE[k]?`<s style="opacity:.5">${SHOP_PRICE[k]}</s> `:""}${pr.toLocaleString("fr-CA")} or</span></div>
         <button type="button" class="btn ${g<pr||owned?"ghost":""}" data-buy="${k}" ${g<pr||owned?"disabled":""}>${owned?"Possédé":"Acheter"}</button></div>`};
-    B.innerHTML=`<h5 class="sh">✦ Article du jour · rabais</h5>${row(f,true)}<h5 class="sh">Armes et armures</h5>${["epee","bouclier","potion"].map(k=>row(k)).join("")}
-      <h5 class="sh">Reliques</h5>${["croc","cuir","cendre","coeur","griffe","corne"].filter(k=>k!==f).map(k=>row(k)).join("")}`;
+    B.innerHTML=`<h5 class="sh">✦ Article du jour · −50 %</h5>${row(f,true)}${SLOT_ORDER.map(sl=>{const ks=[...Object.keys(ITEMS).filter(k=>SLOT_OF[k]===sl),...Object.keys(LOOT).filter(k=>LOOT[k].s===sl&&k!==f).sort((a,b)=>SHOP_PRICE[a]-SHOP_PRICE[b])];return ks.length?`<h5 class="sh">${sl}</h5>${ks.map(k=>row(k)).join("")}`:""}).join("")}`;
   }else{
     const cells=[];player.items.forEach(k=>cells.push({k,n:1,on:!(player.unequip||[]).includes(k)}));
     Object.entries(player.loot||{}).forEach(([k,n])=>{if(n>0)cells.push({k,n,on:n-((player.lootOff||{})[k]||0)>0})});
@@ -1744,7 +1754,7 @@ function renderMap(xp,km){
       ${tokenFig(lookOf(k),col,.8)}
       <g transform="translate(0 -21)"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
-  // jeton du joueur : petite tête de chien infernal
+  // jeton du joueur : chien infernal qui court
   tokPos=[px,py];
   {const sc=document.querySelector(".mapscroll"),kk=px+","+py;if(sc&&sc.scrollWidth>sc.clientWidth+4&&sc.dataset.tk!==kk){sc.dataset.tk=kk;requestAnimationFrame(()=>{sc.scrollLeft=px/MAPW*sc.scrollWidth-sc.clientWidth/2})}}
   const from=prevTok||[px,py];
@@ -1783,13 +1793,39 @@ function renderNodeInfo(pr){
   $("nodeInfo").innerHTML=`<div><h4>${esc(n.n)}</h4><p>${desc}</p><p style="font-family:var(--mono);font-size:12px">Tes stats · ${st.hp} PV · ${st.atk} attaque</p></div>${btn}`;
 }
 const LOOT={
- croc:{n:"Croc de molosse",atk:2,w:32,r:"commun"},
- cuir:{n:"Cuir de démon",hp:10,w:32,r:"commun"},
- cendre:{n:"Cendre runique",atk:5,w:14,r:"rare"},
- coeur:{n:"Cœur de braise",hp:25,w:14,r:"rare"},
- griffe:{n:"Griffe d'abysse",atk:9,hp:10,w:6,r:"epique"},
- corne:{n:"Corne du Seigneur",atk:16,hp:40,w:2,r:"legendaire"}
+ croc:{n:"Croc de molosse",atk:2,w:6.4,r:"commun",s:"Talisman"},
+ cuir:{n:"Cuir de démon",hp:10,w:6.4,r:"commun",s:"Armure"},
+ cendre:{n:"Cendre runique",atk:5,w:3.1,r:"rare",s:"Anneau"},
+ coeur:{n:"Cœur de braise",hp:25,w:3.1,r:"rare",s:"Amulette"},
+ griffe:{n:"Griffe d'abysse",atk:9,hp:10,w:0.93,r:"epique",s:"Gants"},
+ corne:{n:"Corne du Seigneur",atk:16,hp:40,w:0.4,r:"legendaire",s:"Casque"},
+ casque_rouille:{n:"Heaume rouillé",hp:6,w:6.4,r:"commun",s:"Casque"},
+ capuche_ombre:{n:"Capuche d'ombre",atk:3,hp:8,w:3.1,r:"rare",s:"Casque"},
+ couronne_epine:{n:"Couronne d'épines",atk:6,hp:20,w:0.93,r:"epique",s:"Casque"},
+ amu_os:{n:"Amulette d'os",atk:1,hp:5,w:6.4,r:"commun",s:"Amulette"},
+ oeil:{n:"Œil du Néant",atk:8,hp:12,w:0.93,r:"epique",s:"Amulette"},
+ medaillon:{n:"Médaillon du Damné",atk:12,hp:50,w:0.4,r:"legendaire",s:"Amulette"},
+ dague:{n:"Dague rouillée",atk:3,w:6.4,r:"commun",s:"Arme"},
+ hache:{n:"Hache de bourreau",atk:6,w:3.1,r:"rare",s:"Arme"},
+ fleau:{n:"Fléau des âmes",atk:11,w:0.93,r:"epique",s:"Arme"},
+ lame_neant:{n:"Lame du Néant",atk:20,hp:10,w:0.4,r:"legendaire",s:"Arme"},
+ gant_cuir:{n:"Gantelets de cuir",atk:1,hp:4,w:6.4,r:"commun",s:"Gants"},
+ poing_fer:{n:"Poings de fer",atk:4,hp:6,w:3.1,r:"rare",s:"Gants"},
+ anneau_cuivre:{n:"Anneau de cuivre",atk:1,hp:3,w:6.4,r:"commun",s:"Anneau"},
+ anneau_sang:{n:"Anneau de sang",atk:7,hp:15,w:0.93,r:"epique",s:"Anneau"},
+ anneau_glace:{n:"Anneau du Givre",atk:14,hp:30,w:0.4,r:"legendaire",s:"Anneau"},
+ cotte:{n:"Cotte de mailles",hp:22,w:3.1,r:"rare",s:"Armure"},
+ plastron:{n:"Plastron d'obsidienne",hp:45,w:0.93,r:"epique",s:"Armure"},
+ carapace:{n:"Carapace du Wendigo",atk:4,hp:80,w:0.4,r:"legendaire",s:"Armure"},
+ rondache:{n:"Rondache de bois",hp:8,w:6.4,r:"commun",s:"Bouclier"},
+ pavois:{n:"Pavois des damnés",atk:1,hp:20,w:3.1,r:"rare",s:"Bouclier"},
+ ceinture:{n:"Ceinture cloutée",atk:1,hp:4,w:6.4,r:"commun",s:"Ceinture"},
+ fiole:{n:"Fiole de rage",atk:4,hp:4,w:3.1,r:"rare",s:"Ceinture"},
+ plume:{n:"Plume de corbeau",atk:1,hp:4,w:6.4,r:"commun",s:"Talisman"},
+ rune:{n:"Pierre runique",atk:3,hp:10,w:3.1,r:"rare",s:"Talisman"},
+ totem:{n:"Totem du Cerbère",atk:8,hp:18,w:0.93,r:"epique",s:"Talisman"}
 };
+Object.entries(LOOT).forEach(([k,v])=>{SHOP_PRICE[k]=RPRICE[v.r]});
 const RLAB={commun:"Commun",rare:"Rare",epique:"Épique",legendaire:"Légendaire"};
 const rollsFor=(min,first)=>{const n=Math.min(8,Math.floor(min/15));return first?Math.max(1,n):n};
 function isFirstGym(curId){const k=keyOf(me);return !punches.some(p=>p.key===k&&p.type==="gym"&&p.end&&p.id!==curId)}
@@ -1803,7 +1839,32 @@ const LOOT_ICON={
  cendre:'<circle cx="12" cy="13" r="7" fill="#2a1f3a" stroke="#6aa6ff"/><path d="M12 8v10M8 11l8 4M16 11l-8 4" stroke="#6aa6ff" stroke-width="1.4"/>',
  coeur:'<path d="M12 20S4 15 4 9a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 6-8 11-8 11Z" fill="#b3141b" stroke="#ff6a1a"/><path d="M9 10c1-2 3-1 3 0" stroke="#ffd9a8" fill="none"/>',
  griffe:'<path d="M5 20c2-6 3-11 2-16 3 4 4 9 3 16ZM10 20c2-6 3-11 3-16 2 5 3 10 1 16ZM15 20c2-5 3-9 4-13 1 5 0 9-2 13Z" fill="#c77dff" stroke="#3a1050"/>',
- corne:'<path d="M6 21C4 14 7 6 15 3c-3 4-4 8-2 12 1 3 0 5-2 6Z" fill="#c9a24a" stroke="#ff9d2e"/><path d="M8 17c2-1 4-1 5 0M9 13c2-1 3-1 5 0" stroke="#7a5a20"/>'
+ corne:'<path d="M6 21C4 14 7 6 15 3c-3 4-4 8-2 12 1 3 0 5-2 6Z" fill="#c9a24a" stroke="#ff9d2e"/><path d="M8 17c2-1 4-1 5 0M9 13c2-1 3-1 5 0" stroke="#7a5a20"/>',
+ casque_rouille:'<path d="M5 14Q5 4 12 3q7 1 7 11v4H5Z" fill="#7a5a48" stroke="#2a1a14"/><path d="M7 11h10v2H7Z" fill="#170404"/><circle cx="9" cy="7" r="1" fill="#a0603a"/><circle cx="15" cy="16" r="1" fill="#a0603a"/>',
+ capuche_ombre:'<path d="M4 20Q3 6 12 2q9 4 8 18Q12 16 4 20Z" fill="#1a2a4a" stroke="#6aa6ff"/><path d="M8 10q4-3 8 0l-1 6q-3 2-6 0Z" fill="#050101"/><circle cx="10" cy="12" r="1" fill="#6aa6ff"/><circle cx="14" cy="12" r="1" fill="#6aa6ff"/>',
+ couronne_epine:'<path d="M4 18 5 8l3 4 4-8 4 8 3-4 1 10Z" fill="#4a1a5a" stroke="#c77dff"/><path d="M4 18h16" stroke="#c77dff" stroke-width="2"/><circle cx="12" cy="14" r="1.6" fill="#ff3a3a"/>',
+ amu_os:'<path d="M6 3q6 8 12 0" fill="none" stroke="#7a5a48" stroke-width="1.2"/><path d="M10 10h4l1 8-3 3-3-3Z" fill="#e8dccb" stroke="#6b6055"/>',
+ oeil:'<path d="M6 3q6 7 12 0" fill="none" stroke="#c9a24a" stroke-width="1.2"/><ellipse cx="12" cy="15" rx="7" ry="5" fill="#1a0a2a" stroke="#c77dff"/><circle cx="12" cy="15" r="2.6" fill="#c77dff"/><circle cx="12" cy="15" r="1" fill="#050101"/>',
+ medaillon:'<path d="M6 3q6 7 12 0" fill="none" stroke="#ff9d2e" stroke-width="1.4"/><circle cx="12" cy="15" r="6.5" fill="#c9a24a" stroke="#ff9d2e"/><circle cx="12" cy="15" r="3.6" fill="#b3141b" stroke="#7a5a20"/><path d="M12 12v6M9 15h6" stroke="#ffd9a8" stroke-width=".8"/>',
+ dague:'<path d="M17 3 19 5 10 14l-2-2Z" fill="#a08a78" stroke="#4a3a30" stroke-width=".8"/><path d="M6 11l7 7-1.5 1L5 12.5Z" fill="#7a5a48"/><path d="M6 17l-3 3 1 1 3-3Z" fill="#4a2a1a"/>',
+ hache:'<path d="M5 21 17 6" stroke="#6b3b1a" stroke-width="2.2"/><path d="M13 3q8 1 8 8-5-1-8-4Z" fill="#9fb0c0" stroke="#6aa6ff"/>',
+ fleau:'<path d="M4 21 11 13" stroke="#3a2a4a" stroke-width="2.4"/><path d="M11 13q2-3 4-4" stroke="#8a7a9a" stroke-dasharray="1.5 1" fill="none"/><circle cx="17" cy="7" r="4" fill="#4a1a6a" stroke="#c77dff"/><path d="M17 1v2M17 11v2M11 7h2M21 7h2M13 3l1.4 1.4M21 11l-1.4-1.4" stroke="#c77dff"/>',
+ lame_neant:'<path d="M20 2 22 4 9 17l-3-3Z" fill="#1a0a2a" stroke="#ff9d2e"/><path d="M19 4 9 14" stroke="#c77dff" stroke-width=".8"/><path d="M4 12l8 8-2 1-7-7Z" fill="#c9a24a"/><path d="M4 19l-2 3 1 1 3-2Z" fill="#ff9d2e"/>',
+ gant_cuir:'<path d="M7 21V11l-2-4 2-1 2 3V4h2v6V3h2v7V4h2v7l2-3 1 1-3 6v6Z" fill="#7a3a24" stroke="#3a1a10"/>',
+ poing_fer:'<path d="M6 21V11l-1-4 2-1 2 3V4h2v6V3h2v7V4h2v7l2-3 1 1-3 6v6Z" fill="#9fb0c0" stroke="#2a3a4a"/><path d="M7 14h11M8 17h9" stroke="#6aa6ff"/>',
+ anneau_cuivre:'<circle cx="12" cy="14" r="6" fill="none" stroke="#c87a3a" stroke-width="2.4"/><path d="M10 7h4l-1 2h-2Z" fill="#c87a3a"/>',
+ anneau_sang:'<circle cx="12" cy="15" r="6" fill="none" stroke="#c9a24a" stroke-width="2.2"/><path d="M12 3l3 4-3 3-3-3Z" fill="#b3141b" stroke="#c77dff"/>',
+ anneau_glace:'<circle cx="12" cy="15" r="6" fill="none" stroke="#bfe6ff" stroke-width="2.4"/><path d="M12 2l3.5 4.5L12 10 8.5 6.5Z" fill="#9fd8ff" stroke="#ff9d2e"/><path d="M12 3v6M9.5 6h5" stroke="#fff" stroke-width=".6"/>',
+ cotte:'<path d="M5 6 9 3h6l4 3-2 4 1 10H6l1-10Z" fill="#6a7a8a" stroke="#2a3a4a"/><path d="M7 9h10M7 12h10M7 15h10M7 18h10" stroke="#9fb0c0" stroke-dasharray="1 1"/>',
+ plastron:'<path d="M5 6 9 3h6l4 3-2 4 1 10H6l1-10Z" fill="#1a1020" stroke="#c77dff"/><path d="M12 5v14M8 9l4 3 4-3" stroke="#ff6a1a" stroke-width="1"/>',
+ carapace:'<path d="M5 6 9 3h6l4 3-2 4 1 10H6l1-10Z" fill="#cfe6f5" stroke="#ff9d2e"/><path d="M8 8l4 4 4-4M8 13l4 4 4-4" stroke="#2a5a7a" stroke-width="1.2" fill="none"/>',
+ rondache:'<circle cx="12" cy="12" r="9" fill="#8a5a30" stroke="#3a2010"/><path d="M5 9h14M4 13h16M6 17h12" stroke="#5a3a1a"/><circle cx="12" cy="12" r="2.4" fill="#a0a0a0" stroke="#4a4a4a"/>',
+ pavois:'<path d="M5 3h14v9c0 5-3 8-7 10-4-2-7-5-7-10Z" fill="#3a1a14" stroke="#6aa6ff"/><path d="M12 5v15M7 10h10" stroke="#b3141b" stroke-width="1.6"/>',
+ ceinture:'<path d="M2 10h20v5H2Z" fill="#5a3a24" stroke="#2a1a10"/><rect x="9" y="8.5" width="6" height="8" rx="1" fill="none" stroke="#c9a24a" stroke-width="1.6"/><circle cx="5" cy="12.5" r=".9" fill="#c9a24a"/><circle cx="19" cy="12.5" r=".9" fill="#c9a24a"/>',
+ fiole:'<path d="M10 3h4v4l3 5v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7l3-5Z" fill="#ff6a1a" stroke="#6aa6ff"/><rect x="9" y="2" width="6" height="2" fill="#6b3b1a"/><path d="M9 14h6" stroke="#ffd9a8"/>',
+ plume:'<path d="M5 20C8 12 12 6 20 3c-2 7-6 12-13 15Z" fill="#2a2a3a" stroke="#6b6055"/><path d="M5 20 15 9" stroke="#8a8a9a" stroke-width=".8"/>',
+ rune:'<path d="M6 5 16 3l3 9-4 9-9-2-2-8Z" fill="#3a3a4a" stroke="#6aa6ff"/><path d="M11 7v10M11 10l4-2M11 13l4 2" stroke="#6aa6ff" stroke-width="1.4"/>',
+ totem:'<path d="M9 22V9h6v13Z" fill="#6b3b1a" stroke="#2a1a10"/><circle cx="6" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="3.4" fill="#2a1020" stroke="#c77dff"/><circle cx="18" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="1" fill="#ff6a1a"/>'
 };
 let lastKm=0,selAuto=true;const newSlots=new Set();
 const LOOKS={helm:[["heaume","Heaume"],["capuche","Capuche"],["crane","Crâne"],["couronne","Couronne"]],
@@ -1816,7 +1877,18 @@ function helmBig(l,g){const eyes=(y)=>`<circle cx="72" cy="${y}" r="2.4" fill="$
   const base=`<path d="M60 30Q80 14 100 30L102 58Q80 70 58 58Z" fill="#2c2220" stroke="#0c0606"/><path d="M64 44h32l-3 8H67Z" fill="#050101"/>${eyes(47)}`;
   if(l.helm==="couronne")return base+`<path d="M60 30 62 12 69 23 74 4 80 20 86 4 91 23 98 12 100 30Q80 22 60 30Z" fill="#c9a24a" stroke="#7a5a20"/><circle cx="80" cy="25" r="2.5" fill="#b3141b"/>`;
   return base+`<path d="M66 28 62 18 70 24ZM94 28l4-10-8 6Z" fill="#6a5048"/>`}
-function tokenFig(l,col,sc){return `<g transform="scale(${sc}) translate(-30 -22)"><path d="M14 46Q30 30 46 46L44 54H16Z" fill="${col}" stroke="#0c0606" stroke-width="1.5"/><path d="M20 40Q30 34 40 40" stroke="#000" stroke-opacity=".35" fill="none"/>${helmSmall(l,l.eyes,col)}</g>`}
+function tokenFig(l,col,sc){const o='stroke="#0c0606" stroke-width="1.1" stroke-linejoin="round"',dk="rgba(0,0,0,.35)";
+  return `<g class="dog" transform="translate(-2 4) scale(${sc*.85})"><g class="dbody">
+  <path class="dtail" d="M-14 -4Q-22 -8 -24 -17" stroke="${col}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path class="dl b2" d="M-12 0l-2 18h4l3-17Z" fill="${col}" ${o}/><path class="dl f2" d="M8 0l1 18h4l-1-18Z" fill="${col}" ${o}/>
+  <path d="M-16 -2Q-16 -9 -6 -9H8Q15 -9 15 -3Q15 5 6 5H-8Q-16 5 -16 -2Z" fill="${col}" ${o}/>
+  <path d="M-10 -9Q-1 -13 9 -9L8 -2Q-1 -5 -9 -2Z" fill="${l.cape}" ${o}/>
+  <path class="dl b1" d="M-9 0l-1 18h4l2-17Z" fill="${col}" ${o}/><path class="dl f1" d="M10 0l3 18h4l-2-18Z" fill="${col}" ${o}/>
+  <path d="M9 -6Q11 -16 19 -16L28 -12Q30 -7 25 -6L17 -4Q12 -1 9 -6Z" fill="${col}" ${o}/>
+  <path d="M15 -14 13 -23 19 -16Z" fill="${col}" ${o}/><path d="M15.5 -15 14.4 -20 17.5 -16Z" fill="${dk}"/>
+  <path d="M24 -8 28 -9" stroke="#0c0606" stroke-width="1"/><path d="M25 -7.6l.8 2 .8-1.8" fill="#e8dccb"/>
+  <circle cx="21" cy="-12" r="1.6" fill="${l.eyes}"/><circle cx="21" cy="-12" r="3" fill="${l.eyes}" opacity=".25"/>
+  <circle cx="28.4" cy="-11.6" r="1.2" fill="#0c0606"/></g></g>`}
 function helmSmall(l,g,c){const eyes=(y,x1=27,x2=33)=>`<circle cx="${x1}" cy="${y}" r="1.4" fill="${g}"/><circle cx="${x2}" cy="${y}" r="1.4" fill="${g}"/>`;
   if(l.helm==="capuche")return `<path d="M17 30Q14 6 30 0Q46 6 43 30Q30 24 17 30Z" fill="${l.cape}" stroke="#0c0606"/><path d="M23 14Q30 10 37 14L36 26Q30 29 24 26Z" fill="#050101"/>${eyes(18)}`;
   if(l.helm==="crane")return `<path d="M21 14Q30 2 39 14Q41 22 37 26L35 29H25L23 26Q19 22 21 14Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="26.5" cy="17" r="2.8" fill="#170404"/><circle cx="33.5" cy="17" r="2.8" fill="#170404"/>${eyes(17,26.5,33.5)}`;
@@ -1854,10 +1926,16 @@ function renderInv(){
   const TROPHY='<path d="M12 3c-5 0-8 3-8 7 0 3 2 4 3 5v4h10v-4c1-1 3-2 3-5 0-4-3-7-8-7Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="9" cy="11" r="2" fill="#170404"/><circle cx="15" cy="11" r="2" fill="#170404"/><path d="M10 19v-3M14 19v-3" stroke="#3a2c28"/>';
   const L=eqLoot(player),OWN=player.loot||{};
   const slot=(id,label,icon,has,count,rar,tip)=>`<div data-item="${id}" data-slot="${label}" class="slot ${has?"on":"empty"} ${rar||""} ${newSlots.has(id)?"new":""}" title="${esc(has?tip:label+" · vide")}" tabindex="0" aria-label="${esc(label)}${has?" : "+esc(tip):" vide"}"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${count>1?`<b class="cnt">×${count}</b>`:""}<small>${label}</small></div>`;
-  const ls=(id,label,k)=>{const v=LOOT[k],c=L[k]||0,sac=(OWN[k]||0)-c;return slot(id,label,LOOT_ICON[k],c>0,c,c?v.r:"",`${v.n} ×${c} équipé${c>1?"s":""} · ${[v.atk?`+${v.atk*c} ATQ`:"",v.hp?`+${v.hp*c} PV`:""].filter(Boolean).join(" · ")}${sac>0?` · ${sac} au sac`:""}`).replace('class="slot empty','class="slot empty'+(sac>0?" stash":""))};
+  const RORD={commun:0,rare:1,epique:2,legendaire:3};
+  const ls=(id,label,k0)=>{const ks=Object.keys(LOOT).filter(x=>LOOT[x].s===label),eqk=ks.filter(x=>(L[x]||0)>0),own=ks.filter(x=>(OWN[x]||0)>0);
+    const best=[...(eqk.length?eqk:own)].sort((a,b)=>RORD[LOOT[b].r]-RORD[LOOT[a].r])[0]||k0;
+    if(eqk.length>1||(eqk.length===1&&best!==k0)||(!eqk.length&&best!==k0)){const c=eqk.reduce((a,x)=>a+L[x],0),sac=own.reduce((a,x)=>a+(OWN[x]||0),0)-c,atk=eqk.reduce((a,x)=>a+(LOOT[x].atk||0)*L[x],0),hp=eqk.reduce((a,x)=>a+(LOOT[x].hp||0)*L[x],0),v=LOOT[best];
+      return slot(best,label,LOOT_ICON[best],c>0,c,c?v.r:"",`${eqk.map(x=>LOOT[x].n+(L[x]>1?" ×"+L[x]:"")).join(", ")||label+" · rien d'équipé"}${c?" · "+[atk?`+${atk} ATQ`:"",hp?`+${hp} PV`:""].filter(Boolean).join(" · "):""}${sac>0?` · ${sac} au sac`:""}`).replace('class="slot empty','class="slot empty'+(sac>0?" stash":""))}
+    const k=best;const v=LOOT[k],c=L[k]||0,sac=(OWN[k]||0)-c;return slot(id,label,LOOT_ICON[k],c>0,c,c?v.r:"",`${v.n} ×${c} équipé${c>1?"s":""} · ${[v.atk?`+${v.atk*c} ATQ`:"",v.hp?`+${v.hp*c} PV`:""].filter(Boolean).join(" · ")}${sac>0?` · ${sac} au sac`:""}`).replace('class="slot empty','class="slot empty'+(sac>0?" stash":""))};
   const EQ=eqItems(player),it=x=>EQ.includes(x);
-  $("slotsL").innerHTML=ls("corne","Casque","corne")+ls("coeur","Amulette","coeur")+slot("epee","Arme",ICON.epee,it("epee"),1,"epique","Épée de braise · +12 ATQ")+ls("griffe","Gants","griffe")+ls("cendre","Anneau","cendre");
-  $("slotsR").innerHTML=ls("cuir","Armure","cuir")+slot("bouclier","Bouclier",ICON.bouclier,it("bouclier"),1,"epique","Bouclier d'os · +45 PV")+slot("potion","Ceinture",ICON.potion,it("potion"),1,"rare","Potion de sang · soigne 50 PV une fois par combat")+ls("croc","Talisman","croc")+slot("trophy","Trophées",TROPHY,beat>0,beat,"",`${beat} boss vaincu${beat>1?"s":""}`);
+  const ms=(k,label,r,tip)=>it(k)?slot(k,label,ICON[k],1,1,r,tip):Object.keys(LOOT).some(x=>LOOT[x].s===label&&(OWN[x]||0)>0)?ls(label,label,Object.keys(LOOT).find(x=>LOOT[x].s===label)):slot(k,label,ICON[k],player.items.includes(k)?0:0,1,"",tip).replace('class="slot empty','class="slot empty'+(player.items.includes(k)?" stash":""));
+  $("slotsL").innerHTML=ls("corne","Casque","corne")+ls("coeur","Amulette","coeur")+ms("epee","Arme","epique","Épée de braise · +12 ATQ")+ls("griffe","Gants","griffe")+ls("cendre","Anneau","cendre");
+  $("slotsR").innerHTML=ls("cuir","Armure","cuir")+ms("bouclier","Bouclier","epique","Bouclier d'os · +45 PV")+ms("potion","Ceinture","rare","Potion de sang · soigne 50 PV une fois par combat")+ls("croc","Talisman","croc")+slot("trophy","Trophées",TROPHY,beat>0,beat,"",`${beat} boss vaincu${beat>1?"s":""}`);
   $("invRank").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("invName").textContent=me;
   const base={hp:60+Math.floor(lastXp/8),atk:8+Math.floor(lastXp/25)};
@@ -1976,57 +2054,60 @@ async function focusMap(target){
 
 /* ================= Coffre façon Vampire Survivors ================= */
 let actx=null;
-/* ===== Musique épique (synthèse WebAudio, originale) ===== */
+/* ===== Musique hip-hop (synthèse WebAudio, originale) ===== */
 const MUS=(()=>{
   const N=(m)=>440*Math.pow(2,(m-69)/12);
-  // Ré mineur : i – VI – III – VII | i – VI – VII – V
-  const PROG=[[50,[62,65,69]],[46,[62,65,70]],[53,[60,65,69]],[48,[60,64,67]],[50,[62,65,69]],[46,[62,65,70]],[48,[60,64,67]],[45,[61,64,69]]];
-  const MEL=[[74,0,6],[72,6,2],[70,8,4],[69,12,4],[65,16,6],[67,22,2],[69,24,8],[74,32,6],[76,38,2],[77,40,4],[76,44,4],[72,48,6],[74,54,2],[76,56,4],[73,60,4]];
-  let on=true,ctx=null,out=null,rev=null,timer=null,step=0,nextT=0,bar=0,started=false;
+  // Hip-hop sombre en ré mineur : i – VI – iv – V
+  const PROG=[[38,[62,65,69]],[34,[62,65,70]],[43,[62,67,70]],[45,[61,64,69]]];
+  const RIFF=[[74,0],[77,3],[74,6],[72,8],[69,10],[72,12],[74,14],[69,16],[70,19],[69,22],[67,24],[65,26],[67,28],[69,30]];
+  let on=true,ctx=null,out=null,rev=null,timer=null,step=0,nextT=0,bar=0,started=false,noiseB=null;
   try{on=localStorage.getItem("tdl_music")!=="0"}catch(e){}
-  const BPM=78,S16=60/BPM/4;
+  const BPM=98,S16=60/BPM/4,SW=.18;
   function intense(){const f=document.getElementById("fight");return !!(f&&!f.hidden)}
   function init(){
     if(ctx)return true;
     try{ctx=actx=actx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){return false}
     out=ctx.createGain();out.gain.value=0;
-    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
+    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=5;
     out.connect(comp).connect(ctx.destination);
-    rev=ctx.createConvolver();const L=ctx.sampleRate*3.2,b=ctx.createBuffer(2,L,ctx.sampleRate);
-    for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,2.6)}
-    rev.buffer=b;const rg=ctx.createGain();rg.gain.value=.55;rev.connect(rg).connect(out);
+    rev=ctx.createConvolver();const L=ctx.sampleRate*1.6,b=ctx.createBuffer(2,L,ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,3)}
+    rev.buffer=b;const rg=ctx.createGain();rg.gain.value=.35;rev.connect(rg).connect(out);
+    noiseB=ctx.createBuffer(1,ctx.sampleRate*.4,ctx.sampleRate);const nd=noiseB.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
     return true}
-  function env(g,t,a,d,v){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.setTargetAtTime(0,t+a+d*.6,d*.35)}
-  function send(node,wet){node.connect(out);const s=ctx.createGain();s.gain.value=wet;node.connect(s).connect(rev)}
-  function voice(f,t,dur,type,v,cut,a=.02,wet=.3,det=0){
-    const o=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
-    o.type=type;o.frequency.value=f;o.detune.value=det;lp.type="lowpass";lp.frequency.value=cut;lp.Q.value=.7;
-    env(g,t,a,dur,v);o.connect(lp).connect(g);send(g,wet);o.start(t);o.stop(t+dur+1.5)}
-  function taiko(t,v,f0=110){
-    const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(42,t+.25);
-    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.6);o.connect(g);send(g,.35);o.start(t);o.stop(t+.7);
-    const n=ctx.createBufferSource(),nb=ctx.createBuffer(1,ctx.sampleRate*.12,ctx.sampleRate),d=nb.getChannelData(0);
-    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
-    n.buffer=nb;const bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=700;const ng=ctx.createGain();ng.gain.value=v*.35;
-    n.connect(bp).connect(ng);send(ng,.3);n.start(t)}
+  function send(node,wet){node.connect(out);if(wet){const s=ctx.createGain();s.gain.value=wet;node.connect(s).connect(rev)}}
+  function kickD(t,v){const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.12);
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.38);o.connect(g);send(g,0);o.start(t);o.stop(t+.4)}
+  function noise(t,dur,v,type,f,wet,q=.8){const n=ctx.createBufferSource(),fl=ctx.createBiquadFilter(),g=ctx.createGain();n.buffer=noiseB;fl.type=type;fl.frequency.value=f;fl.Q.value=q;
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);n.connect(fl).connect(g);send(g,wet);n.start(t);n.stop(t+dur+.02)}
+  function snare(t,v){noise(t,.2,v,"bandpass",1900,.25,.6);const o=ctx.createOscillator(),g=ctx.createGain();o.type="triangle";o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(140,t+.08);
+    g.gain.setValueAtTime(v*.5,t);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(g);send(g,.1);o.start(t);o.stop(t+.14)}
+  function hat(t,v,open){noise(t,open?.16:.035,v,"highpass",7500,0)}
+  function bass(t,f,dur,v){const o=ctx.createOscillator(),g=ctx.createGain(),sh=ctx.createWaveShaper(),c=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;c[i]=Math.tanh(2.2*x)}sh.curve=c;
+    o.type="sine";o.frequency.setValueAtTime(f*1.5,t);o.frequency.exponentialRampToValueAtTime(f,t+.05);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.setTargetAtTime(0,t+dur*.7,dur*.25);
+    o.connect(sh).connect(g);send(g,0);o.start(t);o.stop(t+dur+.4)}
+  function keys(f,t,dur,v,type="triangle",cut=1800,wet=.3){const o=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();o.type=type;o.frequency.value=f;lp.type="lowpass";lp.frequency.value=cut;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.setTargetAtTime(0,t+.02,dur*.4);o.connect(lp).connect(g);send(g,wet);o.start(t);o.stop(t+dur+.8)}
   function tick(t){
-    const s=step%16,ch=PROG[bar%PROG.length],root=ch[0],hot=intense(),phrase=Math.floor(bar/8)%2;
-    // ostinato cordes graves (croches)
-    if(s%2===0)voice(N(s%4===0?root-12:root),t,S16*1.8,"sawtooth",.11,hot?900:650,.01,.15);
-    // chœur / nappe
-    if(s===0)ch[1].forEach((m,i)=>{voice(N(m),t,S16*15,"sawtooth",.032,1300,.5,.6,-7+i*5);voice(N(m-12),t,S16*15,"triangle",.05,900,.6,.6)});
-    // taikos
-    const pat=hot?[0,3,6,8,10,11,12,14]:[0,6,8,14];
-    if(pat.includes(s))taiko(t,s===0||s===8?.9:.55);
-    if(bar%4===3&&s>=12)taiko(t,.5+.12*(s-12),140);
-    // cuivres (mélodie) une phrase sur deux
-    if(phrase===1){const pos=(bar%4)*16+s;MEL.forEach(([m,p,l])=>{if(p===pos){voice(N(m-12),t,S16*l*.95,"sawtooth",.07,1600,.06,.45,4);voice(N(m-12),t,S16*l*.95,"square",.025,1100,.06,.45,-4)}})}
+    const s=step%16,ch=PROG[Math.floor(bar/2)%PROG.length],root=ch[0],hot=intense(),half=Math.floor(bar/8)%2;
+    const sw=s%2?S16*SW:0,tt=t+sw;
+    // batterie boom bap
+    if([0,7,10].includes(s)||(hot&&[3,14].includes(s))||(bar%2&&s===13))kickD(tt,.85);
+    if(s===4||s===12)snare(tt,.7);
+    if(hot)hat(tt,s%2?.12:.2,false);else if(s%2===0)hat(tt,s%4?.13:.2,s===14);
+    if(hot&&bar%2&&s>=12)hat(tt+S16/2,.1,false);
+    // basse 808
+    if(s===0)bass(tt,N(root),S16*6,.42);if(s===7)bass(tt,N(root),S16*2.5,.32);if(s===10)bass(tt,N(root+(bar%2?3:0)),S16*5,.36);
+    // accords (stabs)
+    if(s===0||s===6||(s===11&&bar%2))ch[1].forEach(m=>keys(N(m),tt,S16*(s===0?5:2),.045,"triangle",1500,.35));
+    // riff lead une phrase sur deux
+    if(half===1){const pos=(bar%2)*16+s;RIFF.forEach(([m,p])=>{if(p===pos){keys(N(m),tt,S16*1.6,.05,"square",2400,.4);keys(N(m+12),tt,S16*1.2,.015,"sine",4000,.4)}})}
     step++;if(step%16===0)bar++}
   function sched(){if(!ctx)return;while(nextT<ctx.currentTime+.25){tick(nextT);nextT+=S16}}
   function start(){
     if(!on||!init())return;if(ctx.state==="suspended")ctx.resume();
-    if(timer)return;nextT=ctx.currentTime+.08;timer=setInterval(sched,60);
-    out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setTargetAtTime(.32,ctx.currentTime,1.2);started=true}
+    if(timer)return;nextT=ctx.currentTime+.08;timer=setInterval(sched,50);
+    out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setTargetAtTime(.14,ctx.currentTime,.8);started=true}
   function stop(){if(timer){clearInterval(timer);timer=null}if(ctx&&out){out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setTargetAtTime(0,ctx.currentTime,.15)}}
   function paint(){document.querySelectorAll(".musbtn").forEach(b=>{b.classList.toggle("off",!on);b.setAttribute("aria-pressed",String(on));b.setAttribute("aria-label",on?"Couper la musique":"Activer la musique")})}
   function toggle(){on=!on;try{localStorage.setItem("tdl_music",on?"1":"0")}catch(e){}on?start():stop();paint()}
@@ -2683,7 +2764,32 @@ const LORE={
  cendre:"Des cendres gravées de runes. Elles murmurent où frapper.",
  coeur:"Il bat toujours. Chaque battement te redonne du souffle.",
  griffe:"Trois griffes violettes tirées d'une bête sans nom.",
- corne:"La corne d'un Seigneur déchu. Ceux qui la portent ne reculent plus."};
+ corne:"La corne d'un Seigneur déchu. Ceux qui la portent ne reculent plus.",
+ casque_rouille:"Rouillé, cabossé, mais il a arrêté plus d'une hache.",
+ capuche_ombre:"Tissée de nuit. Ceux qui la portent frappent sans être vus.",
+ couronne_epine:"Chaque épine a bu le sang d'un roi.",
+ amu_os:"Une phalange percée, enfilée sur un lacet de cuir.",
+ oeil:"Il regarde toujours. Parfois, il cligne.",
+ medaillon:"Il renferme le dernier souffle d'un gladiateur immortel.",
+ dague:"Elle ne coupe plus grand-chose. Elle pique encore.",
+ hache:"Le manche est lisse d'avoir trop servi.",
+ fleau:"Chaque coup arrache un cri qui n'est pas le tien.",
+ lame_neant:"Elle ne reflète rien. Pas même celui qui la tient.",
+ gant_cuir:"Ils sentent la sueur et la poussière d'arène.",
+ poing_fer:"Forgés pour briser les mâchoires, pas les épées.",
+ anneau_cuivre:"Il laisse une trace verte au doigt. Et un peu de courage.",
+ anneau_sang:"Il serre un peu plus fort à chaque victoire.",
+ anneau_glace:"Volé à la Liche. Ton souffle gèle quand tu le portes.",
+ cotte:"Mille anneaux d'acier, mille coups évités.",
+ plastron:"Taillé dans la roche volcanique du Pont de feu.",
+ carapace:"Arrachée au Wendigo des Glaces. Elle est encore froide.",
+ rondache:"Quelques planches et beaucoup d'espoir.",
+ pavois:"Des visages hurlent sous la peinture.",
+ ceinture:"Elle tient le pantalon. Et le moral.",
+ fiole:"Une gorgée et tu vois rouge pour une heure.",
+ plume:"Le corbeau l'a laissée sur une tombe fraîche.",
+ rune:"Une seule rune, gravée par une main qui n'existe plus.",
+ totem:"Trois têtes sculptées. Une seule dort."};
 const ITEM_STATS={epee:{atk:12},bouclier:{hp:45},potion:{heal:50}};
 function showPlayer(k){
   const c=charOf(k),st=statsFrom(c.pl,c.xp),ri=rankIdx(c.xp),pr=progressOf(c.km,c.pl.bosses),isMe=k===keyOf(me);
@@ -2732,14 +2838,14 @@ function showItem(k){
   const eq=isMap?(owned&&!(player.unequip||[]).includes(k)?1:0):Math.max(0,owned-((player.lootOff||{})[k]||0));
   $("itIcon").innerHTML=isMap?ICON[k]:LOOT_ICON[k];
   $("itName").textContent=v.n;$("itName").className="r-"+r;
-  $("itType").textContent=`${RLAB[r]} · ${SLOT_OF[k]}${isLoot?" · s'empile":""}`;
+  $("itType").textContent=`${RLAB[r]} · ${SLOT_OF[k]||(LOOT[k]&&LOOT[k].s)||''}${isLoot?" · s'empile":""}`;
   const lines=[];if(st.atk)lines.push(`<div class="itl stat">+${st.atk} Attaque</div>`);if(st.hp)lines.push(`<div class="itl stat">+${st.hp} Points de vie</div>`);
   if(st.heal)lines.push(`<div class="itl stat">Soigne ${st.heal} PV · 1 fois par combat</div>`);
   let extra="";
   if(owned){extra+=`<div class="itsep"></div><div class="itl">Possédé : <b>${owned}</b> · Équipé : <b>${eq}</b>${owned-eq>0?` · Au sac : <b>${owned-eq}</b>`:""}</div>`;
     if(isLoot&&eq>0)extra+=`<div class="itl tot">Bonus total porté : ${[st.atk?`+${st.atk*eq} ATQ`:"",st.hp?`+${st.hp*eq} PV`:""].filter(Boolean).join(" · ")}</div>`;}
   else extra+=`<div class="itsep"></div><div class="itl no">Pas encore trouvé${isMap?" · dans un coffre de la carte":" · au gym, au hasard"}</div>`;
-  if(isLoot)extra+=`<div class="itl drop">Chance au gym : ${Math.round(100*v.w/Object.values(LOOT).reduce((a,x)=>a+x.w,0))} % par butin</div>`;
+  if(isLoot)extra+=`<div class="itl drop">Chance au gym : ${(Math.round(1000*v.w/Object.values(LOOT).reduce((a,x)=>a+x.w,0))/10).toLocaleString("fr-CA")} % par butin · Boutique : ${SHOP_PRICE[k]} or</div>`;
   $("itBody").innerHTML=lines.join("")+extra+`<p class="itlore">« ${esc(LORE[k]||"")} »</p>`;
   let act="";
   if(owned&&isMap)act=`<button type="button" class="btn ${eq?"ghost":""}" data-tog="${k}">${eq?"Ranger au sac":"Équiper"}</button>`;
