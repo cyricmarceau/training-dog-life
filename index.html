@@ -2379,7 +2379,7 @@ function mpCheck(S){if(S.boss.hp<=0){S.boss.hp=0;S.status="over";S.result="win";
 async function mpCommit(S,ev){S.seq=(S.seq||0)+1;ev.seq=S.seq;S.ev=ev;mpCheck(S);if(S.status==="fight")mpNext(S);
   mpDoc=S;fights["b"+S.bi]=S;mpShow(S,false);
   try{await fCol.doc("b"+S.bi).set(S)}catch(_){$("punchMsg").textContent="Connexion perdue avec l'arène."}
-  if(S.status==="over"&&S.host===keyOf(me))mpFinish(S)}
+  if(S.status==="over"){mpSelf(S);if(S.host===keyOf(me))mpFinish(S)}}
 async function mpStart(){
   const f=F,k=keyOf(me),now=Date.now();
   const S={bi:f.bi,status:"fight",host:k,hb:now,at:now,seq:0,crowd:20,turn:k,turnAt:now,
@@ -2428,20 +2428,30 @@ function playEv(d){const ev=d.ev;if(!ev)return;const idx=key=>d.team.findIndex(m
     else{anim("fig-boss","hit");slash("fig-boss",ev.kind);if(ev.kind==="quick")setTimeout(()=>slash("fig-boss","quick2"),110);sparks("fig-boss",ev.kind==="heavy"||ev.crit?14:7,ev.crit?"#ffcf3a":"#ffb347");if(ev.kind==="heavy"||ev.crit)shakeArena();popNum("fig-boss",String(ev.dmg),ev.crit?"crit":ev.kind==="heavy"?"heavy":"");tone(ev.crit?220:160,0,.08,"sawtooth",.05)}},140)}
   else if(ev.kind==="join"){popNum(aid,"ARRIVÉE !","heal");sparks(aid,14,"#ffe08a");tone(660,0,.15,"triangle",.05)}
   else if(ev.heal)popNum(aid,ev.heal,ev.heal.includes("END")?"end":"heal")}
-async function mpFinish(S){if(mpFinished[S.at])return;mpFinished[S.at]=1;const won=S.result==="win",now=Date.now(),b=BOSSES[S.bi];
-  for(const m of S.team){const c=charOf(m.key),L=lifeOf(m.key);let pl=c.pl;
-    if(!m.alive&&punches.some(p=>p.type==="death"&&p.key===m.key&&p.at>=S.at))continue;
-    if(!m.alive){const ri=rankIdx(c.xp);try{const ev={name:m.name,key:m.key,type:"death",boss:b.n,at:now+1,end:now+1,km:0,lvl:ri+1,rank:RANKS[ri][1],xp:c.xp,kmChar:Math.round(c.km*10)/10,bosses:pl.bosses.length};if(mode==="db")await col.add(ev)}catch(_){}
+/* résultat appliqué par chaque joueur à lui-même (idempotent) */
+async function mpSelf(S){const k=keyOf(me),fk="tdl_fin_"+k+"_"+S.bi+"_"+S.at;if(mpFinished["s"+S.at]||LS.get(fk))return;
+  const m=S.team.find(x=>x.key===k);if(!m)return;mpFinished["s"+S.at]=1;LS.set(fk,"1");
+  if(S.result!=="win"||!m.alive)return;
+  if(!player.bosses.includes(S.bi)){player.bosses=[...player.bosses,S.bi];$("punchMsg").textContent=`${BOSSES[S.bi].n} est vaincu : la route est ouverte !`}
+  else{const rw=rollLoot(1)[0];player.loot=player.loot||{};player.loot[rw]=(player.loot[rw]||0)+1;$("punchMsg").textContent=`Renfort récompensé : ${LOOT[rw].n}.`}
+  try{await savePlayer()}catch(_){}
+  selAuto=true;render()}
+/* tâches communes (hôte) : cimetière, boss des absents, annonce, groupe */
+async function mpFinish(S){if(mpFinished[S.at])return;mpFinished[S.at]=1;const won=S.result==="win",now=Date.now(),b=BOSSES[S.bi],k=keyOf(me);
+  for(const m of S.team){if(m.key===k)continue;const c=charOf(m.key);
+    if(!m.alive){if(punches.some(p=>p.type==="death"&&p.key===m.key&&p.at>=S.at))continue;
+      const ri=rankIdx(c.xp);try{const ev={name:m.name,key:m.key,type:"death",boss:b.n,at:now+1,end:now+1,km:0,lvl:ri+1,rank:RANKS[ri][1],xp:c.xp,kmChar:Math.round(c.km*10)/10,bosses:c.pl.bosses.length};if(mode==="db")await col.add(ev)}catch(_){}
       continue}
-    else if(won&&!pl.bosses.includes(S.bi))pl={...pl,bosses:[...pl.bosses,S.bi]};
-    else if(won){const rw=rollLoot(1)[0];pl={...pl,loot:{...(pl.loot||{}),[rw]:((pl.loot||{})[rw]||0)+1}}}
-    else continue;
-    if(m.key===keyOf(me)){player=normPlayer(pl);try{await savePlayer()}catch(_){}}
-    else if(pCol){try{await pCol.doc(slug(m.key)).set({name:m.name,key:m.key,items:pl.items||[],bosses:pl.bosses||[],loot:pl.loot||{},chests:pl.chests||[],unequip:pl.unequip||[],lootOff:pl.lootOff||{},xpOff:pl.xpOff||0,kmOff:pl.kmOff||0,deaths:pl.deaths||0})}catch(_){}}}
-  try{if(won){const alive=S.team.filter(m=>m.alive).map(m=>m.name).join(", ");if(mode==="db")await col.add({name:alive,key:"~event",type:"victory",boss:b.n,at:now,end:now,km:0})}
+    if(won&&pCol&&!c.pl.bosses.includes(S.bi)){const bs=[...c.pl.bosses,S.bi];
+      try{if(playersAll[m.key])await pCol.doc(slug(m.key)).update({bosses:bs});else await pCol.doc(slug(m.key)).set({name:m.name,key:m.key,items:[],bosses:bs,loot:{},chests:[],unequip:[],lootOff:{},xpOff:0,kmOff:0,deaths:0})}catch(_){}}}
+  try{if(won&&!punches.some(p=>p.type==="victory"&&p.boss===b.n&&p.at>=S.at)){const alive=S.team.filter(m=>m.alive).map(m=>m.name).join(", ");if(mode==="db")await col.add({name:alive,key:"~event",type:"victory",boss:b.n,at:now,end:now,km:0})}
     if(rCol&&raidOf(S.bi))await rCol.doc("b"+S.bi).delete()}catch(_){}
   render()}
-function onFights(){const k=keyOf(me);if(!me)return;
+function mpSettle(){if(!me)return;const k=keyOf(me);
+  Object.values(fights).forEach(x=>{if(!x||!x.team||x.status!=="over"||!x.team.some(m=>m.key===k))return;
+    if(Date.now()-(x.turnAt||x.at||0)>3*3600000||(myAcc&&myAcc.at>x.at))return;
+    mpSelf(x);if(x.host===k||Date.now()-(x.hb||0)>15000)mpFinish(x)})}
+function onFights(){const k=keyOf(me);if(!me)return;try{mpSettle()}catch(_){}
   const d=Object.values(fights).filter(x=>x&&x.team&&x.team.some(m=>m.key===k)&&!mpDismissed[x.bi+":"+x.at]&&(x.status==="fight"||(x.status==="over"&&Date.now()-(x.at||0)<3600000))).sort((a,b)=>b.at-a.at)[0];
   if(!d)return;
   const fresh=!mpDoc||mpDoc.at!==d.at||!F||!F.mp;mpDoc=d;mpShow(d,fresh)}
