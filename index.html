@@ -968,6 +968,9 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .bioin{width:100%;box-sizing:border-box;resize:vertical;min-height:52px;font:inherit;font-size:14px;color:var(--bone);background:#0f0807;border:1px solid #4a2a20;border-radius:4px;padding:8px}
 .bioin:focus{outline:none;border-color:#c9a24a}.biorow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}.biorow small{color:var(--bone-dim);font-size:11px}
 .pcbio{margin:0 0 12px;text-align:center;font-style:italic;color:var(--bone);line-height:1.4;overflow-wrap:anywhere}
+#map .goldpop{animation:goldup 1.1s ease-out forwards;pointer-events:none;transform-box:fill-box;transform-origin:50% 100%}
+#map .goldpop .gptxt{font:900 12px "Alegreya Sans",sans-serif;fill:#ffd84a;stroke:#3a1a05;stroke-width:2.4;paint-order:stroke}
+@keyframes goldup{0%{opacity:0;transform:translateY(6px) scale(.6)}15%{opacity:1;transform:translateY(0) scale(1.2)}30%{transform:translateY(-3px) scale(1)}100%{opacity:0;transform:translateY(-26px) scale(1)}}
 </style>
 </head>
 <body>
@@ -1823,8 +1826,40 @@ const LOOT={
  fiole:{n:"Fiole de rage",atk:4,hp:4,w:3.1,r:"rare",s:"Ceinture"},
  plume:{n:"Plume de corbeau",atk:1,hp:4,w:6.4,r:"commun",s:"Talisman"},
  rune:{n:"Pierre runique",atk:3,hp:10,w:3.1,r:"rare",s:"Talisman"},
- totem:{n:"Totem du Cerbère",atk:8,hp:18,w:0.93,r:"epique",s:"Talisman"}
+ totem:{n:"Totem du Cerbère",atk:8,hp:18,w:0.93,r:"epique",s:"Talisman"},
+ heaume_fer:{n:"Heaume de fer",atk:1,hp:7,w:1,r:"commun",s:"Casque"},
+ masque_demon:{n:"Masque de démon",atk:4,hp:10,w:1,r:"rare",s:"Casque"},
+ heaume_givre:{n:"Heaume du Givre",atk:5,hp:26,w:1,r:"epique",s:"Casque"},
+ crane_roi:{n:"Crâne du Roi-Liche",atk:15,hp:45,w:1,r:"legendaire",s:"Casque"},
+ dent_loup:{n:"Dent de loup",atk:2,hp:2,w:1,r:"commun",s:"Amulette"},
+ pendentif_lune:{n:"Pendentif lunaire",atk:3,hp:14,w:1,r:"rare",s:"Amulette"},
+ larme_abysse:{n:"Larme d'abysse",atk:9,hp:14,w:1,r:"epique",s:"Amulette"},
+ gourdin:{n:"Gourdin clouté",atk:4,w:1,r:"commun",s:"Arme"},
+ epee_courte:{n:"Épée courte",atk:3,hp:2,w:1,r:"commun",s:"Arme"},
+ lance:{n:"Lance de garde",atk:7,w:1,r:"rare",s:"Arme"},
+ marteau:{n:"Marteau de guerre",atk:12,hp:5,w:1,r:"epique",s:"Arme"},
+ faux:{n:"Faux de la Mort",atk:22,w:1,r:"legendaire",s:"Arme"},
+ mitaines:{n:"Mitaines de laine",hp:6,w:1,r:"commun",s:"Gants"},
+ gant_epines:{n:"Gants d'épines",atk:8,hp:10,w:1,r:"epique",s:"Gants"},
+ poigne_titan:{n:"Poigne du Titan",atk:16,hp:30,w:1,r:"legendaire",s:"Gants"},
+ anneau_os:{n:"Anneau d'os",atk:2,hp:1,w:1,r:"commun",s:"Anneau"},
+ anneau_rubis:{n:"Anneau de rubis",atk:4,hp:8,w:1,r:"rare",s:"Anneau"},
+ anneau_ombre:{n:"Anneau des ombres",atk:9,hp:8,w:1,r:"epique",s:"Anneau"},
+ gilet:{n:"Gilet de toile",hp:7,w:1,r:"commun",s:"Armure"},
+ brigandine:{n:"Brigandine",atk:1,hp:18,w:1,r:"rare",s:"Armure"},
+ robe_liche:{n:"Robe de la Liche",atk:5,hp:38,w:1,r:"epique",s:"Armure"},
+ ecu:{n:"Écu de garde",hp:10,w:1,r:"commun",s:"Bouclier"},
+ targe:{n:"Targe à pointes",atk:3,hp:14,w:1,r:"rare",s:"Bouclier"},
+ egide:{n:"Égide du Néant",atk:2,hp:40,w:1,r:"epique",s:"Bouclier"},
+ mur_titan:{n:"Rempart du Titan",atk:5,hp:90,w:1,r:"legendaire",s:"Bouclier"},
+ sacoche:{n:"Sacoche de cuir",hp:5,w:1,r:"commun",s:"Ceinture"},
+ ceinture_os:{n:"Ceinture d'os",atk:2,hp:12,w:1,r:"rare",s:"Ceinture"},
+ ceinturon_feu:{n:"Ceinturon de braise",atk:7,hp:16,w:1,r:"epique",s:"Ceinture"},
+ os_chance:{n:"Osselet porte-bonheur",atk:1,hp:3,w:1,r:"commun",s:"Talisman"},
+ orbe_feu:{n:"Orbe de feu",atk:5,hp:4,w:1,r:"rare",s:"Talisman"},
+ sceau:{n:"Sceau des Enfers",atk:13,hp:40,w:1,r:"legendaire",s:"Talisman"}
 };
+{const RW={commun:64,rare:28,epique:6.5,legendaire:2},c={};Object.values(LOOT).forEach(v=>c[v.r]=(c[v.r]||0)+1);Object.values(LOOT).forEach(v=>{v.w=RW[v.r]/c[v.r]})}
 Object.entries(LOOT).forEach(([k,v])=>{SHOP_PRICE[k]=RPRICE[v.r]});
 const RLAB={commun:"Commun",rare:"Rare",epique:"Épique",legendaire:"Légendaire"};
 const rollsFor=(min,first)=>{const n=Math.min(8,Math.floor(min/15));return first?Math.max(1,n):n};
@@ -1864,7 +1899,38 @@ const LOOT_ICON={
  fiole:'<path d="M10 3h4v4l3 5v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7l3-5Z" fill="#ff6a1a" stroke="#6aa6ff"/><rect x="9" y="2" width="6" height="2" fill="#6b3b1a"/><path d="M9 14h6" stroke="#ffd9a8"/>',
  plume:'<path d="M5 20C8 12 12 6 20 3c-2 7-6 12-13 15Z" fill="#2a2a3a" stroke="#6b6055"/><path d="M5 20 15 9" stroke="#8a8a9a" stroke-width=".8"/>',
  rune:'<path d="M6 5 16 3l3 9-4 9-9-2-2-8Z" fill="#3a3a4a" stroke="#6aa6ff"/><path d="M11 7v10M11 10l4-2M11 13l4 2" stroke="#6aa6ff" stroke-width="1.4"/>',
- totem:'<path d="M9 22V9h6v13Z" fill="#6b3b1a" stroke="#2a1a10"/><circle cx="6" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="3.4" fill="#2a1020" stroke="#c77dff"/><circle cx="18" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="1" fill="#ff6a1a"/>'
+ totem:'<path d="M9 22V9h6v13Z" fill="#6b3b1a" stroke="#2a1a10"/><circle cx="6" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="3.4" fill="#2a1020" stroke="#c77dff"/><circle cx="18" cy="7" r="3" fill="#2a1020" stroke="#c77dff"/><circle cx="12" cy="5" r="1" fill="#ff6a1a"/>',
+ heaume_fer:'<path d="M5 14Q5 4 12 3q7 1 7 11v4H5Z" fill="#8a8a90" stroke="#6b6055"/><path d="M7 11h10v2H7Z" fill="#170404"/><path d="M12 3v-1.5" stroke="#6b6055" stroke-width="2"/>',
+ masque_demon:'<path d="M5 6q7-4 14 0v7q-2 7-7 8-5-1-7-8Z" fill="#7a1010" stroke="#6aa6ff"/><path d="M7 10l3 2-3 1ZM17 10l-3 2 3 1Z" fill="#ffe08a"/><path d="M9 17h6" stroke="#170404" stroke-width="1.4"/><path d="M5 6 3 1l5 4M19 6l2-5-5 4" fill="#6aa6ff"/>',
+ heaume_givre:'<path d="M5 14Q5 4 12 3q7 1 7 11v4H5Z" fill="#9fd8ff" stroke="#c77dff"/><path d="M7 11h10v2H7Z" fill="#170404"/><path d="M12 3v-1.5" stroke="#c77dff" stroke-width="2"/>',
+ crane_roi:'<path d="M6 11Q6 3 12 3t6 8q0 4-2 5v3H8v-3q-2-1-2-5Z" fill="#e8dccb" stroke="#ff9d2e"/><circle cx="9.5" cy="11" r="2" fill="#170404"/><circle cx="14.5" cy="11" r="2" fill="#170404"/><path d="M5 5 7 1l2 3 3-3 3 3 2-3 2 4" fill="none" stroke="#ff9d2e" stroke-width="1.4"/>',
+ dent_loup:'<path d="M6 3q6 7 12 0" fill="none" stroke="#6b6055" stroke-width="1.2"/><path d="M10 9h4q0 7-2 12-2-5-2-12Z" fill="#e8dccb" stroke="#6b6055"/>',
+ pendentif_lune:'<path d="M6 3q6 8 12 0" fill="none" stroke="#6aa6ff" stroke-width="1.2"/><path d="M12 9l5 6-5 6-5-6Z" fill="#cfe6f5" stroke="#6aa6ff"/>',
+ larme_abysse:'<path d="M6 3q6 8 12 0" fill="none" stroke="#c77dff" stroke-width="1.2"/><path d="M12 9l5 6-5 6-5-6Z" fill="#3a1050" stroke="#c77dff"/>',
+ gourdin:'<path d="M5 21 13 10" stroke="#6b3b1a" stroke-width="2.4"/><circle cx="15.5" cy="7.5" r="5" fill="#6b4a2a" stroke="#6b6055"/><path d="M15.5 1v2M15.5 12v2M9 7.5h2M20 7.5h2" stroke="#6b6055" stroke-width="1.4"/>',
+ epee_courte:'<path d="M19 2 21 4 9 16l-2-2Z" fill="#b0b0b8" stroke="#6b6055" stroke-width=".8"/><path d="M5 13l6 6-2 1-5-5Z" fill="#6b6055"/><path d="M4 19l-2 3 1 1 3-2Z" fill="#4a2a1a"/>',
+ lance:'<path d="M4 21 17 8" stroke="#6b3b1a" stroke-width="1.8"/><path d="M15 6l6-4-3 7Z" fill="#c0c8d0" stroke="#6aa6ff"/>',
+ marteau:'<path d="M5 21 13 10" stroke="#6b3b1a" stroke-width="2.4"/><circle cx="15.5" cy="7.5" r="5" fill="#4a4a5a" stroke="#c77dff"/><path d="M15.5 1v2M15.5 12v2M9 7.5h2M20 7.5h2" stroke="#c77dff" stroke-width="1.4"/>',
+ faux:'<path d="M6 22 14 4" stroke="#2a1a14" stroke-width="2"/><path d="M14 4Q22 4 22 13 18 7 12 8Z" fill="#1a0a2a" stroke="#ff9d2e"/>',
+ mitaines:'<path d="M7 21V11l-2-4 2-1 2 3V4h2v6V3h2v7V4h2v7l2-3 1 1-3 6v6Z" fill="#8a5a3a" stroke="#6b6055"/>',
+ gant_epines:'<path d="M7 21V11l-2-4 2-1 2 3V4h2v6V3h2v7V4h2v7l2-3 1 1-3 6v6Z" fill="#2a3a1a" stroke="#c77dff"/>',
+ poigne_titan:'<path d="M5 9h14v6H5Z" fill="#c9a24a" stroke="#ff9d2e"/><circle cx="8" cy="12" r="1.5" fill="#170404"/><circle cx="12" cy="12" r="1.5" fill="#170404"/><circle cx="16" cy="12" r="1.5" fill="#170404"/>',
+ anneau_os:'<circle cx="12" cy="15" r="6" fill="none" stroke="#e8dccb" stroke-width="2.4"/><path d="M12 3l3 4-3 3-3-3Z" fill="#6b6055" stroke="#170404" stroke-width=".6"/>',
+ anneau_rubis:'<circle cx="12" cy="15" r="6" fill="none" stroke="#c9a24a" stroke-width="2.4"/><path d="M12 3l3 4-3 3-3-3Z" fill="#6aa6ff" stroke="#170404" stroke-width=".6"/>',
+ anneau_ombre:'<circle cx="12" cy="15" r="6" fill="none" stroke="#2a2a3a" stroke-width="2.4"/><path d="M12 3l3 4-3 3-3-3Z" fill="#c77dff" stroke="#170404" stroke-width=".6"/>',
+ gilet:'<path d="M5 6 9 3h6l4 3-2 4 1 10H6l1-10Z" fill="#8a7a5a" stroke="#6b6055"/><path d="M12 5v14" stroke="#6b6055" stroke-width=".8"/>',
+ brigandine:'<path d="M5 6 9 3h6l4 3-2 4 1 10H6l1-10Z" fill="#5a3a24" stroke="#6aa6ff"/><path d="M12 5v14" stroke="#6aa6ff" stroke-width=".8"/>',
+ robe_liche:'<path d="M8 3h8l2 5-1 2 3 11H4l3-11-1-2Z" fill="#1a3a5a" stroke="#c77dff"/><path d="M12 6v15M9 12h6" stroke="#c77dff" stroke-width=".9"/>',
+ ecu:'<path d="M5 3h14v9c0 5-3 8-7 10-4-2-7-5-7-10Z" fill="#6b4a2a" stroke="#6b6055"/><path d="M12 5v15M7 10h10" stroke="#6b6055" stroke-width="1.3"/>',
+ targe:'<circle cx="12" cy="12" r="9" fill="#5a5a6a" stroke="#6aa6ff"/><circle cx="12" cy="12" r="5" fill="none" stroke="#6aa6ff"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="#6aa6ff" stroke-width="1.6"/>',
+ egide:'<path d="M5 3h14v9c0 5-3 8-7 10-4-2-7-5-7-10Z" fill="#2a1040" stroke="#c77dff"/><path d="M12 5v15M7 10h10" stroke="#c77dff" stroke-width="1.3"/>',
+ mur_titan:'<path d="M5 3h14v9c0 5-3 8-7 10-4-2-7-5-7-10Z" fill="#8a6a2a" stroke="#ff9d2e"/><path d="M12 5v15M7 10h10" stroke="#ff9d2e" stroke-width="1.3"/>',
+ sacoche:'<path d="M6 8h12l1 12H5Z" fill="#7a4a2a" stroke="#6b6055"/><path d="M9 8V6a3 3 0 0 1 6 0v2M6 12h12" stroke="#6b6055" fill="none"/>',
+ ceinture_os:'<path d="M2 10h20v5H2Z" fill="#d9ccb5" stroke="#2a1a10"/><rect x="9" y="8.5" width="6" height="8" rx="1" fill="none" stroke="#6aa6ff" stroke-width="1.6"/>',
+ ceinturon_feu:'<path d="M2 10h20v5H2Z" fill="#b3141b" stroke="#2a1a10"/><rect x="9" y="8.5" width="6" height="8" rx="1" fill="none" stroke="#c77dff" stroke-width="1.6"/>',
+ os_chance:'<path d="M6 3q6 7 12 0" fill="none" stroke="#6b6055" stroke-width="1.2"/><path d="M10 9h4q0 7-2 12-2-5-2-12Z" fill="#e8dccb" stroke="#6b6055"/>',
+ orbe_feu:'<circle cx="12" cy="12" r="7" fill="#ff6a1a" stroke="#6aa6ff"/><circle cx="10" cy="10" r="2" fill="#fff" opacity=".45"/>',
+ sceau:'<circle cx="12" cy="12" r="8" fill="#3a0505" stroke="#ff9d2e" stroke-width="1.4"/><path d="M12 5l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5Z" fill="#ff9d2e"/>'
 };
 let lastKm=0,selAuto=true;const newSlots=new Set();
 const LOOKS={helm:[["heaume","Heaume"],["capuche","Capuche"],["crane","Crâne"],["couronne","Couronne"]],
@@ -2023,7 +2089,7 @@ async function walkMap(fromKm,toKm){
   /* saut de case en case le long du tracé */
   const dust=(x,y,n)=>{const m=$("map");if(!m)return;for(let q=0;q<n;q++){const g=document.createElementNS("http://www.w3.org/2000/svg","circle");g.setAttribute("cx",x+(Math.random()*10-5));g.setAttribute("cy",y+2);g.setAttribute("r",2+Math.random()*2);g.setAttribute("class","dust");m.appendChild(g);setTimeout(()=>g.remove(),900)}};
   for(let si=0;si<seg.length;si++){if(tok!==camTok)break;
-    const a=pts[si],b=pts[si+1],len=seg[si],dur=Math.max(260,Math.min(620,len*3.4)),H=Math.max(10,Math.min(28,len*.28)),t0=performance.now();
+    const a=pts[si],b=pts[si+1],len=seg[si],dur=Math.max(110,2000*len/L),H=Math.max(6,Math.min(22,len*.25)),t0=performance.now();
     hopSound(si);
     await new Promise(res=>{const step=now=>{if(tok!==camTok){res();return}
       const k=Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,x=a[0]+(b[0]-a[0])*e,yb=a[1]+(b[1]-a[1])*e,y=yb-Math.sin(Math.PI*k)*H;
@@ -2033,8 +2099,9 @@ async function walkMap(fromKm,toKm){
     dust(b[0],b[1],4);
     const ni=nodes.indexOf(nodes[si]);if(si<nodes.length){const n=document.querySelector(`#map .node[data-i="${nodes[si]}"]`);
       if(n){n.classList.add("passed");n.querySelector(".coin")?.remove();coinSound();
-        const m=$("map"),nd=NODES[nodes[si]];if(m&&nd){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",nd.x+12);tx.setAttribute("y",nd.y-18);tx.setAttribute("class","kmpop coinpop");tx.setAttribute("text-anchor","middle");tx.textContent="+1 or";m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}}
-    await wait(70)}
+        const m=$("map");if(m){const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("transform",`translate(${b[0]} ${b[1]-52})`);
+          g.innerHTML='<g class="goldpop"><circle cx="-11" cy="-3.5" r="5" fill="#ffcf4a" stroke="#7a5a20" stroke-width="1"/><text x="-11" y="-1.2" text-anchor="middle" font-size="6.5" font-weight="900" fill="#7a5a20">$</text><text x="7" y="0" text-anchor="middle" class="gptxt">+1</text></g>';m.appendChild(g);setTimeout(()=>g.remove(),1100)}}}
+    }
   {const tt=$("tok");if(tt)tt.classList.remove("hopping")}
   const tt=$("tok");if(tt)tt.classList.remove("walking");
   walkHold=null;prevTok=null;render();
@@ -2127,28 +2194,28 @@ const MUS=(()=>{
 function tone(f,t,d,type="square",v=.05){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+d);o.connect(g).connect(actx.destination);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+d+.02)}catch(e){}}
 /* Fanfare de victoire originale, style JRPG (cuivres synthétiques) */
 function victoryTheme(){
+  /* Applaudissements de foule (synthèse originale) */
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){return}
-  const A=actx,t0=A.currentTime+.05,B=60/132,master=A.createGain();master.gain.value=.22;master.connect(A.destination);
-  const N=n=>440*Math.pow(2,(n-69)/12);
-  function brass(midi,start,dur,vol){const o1=A.createOscillator(),o2=A.createOscillator(),f=A.createBiquadFilter(),g=A.createGain();
-    o1.type="sawtooth";o2.type="square";o1.frequency.value=N(midi);o2.frequency.value=N(midi)*1.003;
-    f.type="lowpass";f.frequency.setValueAtTime(900,start);f.frequency.linearRampToValueAtTime(2600,start+.06);f.frequency.exponentialRampToValueAtTime(1200,start+dur);
-    g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(vol,start+.03);g.gain.setValueAtTime(vol*.8,start+Math.max(.05,dur-.08));g.gain.exponentialRampToValueAtTime(.0001,start+dur);
-    o1.connect(f);o2.connect(f);f.connect(g);g.connect(master);o1.start(start);o2.start(start);o1.stop(start+dur+.05);o2.stop(start+dur+.05)}
-  function bass(midi,start,dur){const o=A.createOscillator(),g=A.createGain();o.type="triangle";o.frequency.value=N(midi);
-    g.gain.setValueAtTime(.5,start);g.gain.exponentialRampToValueAtTime(.0001,start+dur);o.connect(g);g.connect(master);o.start(start);o.stop(start+dur+.05)}
-  function drum(start,vol){const len=.12,buf=A.createBuffer(1,A.sampleRate*len,A.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
-    const s=A.createBufferSource(),f=A.createBiquadFilter(),g=A.createGain();s.buffer=buf;f.type="bandpass";f.frequency.value=1800;g.gain.value=vol;s.connect(f);f.connect(g);g.connect(master);s.start(start)}
-  // mélodie originale [note MIDI, début en temps, durée en temps]
-  const mel=[[64,0,.5],[67,.5,.5],[72,1,1.5],[74,2.5,.5],[70,3,.5],[74,3.5,.5],[77,4,1.5],[76,5.5,.5],
-             [77,6,.5],[76,6.5,.5],[74,7,.5],[72,7.5,.5],[69,8,1],[71,9,.5],[72,9.5,2.5]];
-  mel.forEach(([n,s,d])=>brass(n,t0+s*B,d*B,.5));
-  // harmonie (accords tenus) : Do, Si♭, Fa, Sol, Do
-  const ch=[[[60,64,67],0,2.5],[[58,62,65],2.5,1.5],[[57,60,65],4,2],[[55,59,62],6,3],[[55,60,64],9,3]];
-  ch.forEach(([ns,s,d])=>ns.forEach(n=>brass(n-12,t0+s*B,d*B,.16)));
-  [[36,0,2.5],[34,2.5,1.5],[41,4,2],[43,6,3],[36,9,3]].forEach(([n,s,d])=>bass(n,t0+s*B,d*B));
-  [0,1,2,2.5,4,5,6,7,8,9,9.5].forEach(s=>drum(t0+s*B,.35));
-  setTimeout(()=>{try{master.disconnect()}catch(e){}},14*B*1000);
+  const A=actx,t0=A.currentTime+.05,DUR=4.2,master=A.createGain();master.gain.value=.5;master.connect(A.destination);
+  const nb=A.createBuffer(1,A.sampleRate*.06,A.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=(Math.random()*2-1)*Math.pow(1-i/nd.length,3);
+  const env=x=>x<.25?x/.25:x<.55?1:Math.pow(1-(x-.55)/.45,1.6);
+  for(let t=0;t<DUR;){const x=t/DUR,dens=8+70*env(x);
+    const s=A.createBufferSource(),f=A.createBiquadFilter(),g=A.createGain(),p=A.createStereoPanner?A.createStereoPanner():null;
+    s.buffer=nb;s.playbackRate.value=.75+Math.random()*.6;f.type="bandpass";f.frequency.value=900+Math.random()*1900;f.Q.value=.9+Math.random()*1.2;
+    g.gain.value=(.25+Math.random()*.75)*(.25+.75*env(x));s.connect(f).connect(g);
+    if(p){p.pan.value=Math.random()*1.6-.8;g.connect(p).connect(master)}else g.connect(master);
+    s.start(t0+t);t+=(.4+Math.random()*1.2)/dens}
+  // rumeur de la foule
+  const rb=A.createBuffer(1,A.sampleRate*DUR,A.sampleRate),rd=rb.getChannelData(0);let last=0;
+  for(let i=0;i<rd.length;i++){last=last*.97+(Math.random()*2-1)*.03;rd[i]=last*6}
+  const r=A.createBufferSource(),rf=A.createBiquadFilter(),rg=A.createGain();r.buffer=rb;rf.type="bandpass";rf.frequency.value=520;rf.Q.value=.6;
+  rg.gain.setValueAtTime(0,t0);rg.gain.linearRampToValueAtTime(.28,t0+.9);rg.gain.setValueAtTime(.28,t0+2.2);rg.gain.linearRampToValueAtTime(0,t0+DUR);
+  r.connect(rf).connect(rg).connect(master);r.start(t0);
+  // quelques sifflets d'encouragement
+  [[.5,1900],[1.3,2300],[2.1,2050]].forEach(([d,fq])=>{const o=A.createOscillator(),g=A.createGain();o.type="sine";const st=t0+d;
+    o.frequency.setValueAtTime(fq,st);o.frequency.linearRampToValueAtTime(fq*1.35,st+.18);o.frequency.linearRampToValueAtTime(fq*1.05,st+.4);
+    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.05,st+.04);g.gain.linearRampToValueAtTime(0,st+.42);o.connect(g).connect(master);o.start(st);o.stop(st+.45)});
+  setTimeout(()=>{try{master.disconnect()}catch(e){}},(DUR+1)*1000);
 }
 
 function fanfare(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.09,.22,"square",.045));tone(1568,.5,.6,"triangle",.06)}
@@ -2524,7 +2591,7 @@ async function endFight(won){const f=F;arenaRender();$("fTurn").className="turnb
     $("fResult").hidden=false;$("fResult").innerHTML=won?`<b class="win">RÉUSSI</b>Entraînement seulement · aucun XP, rien de validé.`:`<b class="dead">K.O.</b>Entraînement seulement · ton personnage est intact.`;
     $("fActs").hidden=true;$("fClose").hidden=false;$("fClose").focus();return}
   const dead=f.team.filter(m=>!m.alive),alive=f.team.filter(m=>m.alive);
-  if(won){flog(`${f.b.n} est vaincu !`,"win");f.training?fanfare():victoryTheme()}else flog(`L'équipe est anéantie par ${f.b.n}.`,"dead");
+  if(won){flog(`${f.b.n} est vaincu !`,"win");victoryTheme()}else flog(`L'équipe est anéantie par ${f.b.n}.`,"dead");
   const deathInfo={};
   for(const m of f.team){
     const c=charOf(m.key),L=lifeOf(m.key);let pl=c.pl;
@@ -2825,7 +2892,38 @@ const LORE={
  fiole:"Une gorgée et tu vois rouge pour une heure.",
  plume:"Le corbeau l'a laissée sur une tombe fraîche.",
  rune:"Une seule rune, gravée par une main qui n'existe plus.",
- totem:"Trois têtes sculptées. Une seule dort."};
+ totem:"Trois têtes sculptées. Une seule dort.",
+ heaume_fer:"Lourd, froid, fiable. Comme un vieux forgeron.",
+ masque_demon:"Les démons mineurs te prennent pour leur chef.",
+ heaume_givre:"Le givre ne fond jamais sur ce métal.",
+ crane_roi:"Il a régné mille ans. Il veut recommencer.",
+ dent_loup:"Une seule dent, mais elle a fait ses preuves.",
+ pendentif_lune:"Il luit faiblement les nuits sans lune.",
+ larme_abysse:"Une goutte tombée du Néant, figée pour toujours.",
+ gourdin:"Simple. Efficace. Bruyant.",
+ epee_courte:"L'arme de tout gladiateur qui débute.",
+ lance:"Elle tient l'ennemi à bonne distance.",
+ marteau:"Chaque coup fait trembler l'arène.",
+ faux:"Elle fauche les âmes comme du blé mûr.",
+ mitaines:"Tricotées par une grand-mère inquiète.",
+ gant_epines:"Ils blessent celui qui frappe, et plus encore celui qui est frappé.",
+ poigne_titan:"Elle a broyé des montagnes.",
+ anneau_os:"Taillé dans une vertèbre. Mieux vaut ne pas demander de qui.",
+ anneau_rubis:"Le rubis bat comme un cœur.",
+ anneau_ombre:"Ton ombre frappe un instant avant toi.",
+ gilet:"Mieux que rien. De peu.",
+ brigandine:"Des plaques cousues dans le cuir, solide et souple.",
+ robe_liche:"Tissée de fils de givre et de murmures.",
+ ecu:"Le bouclier réglementaire de la garde des Portes.",
+ targe:"Elle protège et elle mord.",
+ egide:"Les coups s'y perdent comme dans un puits.",
+ mur_titan:"Une porte de forteresse, portée à bout de bras.",
+ sacoche:"Pour les bandages et les restes de repas.",
+ ceinture_os:"Chaque os est un adversaire vaincu.",
+ ceinturon_feu:"Il chauffe à chaque combat.",
+ os_chance:"On le lance avant chaque combat. Il tombe toujours debout.",
+ orbe_feu:"Une flamme prisonnière qui veut sortir.",
+ sceau:"Le sceau du Seigneur de la Terreur lui-même."};
 const ITEM_STATS={epee:{atk:12},bouclier:{hp:45},potion:{heal:50}};
 function showPlayer(k){
   const c=charOf(k),st=statsFrom(c.pl,c.xp),ri=rankIdx(c.xp),pr=progressOf(c.km,c.pl.bosses),isMe=k===keyOf(me);
