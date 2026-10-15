@@ -988,6 +988,8 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .credits b{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.04em;color:#f2e8d8}
 .cr-sub{font-size:11px;letter-spacing:.12em;color:#c9a24a}
 .cr-copy{font-size:10px;letter-spacing:.08em;color:var(--bone-dim);opacity:.7;margin-top:6px}
+.cdead{font-style:normal;font-size:11px;font-weight:700;color:#ff4a3a;margin-left:5px;letter-spacing:.04em}.chatp li.dead b{text-decoration:line-through;text-decoration-color:rgba(255,74,58,.6)}
+.mapwrap.animoff *,.mapwrap.animoff *::before,.mapwrap.animoff *::after{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -1452,6 +1454,9 @@ function draw(now){
 let houndVis=true,houndRun=true;
 function houndWake(){if(!houndRun&&houndVis&&!document.hidden){houndRun=true;t0=performance.now();requestAnimationFrame(draw)}}
 try{new IntersectionObserver(es=>{houndVis=es[0].isIntersecting;houndWake()}).observe(cv)}catch(_){}
+/* animations de la carte en pause quand elle est hors écran ou l'onglet caché */
+(()=>{const mw=document.querySelector(".mapwrap");if(!mw)return;let vis=true;const upd=()=>mw.classList.toggle("animoff",!vis||document.hidden);
+  try{new IntersectionObserver(es=>{vis=es[0].isIntersecting;upd()},{rootMargin:"120px"}).observe(mw)}catch(_){}document.addEventListener("visibilitychange",upd)})();
 document.addEventListener("visibilitychange",houndWake);
 requestAnimationFrame(draw);
 
@@ -1556,7 +1561,7 @@ document.addEventListener("click",async e=>{
     $("punchMsg").textContent=`Vendu : ${itemInfo(k).n} · +${pr} or`}
 });
 let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
-function render(){try{checkMyDeath()}catch(_){}
+function render(){try{checkMyDeath()}catch(_){}try{if(!$("chatP").hidden)renderChat()}catch(_){}
 
   if(!me)return;
   const k=keyOf(me), mine=punches.filter(p=>p.key===k&&isAct(p)), n=mine.length;
@@ -1764,10 +1769,10 @@ function renderMap(xp,km){
   if(pr.frac){const a=NODES[pr.idx];done+=`M${a.x} ${a.y}L${px} ${py}`}
   // autres joueurs
   const me_=keyOf(me);let others="";
-  const kmBy={};punches.forEach(p=>{if(!isAct(p))return;kmBy[p.key]=kmBy[p.key]||{name:p.name,km:0};kmBy[p.key].km+=+p.km||0});
-  Object.keys(playersAll).forEach(k=>{if(!kmBy[k])kmBy[k]={name:playersAll[k].name||k,km:0}});
+  const kmBy={};{const I=lifeIndex(),ks=new Set([...I.closed.keys(),...I.open.map(p=>p.key),...Object.keys(playersAll)]);
+    ks.forEach(k=>{if(k&&k!==me_)kmBy[k]={name:nameOf(k),km:lifeOf(k).km}})}
   friendsOnMap=[];const slotCount={};const mk=`${Math.round(px)}:${Math.round(py)}`;slotCount[mk]=1;
-  Object.entries(kmBy).forEach(([k,v],j)=>{if(k===me_)return;const st=normPlayer(playersAll[k]);const fpr=progressOf(Math.max(0,v.km-st.kmOff),st.bosses);const [ox,oy]=posOf(fpr);
+  Object.entries(kmBy).forEach(([k,v],j)=>{if(k===me_)return;const st=normCached(playersAll[k]);const fpr=progressOf(Math.max(0,v.km-st.kmOff),st.bosses);const [ox,oy]=posOf(fpr);
     const key2=`${Math.round(ox)}:${Math.round(oy)}`,n=slotCount[key2]||0;slotCount[key2]=n+1;
     const ang=-Math.PI/2+(n%2?1:-1)*(0.7+Math.floor((n+1)/2)*0.55),fx=ox+(n?Math.cos(ang)*26:0),fy=oy-20+(n?Math.sin(ang)*14+12:0);
     const col=colorOf(k,FRIEND_COL[j%FRIEND_COL.length]);
@@ -1787,11 +1792,12 @@ function renderMap(xp,km){
     <ellipse cx="0" cy="22" rx="9" ry="3" fill="rgba(0,0,0,.5)"/>
     ${photoOf(keyOf(me))?photoCoin(keyOf(me),myColor(),1):tokenFig(lookOf(keyOf(me)),myColor(),1)}</g>
     <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
-  $("map").innerHTML=MAP_BG+
-    `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
-     <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
-     <path d="${done}" stroke="${W_.path}" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+
-    NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+others+tok;
+  /* couche statique (décor + tracé) construite une seule fois ; seule la couche dynamique est remplacée, et seulement si elle change */
+  {const M=$("map");let dy=$("mapDyn");
+    if(!dy||!$("mapBg")){M.innerHTML=`<g id="mapBg">${MAP_BG}<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
+     <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/></g><g id="mapDyn"></g>`;dy=$("mapDyn")}
+    const html=`<path d="${done}" stroke="${W_.path}" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+others+tok;
+    if(dy._h!==html||!$("tok")){dy.innerHTML=html;dy._h=html}}
   if(walkHold){const t=$("tok");if(t){t.style.transition="none";t.style.transform=`translate(${walkHold[0]}px,${walkHold[1]-20}px)`}}
   else if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
   prevTok=[px,py];
@@ -2270,7 +2276,7 @@ function victoryTheme(){
 function fanfare(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.09,.22,"square",.045));tone(1568,.5,.6,"triangle",.06)}
 let fxRun=false,fxParts=[];
 function fxLoop(){
-  const c=$("vsFx");if(!fxRun)return;const x=c.getContext("2d"),dpr=Math.min(2,devicePixelRatio||1);
+  const c=$("vsFx");if(!fxRun)return;if($("vs").hidden){fxRun=false;fxParts=[];return}const x=c.getContext("2d"),dpr=Math.min(2,devicePixelRatio||1);
   if(c.width!==c.clientWidth*dpr){c.width=c.clientWidth*dpr;c.height=c.clientHeight*dpr}
   x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,c.clientWidth,c.clientHeight);
   fxParts=fxParts.filter(p=>{p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.spin;p.life-=.008;if(p.life<=0||p.y>c.clientHeight+20)return false;
@@ -2390,15 +2396,15 @@ function equipFlash(before,after,names,keys){
   $("punchMsg").textContent=`Équipé : ${names.join(", ")}`;
 }
 let chestBusy=false;
-async function checkNewChests(){if(chestBusy||!me)return;chestBusy=true;
+async function checkNewChests(){if(chestBusy||!me)return 0;chestBusy=true;let n=0;
   try{for(let i=0;i<NODES.length;i++){const km=charOf(keyOf(me)).km,pr=progressOf(km,player.bosses),n=NODES[i];
-    if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i)}}}
+    if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i);n++}}}
   finally{chestBusy=false}
-}
+  return n}
 /* coffres dépassés pendant qu'un boss bloquait la route : on les ouvre dès que la voie est libre */
 let chestLaterT=0;function chestsLater(ms=900){clearTimeout(chestLaterT);chestLaterT=setTimeout(async()=>{
   if(!me||!$("fight").hidden||!$("vs").hidden||walkHold||chestBusy){chestsLater(1500);return}
-  await checkNewChests();checkMandatoryBoss()},ms)}
+  if(await checkNewChests())checkMandatoryBoss()},ms)}
 
 /* ================= Combat d'arène (Swords & Sandals) · permadeath · équipe ================= */
 const isAct=p=>p.type!=="death"&&p.type!=="victory";
@@ -2719,8 +2725,9 @@ function renderChat(){if(!me)return;const k=keyOf(me),open=!$("chatP").hidden;
   bd.hidden=!unread||open;bd.textContent=unread>99?"99+":unread;
   if(!open)return;const L=$("chatList"),atBot=L.scrollHeight-L.scrollTop-L.clientHeight<60;
   const tm=ts=>{const d=new Date(ts),t=d.toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"});return Date.now()-ts<864e5?t:d.toLocaleDateString("fr-CA",{day:"numeric",month:"short"})+" "+t};
-  L.innerHTML=chat.length?chat.slice(-CHAT_MAX).map(m=>{const c=m.key===k?myColor():colorOf(m.key,m.col||"#a8988a");
-    return `<li class="${m.key===k?"me":""}" style="--c:${esc(c)}"><b>${esc(m.name||"?")}</b><time>${tm(m.at)}</time><p>${esc(m.t)}</p></li>`}).join(""):`<li class="cempty">Aucun message. Lance la discussion avec le clan.</li>`;
+  const dAt={};punches.forEach(p=>{if(p.type==="death"&&p.key)(dAt[p.key]=dAt[p.key]||[]).push(p.at||0)});
+  L.innerHTML=chat.length?chat.slice(-CHAT_MAX).map(m=>{const c=m.key===k?myColor():colorOf(m.key,m.col||"#a8988a"),dead=(dAt[m.key]||[]).some(t=>t>=(m.at||0));
+    return `<li class="${m.key===k?"me":""}${dead?" dead":""}" style="--c:${esc(c)}"><b>${esc(m.name||"?")}</b>${dead?`<em class="cdead">(mort)</em>`:""}<time>${tm(m.at)}</time><p>${esc(m.t)}</p></li>`}).join(""):`<li class="cempty">Aucun message. Lance la discussion avec le clan.</li>`;
   if(atBot||L.dataset.first!=="1"){L.dataset.first="1";L.scrollTop=L.scrollHeight}}
 function openChat(){$("chatP").hidden=false;$("chatList").dataset.first="";renderChat();setTimeout(()=>$("chatIn").focus(),50)}
 function closeChat(){$("chatP").hidden=true;renderChat();$("chatBtn").focus()}
@@ -3250,12 +3257,13 @@ $("punchBtn").addEventListener("click",async()=>{
           await playChest(`Butin du gym · ${loot.length} objet${loot.length>1?"s":""}`,loot.map(lootCard),{before,after:aft,items:loot});render();
           await finishEquip(curEq)};
       }else{
-        const km=Math.max(0,Math.min(300,Math.round((parseFloat($("kmIn").value)||0)*10)/10));
+        const kin=$("kmIn");if(kin.validity&&kin.validity.badInput){m.className="punchmsg err";m.textContent="Km invalide : écris un nombre (ex. 5.2).";b.disabled=false;kin.focus();return}
+        const km=Math.max(0,Math.min(300,Math.round((parseFloat(String(kin.value).replace(",","."))||0)*10)/10));
         if(mode==="db")await col.doc(active.id).update({end,km});else{active.end=end;active.km=km;saveLocal()}
         $("kmIn").value="";
         m.textContent=`Course terminée · ${gain} min · +${gain} XP`+(km?` · ${km} km sur la carte`:"");
         const fromKm=lastKm;
-        after=async()=>{await wait(300);await walkMap(fromKm,km);await checkNewChests();checkMandatoryBoss()};
+        after=async()=>{await wait(300);await walkMap(fromKm,fromKm+km);await checkNewChests();checkMandatoryBoss()};
       }
     }
     render();
