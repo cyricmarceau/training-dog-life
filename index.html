@@ -799,6 +799,15 @@ body{padding-block:0 210px}
 .th-menu span{display:block;width:18px;height:2px;background:currentColor;border-radius:1px}
 @media (max-width:420px){.th-xp{display:none}}
 @media (prefers-reduced-motion:reduce){.tophud{transition:none}}
+.lookbox{display:flex;gap:12px;align-items:center;margin:4px 0 10px}
+.lookprev{flex:none;width:110px;height:150px;background:radial-gradient(closest-side,rgba(179,20,27,.25),transparent),#0c0605;border:1px solid #3a1a14;border-radius:4px}
+.lookopts{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;text-align:left}
+.lklab{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-dim);margin:0 0 4px}
+.lkrow{display:flex;flex-wrap:wrap;gap:6px}
+.lkchip{font:700 12px/1 var(--body);padding:7px 9px;border-radius:3px;border:1px solid #5a4a44;background:#1a0f0d;color:var(--bone-dim);cursor:pointer}
+.lkchip.on{border-color:#c9a24a;color:#ffe08a;background:#2a1a0e}
+.lkdot{width:26px;height:26px;border-radius:50%;border:2px solid #000;box-shadow:0 0 0 2px transparent;cursor:pointer;padding:0}
+.lkdot.on{box-shadow:0 0 0 2px #ffe08a}
 .burger:hover{border-color:var(--ember)}.burger:hover span{background:#ffe08a}
 .dback{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:25;animation:dfade .2s ease-out}
 @keyframes dfade{from{opacity:0}}
@@ -940,7 +949,9 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       <form id="authForm" class="cform" novalidate>
         <label class="fl">Nom de gladiateur<input id="cName" maxlength="24" required autocomplete="username" placeholder="Ex. : Cyric"></label>
         <label class="fl">Mot secret<input id="cPass" type="password" minlength="6" required autocomplete="current-password" placeholder="6 caractères minimum"></label>
-        <fieldset class="fl" id="colorField" hidden><legend>Ta couleur sur la carte</legend><div class="sws"><label class="sw"><input type="radio" name="cCol" value="#ff6a1a" checked><i style="background:#ff6a1a"></i></label><label class="sw"><input type="radio" name="cCol" value="#6aa6ff"><i style="background:#6aa6ff"></i></label><label class="sw"><input type="radio" name="cCol" value="#5aff9a"><i style="background:#5aff9a"></i></label><label class="sw"><input type="radio" name="cCol" value="#c77dff"><i style="background:#c77dff"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff7ab8"><i style="background:#ff7ab8"></i></label><label class="sw"><input type="radio" name="cCol" value="#40e0d0"><i style="background:#40e0d0"></i></label><label class="sw"><input type="radio" name="cCol" value="#e6e66a"><i style="background:#e6e66a"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff4a3a"><i style="background:#ff4a3a"></i></label></div></fieldset>
+        <fieldset class="fl" id="colorField" hidden><legend>Ton personnage</legend>
+          <div class="lookbox"><svg class="lookprev" id="lookPrev" viewBox="0 0 160 220" aria-label="Aperçu de ton personnage"></svg><div class="lookopts" id="lookOpts"></div></div>
+          <span class="lklab">Couleur (carte et aura)</span><div class="sws"><label class="sw"><input type="radio" name="cCol" value="#ff6a1a" checked><i style="background:#ff6a1a"></i></label><label class="sw"><input type="radio" name="cCol" value="#6aa6ff"><i style="background:#6aa6ff"></i></label><label class="sw"><input type="radio" name="cCol" value="#5aff9a"><i style="background:#5aff9a"></i></label><label class="sw"><input type="radio" name="cCol" value="#c77dff"><i style="background:#c77dff"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff7ab8"><i style="background:#ff7ab8"></i></label><label class="sw"><input type="radio" name="cCol" value="#40e0d0"><i style="background:#40e0d0"></i></label><label class="sw"><input type="radio" name="cCol" value="#e6e66a"><i style="background:#e6e66a"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff4a3a"><i style="background:#ff4a3a"></i></label></div></fieldset>
         <p class="cmsg" id="cMsg" role="alert"></p>
         <button class="btn" type="submit" id="cBtn">Se connecter</button>
       </form>
@@ -1593,24 +1604,38 @@ const LOOT_ICON={
  corne:'<path d="M6 21C4 14 7 6 15 3c-3 4-4 8-2 12 1 3 0 5-2 6Z" fill="#c9a24a" stroke="#ff9d2e"/><path d="M8 17c2-1 4-1 5 0M9 13c2-1 3-1 5 0" stroke="#7a5a20"/>'
 };
 let lastKm=0,selAuto=true;const newSlots=new Set();
-function heroSvg(){
-  const it=eqItems(player),L=eqLoot(player),horns=(L.corne||0)>0,claws=(L.griffe||0)>0,cape=(L.cuir||0)>0;
-  const glow=(L.coeur||0)>0?"#ff6a1a":"#ffe08a";
-  return `<defs><radialGradient id="aura" cx="50%" cy="55%"><stop offset="0" stop-color="${myColor()}" stop-opacity=".45"/><stop offset="1" stop-color="${myColor()}" stop-opacity="0"/></radialGradient>
-   <linearGradient id="armor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3a36"/><stop offset="1" stop-color="#1a1210"/></linearGradient></defs>
-  <ellipse cx="80" cy="120" rx="76" ry="100" fill="url(#aura)"/>
+const LOOKS={helm:[["heaume","Heaume"],["capuche","Capuche"],["crane","Crâne"],["couronne","Couronne"]],
+  eyes:["#ffe08a","#ff3a3a","#6aa6ff","#5aff9a","#c77dff"],cape:["#2a0c0a","#5a1a10","#1a2a4a","#23331a","#3a2a4a"]};
+function normLook(l){l=l||{};return{helm:LOOKS.helm.some(h=>h[0]===l.helm)?l.helm:"heaume",eyes:LOOKS.eyes.includes(l.eyes)?l.eyes:LOOKS.eyes[0],cape:LOOKS.cape.includes(l.cape)?l.cape:LOOKS.cape[0]}}
+function lookOf(k){if(myAcc&&me&&k===keyOf(me))return normLook(myAcc.look);const a=Object.values(accounts).find(x=>x.key===k);return normLook(a&&a.look)}
+function helmBig(l,g){const eyes=(y)=>`<circle cx="72" cy="${y}" r="2.4" fill="${g}"/><circle cx="88" cy="${y}" r="2.4" fill="${g}"/>`;
+  if(l.helm==="capuche")return `<path d="M52 66Q46 20 80 10Q114 20 108 66Q80 56 52 66Z" fill="${l.cape}" stroke="#0c0606"/><path d="M58 64Q80 56 102 64" stroke="#000" stroke-opacity=".4" fill="none"/><path d="M65 34Q80 26 95 34L93 58Q80 64 67 58Z" fill="#050101"/>${eyes(46)}`;
+  if(l.helm==="crane")return `<path d="M61 32Q80 10 99 32Q103 46 97 54L92 64H68L63 54Q57 46 61 32Z" fill="#d9ccb5" stroke="#3a2c28"/><ellipse cx="72" cy="44" rx="5.5" ry="6.5" fill="#170404"/><ellipse cx="88" cy="44" rx="5.5" ry="6.5" fill="#170404"/>${eyes(45)}<path d="M78 50l2 4 2-4Z" fill="#170404"/><path d="M70 58v5M75 58v6M80 58v6M85 58v6M90 58v5" stroke="#3a2c28" stroke-width="1.5"/>`;
+  const base=`<path d="M60 30Q80 14 100 30L102 58Q80 70 58 58Z" fill="#2c2220" stroke="#0c0606"/><path d="M64 44h32l-3 8H67Z" fill="#050101"/>${eyes(47)}`;
+  if(l.helm==="couronne")return base+`<path d="M60 30 62 12 69 23 74 4 80 20 86 4 91 23 98 12 100 30Q80 22 60 30Z" fill="#c9a24a" stroke="#7a5a20"/><circle cx="80" cy="25" r="2.5" fill="#b3141b"/>`;
+  return base+`<path d="M66 28 62 18 70 24ZM94 28l4-10-8 6Z" fill="#6a5048"/>`}
+function helmSmall(l,g,c){const eyes=(y,x1=27,x2=33)=>`<circle cx="${x1}" cy="${y}" r="1.4" fill="${g}"/><circle cx="${x2}" cy="${y}" r="1.4" fill="${g}"/>`;
+  if(l.helm==="capuche")return `<path d="M17 30Q14 6 30 0Q46 6 43 30Q30 24 17 30Z" fill="${l.cape}" stroke="#0c0606"/><path d="M23 14Q30 10 37 14L36 26Q30 29 24 26Z" fill="#050101"/>${eyes(18)}`;
+  if(l.helm==="crane")return `<path d="M21 14Q30 2 39 14Q41 22 37 26L35 29H25L23 26Q19 22 21 14Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="26.5" cy="17" r="2.8" fill="#170404"/><circle cx="33.5" cy="17" r="2.8" fill="#170404"/>${eyes(17,26.5,33.5)}`;
+  const base=`<path d="M20 12Q30 2 40 12V26Q30 32 20 26Z" fill="#4a3a36" stroke="#0c0606"/><path d="M22 16h16l-2 5H24Z" fill="#050101"/>${eyes(18)}`;
+  if(l.helm==="couronne")return base+`<path d="M20 12 21 3 24 8 27 0 30 7 33 0 36 8 39 3 40 12Q30 8 20 12Z" fill="#c9a24a" stroke="#7a5a20"/>`;
+  return base+`<path d="M30 2v-4" stroke="#b3141b" stroke-width="4"/>`}
+function heroSvg(o){o=o||{};const look=o.look||lookOf(keyOf(me)),col=o.color||myColor(),sx=o.sx||"h",bare=!!o.bare;
+  const it=bare?[]:eqItems(player),L=bare?{}:eqLoot(player),horns=(L.corne||0)>0,claws=(L.griffe||0)>0,cape=(L.cuir||0)>0;
+  const glow=(L.coeur||0)>0?"#ff6a1a":look.eyes;
+  return `<defs><radialGradient id="aura${sx}" cx="50%" cy="55%"><stop offset="0" stop-color="${col}" stop-opacity=".45"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient>
+   <linearGradient id="armor${sx}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3a36"/><stop offset="1" stop-color="#1a1210"/></linearGradient></defs>
+  <ellipse cx="80" cy="120" rx="76" ry="100" fill="url(#aura${sx})"/>
   <ellipse cx="80" cy="212" rx="40" ry="6" fill="rgba(0,0,0,.6)"/>
-  ${cape?'<path d="M52 62 30 196 80 186 130 196 108 62Z" fill="#5a1a10" stroke="#2a0806"/>':'<path d="M56 62 44 190 80 182 116 190 104 62Z" fill="#2a0c0a" stroke="#120303"/>'}
-  <path d="M62 140 58 204h16l4-56ZM98 140l4 64H86l-4-56Z" fill="url(#armor)" stroke="#0c0606"/>
-  <path d="M56 66Q80 56 104 66L108 140Q80 150 52 140Z" fill="url(#armor)" stroke="#0c0606"/>
+  ${cape?'<path d="M52 62 30 196 80 186 130 196 108 62Z" fill="#5a1a10" stroke="#2a0806"/>':'<path d="M56 62 44 190 80 182 116 190 104 62Z" fill="'+look.cape+'" stroke="#120303"/>'}
+  <path d="M62 140 58 204h16l4-56ZM98 140l4 64H86l-4-56Z" fill="url(#armor${sx})" stroke="#0c0606"/>
+  <path d="M56 66Q80 56 104 66L108 140Q80 150 52 140Z" fill="url(#armor${sx})" stroke="#0c0606"/>
   <path d="M66 78h28M68 92h24M70 106h20" stroke="#6a5048" stroke-width="2"/>
   <circle cx="80" cy="92" r="6" fill="#140404" stroke="${glow}" stroke-width="1.5"/>
-  <path d="M52 66 40 72 34 128 46 130 54 84ZM108 66l12 6 6 56-12 2-8-46Z" fill="url(#armor)" stroke="#0c0606"/>
+  <path d="M52 66 40 72 34 128 46 130 54 84ZM108 66l12 6 6 56-12 2-8-46Z" fill="url(#armor${sx})" stroke="#0c0606"/>
   ${claws?'<path d="M34 128l-4 10M38 130l-2 11M42 131v10M120 130l2 11M124 130l4 10" stroke="#c77dff" stroke-width="2"/>':''}
-  <path d="M60 30Q80 14 100 30L102 58Q80 70 58 58Z" fill="#2c2220" stroke="#0c0606"/>
-  <path d="M64 44h32l-3 8H67Z" fill="#050101"/>
-  <circle cx="72" cy="47" r="2.4" fill="${glow}"/><circle cx="88" cy="47" r="2.4" fill="${glow}"/>
-  ${horns?'<path d="M62 32C48 26 44 12 50 4c0 10 6 16 16 20ZM98 32c14-6 18-20 12-28 0 10-6 16-16 20Z" fill="#ff9d2e" stroke="#7a4a10"/>':'<path d="M66 28 62 18 70 24ZM94 28l4-10-8 6Z" fill="#6a5048"/>'}
+  ${helmBig(look,glow)}
+  ${horns?'<path d="M62 32C48 26 44 12 50 4c0 10 6 16 16 20ZM98 32c14-6 18-20 12-28 0 10-6 16-16 20Z" fill="#ff9d2e" stroke="#7a4a10"/>':''}
   ${it.includes("epee")?'<g transform="translate(126 132) rotate(-28)"><rect x="-2" y="-92" width="7" height="88" fill="#ff6a1a" stroke="#ffd9a8"/><path d="M-2 -92 1.5 -102 5 -92Z" fill="#ffd9a8"/><rect x="-10" y="-6" width="23" height="5" fill="#c9a24a"/><rect x="-1" y="-1" width="5" height="16" fill="#3a1a10"/></g>':'<g transform="translate(124 132) rotate(-20)"><rect x="-1" y="-40" width="4" height="40" fill="#6a5048"/></g>'}
   ${it.includes("bouclier")?'<path d="M18 92 42 84 46 96C46 124 34 136 24 142 14 136 6 124 8 96Z" fill="#d9ccb5" stroke="#3a2c28" stroke-width="2"/><circle cx="21" cy="104" r="3" fill="#170404"/><circle cx="33" cy="104" r="3" fill="#170404"/><path d="M22 116h10" stroke="#170404" stroke-width="2"/>':''}
   ${it.includes("potion")?'<path d="M95 128h8v4l3 4v10h-14v-10l3-4Z" fill="#b3141b" stroke="#e8dccb"/>':''}
@@ -1935,10 +1960,9 @@ function bossPanel(bi){
 /* ---------- arène ---------- */
 let F=null,autoT=null;
 const SLOTS=10;
-function gladSvg(c,glow,dead){return `<svg viewBox="0 0 60 90" aria-hidden="true"><ellipse cx="30" cy="87" rx="16" ry="3" fill="rgba(0,0,0,.5)"/>
+function gladSvg(c,glow,dead,look){look=look||normLook();return `<svg viewBox="0 0 60 90" aria-hidden="true"><ellipse cx="30" cy="87" rx="16" ry="3" fill="rgba(0,0,0,.5)"/>
   <path d="M22 50 18 86h9l3-30 3 30h9l-4-36Z" fill="#2a1a16"/><path d="M16 26Q30 18 44 26L46 54Q30 60 14 54Z" fill="${c}" stroke="#0c0606"/>
-  <path d="M20 12Q30 2 40 12V26Q30 32 20 26Z" fill="#4a3a36" stroke="#0c0606"/><path d="M22 16h16l-2 5H24Z" fill="#050101"/>
-  <circle cx="27" cy="18" r="1.4" fill="${glow}"/><circle cx="33" cy="18" r="1.4" fill="${glow}"/><path d="M30 2v-4" stroke="#b3141b" stroke-width="4"/>
+  ${helmSmall(look,glow,c)}
   <path d="M44 30 50 46" stroke="#4a3a36" stroke-width="5"/><path d="M50 46 56 14" stroke="#d9ccb5" stroke-width="3"/><path d="M47 44h7" stroke="#c9a24a" stroke-width="3"/>
   <path d="M16 30 8 40 12 52 20 48Z" fill="#6b4a10" stroke="#0c0606"/></svg>`}
 function bossSvg(b){return `<svg viewBox="0 0 100 120" aria-hidden="true"><ellipse cx="50" cy="116" rx="30" ry="4" fill="rgba(0,0,0,.55)"/>
@@ -2008,7 +2032,7 @@ function arenaRender(){
     const be=$("fig-boss");be.style.left=pct(f.boss.pos);be.classList.toggle("dead",f.boss.hp<=0);
   }else{
   let h="";
-  f.team.forEach((m,i)=>{h+=`<div class="fig team ${m.me?"me":""} ${m.alive?"":"dead"}" id="fig-${i}" style="left:${pct(mPos(m))};transform:translate(${-(f.team.slice(0,i).filter(o=>mPos(o)===mPos(m)).length)*26}px,${i*8}px);z-index:${10-i}">${m.me?'<b class="youmark">TOI</b>':""}${gladSvg(m.col,m.me?"#ffe08a":"#9ad",!m.alive)}<span>${esc(m.name)}</span></div>`});
+  f.team.forEach((m,i)=>{h+=`<div class="fig team ${m.me?"me":""} ${m.alive?"":"dead"}" id="fig-${i}" style="left:${pct(mPos(m))};transform:translate(${-(f.team.slice(0,i).filter(o=>mPos(o)===mPos(m)).length)*26}px,${i*8}px);z-index:${10-i}">${m.me?'<b class="youmark">TOI</b>':""}${gladSvg(m.col,lookOf(m.key).eyes,!m.alive,lookOf(m.key))}<span>${esc(m.name)}</span></div>`});
   h+=`<div class="fig boss ${f.boss.hp>0?"":"dead"}" id="fig-boss" style="left:${pct(f.boss.pos)}">${bossSvg(f.b)}</div>`;
   figs.innerHTML=h;figs.dataset.n=String(f.team.length);
   }
@@ -2253,7 +2277,7 @@ function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);
 function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forEach(id=>$(id).hidden=id!==which);$("gate").hidden=false;
   $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true}
 function setAuthMode(up){signup=up;$("tabLogin").setAttribute("aria-selected",String(!up));$("tabSignup").setAttribute("aria-selected",String(up));
-  $("colorField").hidden=!up;$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
+  $("colorField").hidden=!up;if(up)try{renderSignupLook()}catch(_){}$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
   $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent=""}
 $("tabLogin").addEventListener("click",()=>setAuthMode(false));
 $("tabSignup").addEventListener("click",()=>setAuthMode(true));
@@ -2265,6 +2289,7 @@ function renderAccounts(){
   $("acctList").innerHTML=list.length?list.map(a=>`<li><i style="background:${esc(a.color||"#a8988a")}"></i><b>${esc(a.name)}</b>${myAcc&&a.uid===myAcc.uid?" <em>(toi)</em>":""}<span>inscrit le ${new Date(a.at||Date.now()).toLocaleDateString("fr-CA",{day:"numeric",month:"long"})}</span></li>`).join(""):`<li class="empty">Aucun compte pour l'instant.</li>`;
   if(myAcc){$("acctMe").innerHTML=`<div class="accrow"><i class="accdot" style="background:${esc(myAcc.color)}"></i><div><b>${esc(myAcc.name)}</b><span>Connecté · ce compte te suit sur tous tes appareils</span></div></div>
      <div class="fl"><span>Changer ta couleur</span><div class="sws">${ACC_COLS.map(c=>`<button type="button" class="swb ${c===myAcc.color?"on":""}" data-col="${c}" style="background:${c}" aria-label="Couleur ${c}"></button>`).join("")}</div></div>
+     <div class="fl"><span>Ton apparence</span><div class="lookbox"><svg class="lookprev" viewBox="0 0 160 220" aria-hidden="true">${heroSvg({look:normLook(myAcc.look),color:myAcc.color,bare:true,sx:"a"})}</svg><div class="lookopts" id="acctLook">${lookPickerHtml(normLook(myAcc.look))}</div></div></div>
      <div><button class="btn ghost" type="button" id="logoutBtn">Se déconnecter</button></div>`}
   else $("acctMe").innerHTML=`<p class="pplsub" style="margin:0">Mode local : tes données restent sur cet appareil et tu n'apparais pas sur la carte des autres.</p>`;
 }
@@ -2274,6 +2299,18 @@ document.addEventListener("click",async e=>{
   const prev=myAcc;myAcc={...myAcc,color:b.dataset.col};if(uid)accounts[uid]=myAcc;renderAccounts();render();
   if(!aCol)return;
   try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Couleur changée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render();$("punchMsg").textContent="Impossible de changer la couleur."}});
+let signupLook=normLook();
+function lookPickerHtml(l){
+  return `<div><span class="lklab">Casque</span><div class="lkrow">${LOOKS.helm.map(([v,n])=>`<button type="button" class="lkchip ${l.helm===v?"on":""}" data-lk="helm" data-lv="${v}" aria-pressed="${l.helm===v}">${n}</button>`).join("")}</div></div>
+  <div><span class="lklab">Yeux</span><div class="lkrow">${LOOKS.eyes.map(c=>`<button type="button" class="lkdot ${l.eyes===c?"on":""}" data-lk="eyes" data-lv="${c}" style="background:${c}" aria-label="Yeux ${c}" aria-pressed="${l.eyes===c}"></button>`).join("")}</div></div>
+  <div><span class="lklab">Cape</span><div class="lkrow">${LOOKS.cape.map(c=>`<button type="button" class="lkdot ${l.cape===c?"on":""}" data-lk="cape" data-lv="${c}" style="background:${c}" aria-label="Cape ${c}" aria-pressed="${l.cape===c}"></button>`).join("")}</div></div>`}
+function renderSignupLook(){const col=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
+  $("lookOpts").innerHTML=lookPickerHtml(signupLook);$("lookPrev").innerHTML=heroSvg({look:signupLook,color:col,bare:true,sx:"p"})}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-lk]");if(!b)return;e.preventDefault();
+  if(b.closest("#lookOpts")){signupLook={...signupLook,[b.dataset.lk]:b.dataset.lv};renderSignupLook();return}
+  if(b.closest("#acctLook")&&myAcc){const prev=myAcc;myAcc={...myAcc,look:normLook({...normLook(myAcc.look),[b.dataset.lk]:b.dataset.lv})};if(uid)accounts[uid]=myAcc;renderAccounts();render();
+    if(aCol&&uid){try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Apparence modifiée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render();$("punchMsg").textContent="Impossible de modifier l'apparence."}}}});
+document.addEventListener("change",e=>{if(e.target.matches('input[name="cCol"]'))renderSignupLook()});
 const AUTH_ERR={"auth/email-already-in-use":"Ce nom de gladiateur est déjà pris. Choisis-en un autre ou connecte-toi.",
   "auth/weak-password":"Le mot secret doit avoir au moins 6 caractères.",
   "auth/invalid-credential":"Nom ou mot secret incorrect.","auth/wrong-password":"Nom ou mot secret incorrect.","auth/user-not-found":"Aucun gladiateur à ce nom. Crée un personnage.",
@@ -2291,7 +2328,7 @@ $("authForm").addEventListener("submit",async e=>{e.preventDefault();
       const cred=await auth.createUserWithEmailAndPassword(emailOf(name),pass);
       try{await cred.user.updateProfile({displayName:name})}catch(_){}
       const color=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
-      uid=cred.user.uid;myAcc={uid,name,key:keyOf(name),color,at:Date.now()};
+      uid=cred.user.uid;myAcc={uid,name,key:keyOf(name),color,look:normLook(signupLook),at:Date.now()};
       await aCol.doc(uid).set(myAcc);accounts[uid]=myAcc;
       player=normPlayer({});delete playersAll[keyOf(name)];LS.set("tdl_player_"+keyOf(name),"");
       try{if(pCol)await pCol.doc(slug(keyOf(name))).set({name,key:keyOf(name),items:[],bosses:[],loot:{},chests:[],unequip:[],lootOff:{},xpOff:0,kmOff:0,deaths:0})}catch(_){}
