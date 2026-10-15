@@ -725,6 +725,8 @@ header.top{padding-block:16px 14px;border-bottom:0}
 .itsep{height:1px;background:#3a2c18;margin:6px 0}
 .itlore{margin:8px 0 0;font-style:italic;color:#c8915a;font-size:13px}
 .itact{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.lsel{flex:none;font:700 12px/1 var(--body);padding:7px 9px;border-radius:3px;cursor:pointer;border:1px solid #5a4a44;background:#1a0f0d;color:var(--bone-dim)}
+.lsel.on{border-color:#3f6a2a;background:#14240f;color:#9fe08a}
 .itact:empty{display:none}
 .itact .btn{flex:1;font-size:12px;padding:9px 8px}
 .itact .btn[disabled]{opacity:.35}
@@ -1893,10 +1895,12 @@ const MEMBER_COL=["#7d0b10","#2d4a7a","#3f6a2a","#6a3a7a","#7a5a1a"];
 const mPos=m=>m.pos==null?1:m.pos;
 function bossReach(f){return f.team.filter(m=>m.alive&&f.boss.pos-mPos(m)<=1)}
 function closestPos(f){const a=f.team.filter(m=>m.alive);return a.length?Math.max(...a.map(mPos)):0}
+let lobbyOff={};
+function lobbyCands(bi){const k=keyOf(me),r=raidOf(bi),el=eligible(bi);
+  return [...new Set([k,...atBoss(bi),...((r&&r.members)||[])])].filter(x=>x===k||el(x))}
 function buildF(bi,training){
-  const k=keyOf(me),r=raidOf(bi);
-  const assist=!training&&player.bosses.includes(bi);
-  let team=assist?[k,...atBoss(bi).filter(x=>x!==k)]:!training&&r&&(r.members||[]).includes(k)?(r.members||[]).filter(eligible(bi)):[k];
+  const k=keyOf(me),off=lobbyOff[bi]||{};
+  let team=training?[k]:lobbyCands(bi).filter(x=>x===k||!off[x]);
   if(!team.includes(k))team=[k,...team];
   const b=BOSSES[bi],scale=1+.6*(team.length-1);
   return{bi,b,training,over:false,crowd:20,busy:false,
@@ -1915,41 +1919,30 @@ function openFight(bi,opt){
 function renderLobby(){
   if(!F||$("fPrep").hidden)return;
   const bi=F.bi,k=keyOf(me);
-  if(F.training||!rCol){
+  $("fLobbyBtn").hidden=true;
+  if(F.training||(!rCol&&!fCol)){
     F=buildF(bi,F.training);
     $("fLobby").hidden=true;
     $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
     $("fEnter").textContent=F.training?"Commencer l'entraînement":"Entrer dans l'arène";
-  }else if(player.bosses.includes(bi)){
-    F=buildF(bi,false);
-    $("fLobby").hidden=false;$("fLobbyBtn").hidden=true;
-    $("fLobbyList").innerHTML=F.team.map(m=>`<li class="ready"><i style="background:${m.col}"></i><span class="ln"><b>${esc(m.name)}${m.me?" (toi)":""}</b><small>${m.max} PV · ${m.atk} ATQ · ${m.me?"renfort (boss déjà vaincu)":"devant le boss"}</small></span><em class="ok">✔ Dans l'équipe</em></li>`).join("");
-    const al=F.team.filter(m=>!m.me).map(m=>m.name);
-    $("fLobbyHint").textContent=al.length?`Tu entres en renfort. ${al.join(", ")} ${al.length>1?"sont entraînés":"est entraîné"} dans l'arène avec toi et ${al.length>1?"jouent leur":"joue son"} tour (sinon l'IA joue après 10 s).`:"Personne n'est devant ce boss pour l'instant.";
-    $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
-    {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===k)){$("fLobbyHint").textContent=`Combat en cours : ${fd.team.filter(m=>m.alive).map(m=>m.name).join(", ")}. Entre pour les rejoindre dans l'arène.`;$("fEnter").textContent="Rejoindre le combat";$("fPrepBoss").textContent=`${F.b.n} · ${Math.max(0,fd.boss.hp)}/${fd.boss.max} PV`;return}}
-    $("fEnter").textContent=al.length?`Combattre avec ${al.join(", ")}`:"Entrer dans l'arène seul";
   }else{
-    $("fLobbyBtn").hidden=false;
-    const r=raidOf(bi),members=(r&&r.members)||[],helpers=(r&&r.helpers)||[],inR=members.includes(k),el=eligible(bi);
-    const here=atBoss(bi),cands=[...new Set([k,...here,...members])];
+    const off=lobbyOff[bi]=lobbyOff[bi]||{},cands=lobbyCands(bi),here=atBoss(bi),beat=player.bosses.includes(bi);
     F=buildF(bi,false);
     $("fLobby").hidden=false;
-    $("fLobbyList").innerHTML=cands.map(x=>{const c=charOf(x),st=statsFrom(c.pl,c.xp),joined=members.includes(x)&&el(x),helper=helpers.includes(x);
-      const col=colorOf(x,"#a8988a");
-      return `<li class="${joined?"ready":""}"><i style="background:${col}"></i><span class="ln"><b>${esc(nameOf(x))}${x===k?" (toi)":""}</b><small>${st.hp} PV · ${st.atk} ATQ${helper?" · renfort":here.includes(x)?" · devant le boss":""}</small></span>
-        <em class="${joined?"ok":"wait"}">${joined?"✔ Dans le groupe":x===k?"Pas dans le groupe":"En attente"}</em></li>`}).join("");
-    const others=here.filter(x=>x!==k&&!members.includes(x));
-    $("fLobbyHint").textContent=!inR?(members.length?"Un groupe est ouvert : rejoins-le pour combattre ensemble.":others.length?`${others.map(nameOf).join(", ")} ${others.length>1?"sont":"est"} aussi devant ce boss. Ouvre un groupe pour combattre ensemble.`:"Tu peux combattre seul ou ouvrir un groupe et attendre des alliés."):
-      (F.team.length>1?`Groupe prêt : ${F.team.length} gladiateurs. Chacun risque la permadeath.`:"Tu es seul dans le groupe pour l'instant. Les autres doivent le rejoindre de leur côté.");
-    $("fLobbyBtn").textContent=inR?"Quitter le groupe":members.length?"Rejoindre le groupe":"Ouvrir un groupe";
-    $("fLobbyBtn").dataset.raid=inR?"leave":"join";$("fLobbyBtn").disabled=false;$("fLobbyBtn").dataset.b=bi;
+    $("fLobbyList").innerHTML=cands.map(x=>{const c=charOf(x),st=statsFrom(c.pl,c.xp),inT=x===k||!off[x],col=colorOf(x,"#a8988a");
+      const role=x===k?(beat?"renfort (boss déjà vaincu)":"toi"):here.includes(x)?"devant le boss":"renfort";
+      return `<li class="${inT?"ready":""}"><i style="background:${col}"></i><span class="ln"><b>${esc(nameOf(x))}${x===k?" (toi)":""}</b><small>${st.hp} PV · ${st.atk} ATQ · ${role}</small></span>
+        ${x===k?`<em class="ok">✔ Dans l'équipe</em>`:`<button type="button" class="lsel ${inT?"on":""}" data-lsel="${esc(x)}" aria-pressed="${inT}">${inT?"✔ Dans l'équipe":"＋ Ajouter"}</button>`}</li>`}).join("");
+    const al=F.team.filter(m=>!m.me).map(m=>m.name),out=cands.filter(x=>x!==k&&off[x]).map(nameOf);
+    $("fLobbyHint").textContent=al.length?`${al.join(", ")} ${al.length>1?"entrent":"entre"} dans l'arène avec toi (sinon l'IA joue après 10 s). Touche un nom pour le retirer.${out.length?` Laissés de côté : ${out.join(", ")}.`:""}`:
+      cands.length>1?"Tu combats seul. Touche un nom pour l'ajouter à l'équipe.":"Personne d'autre n'est devant ce boss : tu combats seul.";
     $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
     {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===k)){$("fLobbyHint").textContent=`Combat en cours : ${fd.team.filter(m=>m.alive).map(m=>m.name).join(", ")}. Entre pour les rejoindre dans l'arène.`;$("fEnter").textContent="Rejoindre le combat";$("fPrepBoss").textContent=`${F.b.n} · ${Math.max(0,fd.boss.hp)}/${fd.boss.max} PV`;return}}
-    $("fEnter").textContent=F.team.length>1?`Entrer dans l'arène à ${F.team.length}`:"Entrer dans l'arène seul";
+    $("fEnter").textContent=al.length?`Combattre à ${F.team.length} (avec ${al.join(", ")})`:"Entrer dans l'arène seul";
   }
   $("fPrepBoss").textContent=`${F.b.n} · ${F.boss.max} PV${F.team.length>1?` (renforcé pour ${F.team.length})`:""} · ${F.b.atk} ATQ`;
 }
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lsel]");if(!b||!F)return;const o=lobbyOff[F.bi]=lobbyOff[F.bi]||{},x=b.dataset.lsel;o[x]=!o[x];renderLobby()});
 function arenaRender(){
   const f=F;
   const pct=x=>`calc(${(x/(SLOTS-1))*86+2}%)`;
