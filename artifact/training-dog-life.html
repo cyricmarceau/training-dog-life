@@ -1583,7 +1583,7 @@ function renderShop(){if($("shopP").hidden)return;const g=goldOf();$("shopGold")
         <button type="button" class="btn" data-sell="${shopSel}">Vendre${c.n>1?" un":""} · ${sellPrice(shopSel)} or</button></div></div>`}
     else h+=`<p class="pplsub" style="margin:0">${cells.length?"Touche un objet pour l'équiper, le ranger ou le vendre.":"Ton sac est vide. Les coffres, le gym et la boutique te donnent des objets."}</p>`;
     B.innerHTML=h}}
-function openShop(){$("shopP").hidden=false;renderShop();try{tone(660,0,.06,"triangle",.04);tone(880,.07,.08,"triangle",.04)}catch(_){}}
+function openShop(){$("shopP").hidden=false;renderShop();sfx("open")}
 function closeShop(){$("shopP").hidden=true}
 $("shopTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="buy")closeShop();else{shopTab="buy";openShop()}});
 $("ccShop").addEventListener("click",()=>{shopTab="buy";openShop()});
@@ -1602,7 +1602,7 @@ document.addEventListener("click",async e=>{
     if(BOOTS[k]){player.boots=player.boots||[];if(player.boots.includes(k))return;player.boots.push(k);player.boot=k}
     else if(ITEMS[k]){if(!player.items.includes(k))player.items.push(k);player.unequip=(player.unequip||[]).filter(x=>x!==k)}
     else{player.loot=player.loot||{};player.loot[k]=(player.loot[k]||0)+1}
-    try{await savePlayer()}catch(_){}render();renderShop();tone(988,0,.08,"square",.04);tone(1319,.08,.12,"square",.04);
+    try{await savePlayer()}catch(_){}render();renderShop();sfx("buy");
     try{equipFlash(before,stats(),[itemInfo(k).n],[k])}catch(_){}$("punchMsg").textContent=`Acheté : ${itemInfo(k).n} · −${pr} or`;return}
   const sl=e.target.closest("[data-sell]");
   if(sl){const k=sl.dataset.sell,pr=sellPrice(k);
@@ -1610,7 +1610,7 @@ document.addEventListener("click",async e=>{
     else if(ITEMS[k]){player.items=player.items.filter(x=>x!==k);player.unequip=(player.unequip||[]).filter(x=>x!==k)}
     else{const n=(player.loot||{})[k]||0;if(n<=0)return;player.loot[k]=n-1;player.lootOff=player.lootOff||{};if((player.lootOff[k]||0)>player.loot[k])player.lootOff[k]=player.loot[k];if(!player.loot[k])shopSel=null}
     if(ITEMS[k])shopSel=null;
-    player.gold=(player.gold||0)+pr;try{await savePlayer()}catch(_){}render();renderShop();tone(523,0,.06,"triangle",.05);tone(784,.06,.1,"triangle",.05);
+    player.gold=(player.gold||0)+pr;try{await savePlayer()}catch(_){}render();renderShop();sfx("sell");
     $("punchMsg").textContent=`Vendu : ${itemInfo(k).n} · +${pr} or`}
 });
 let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
@@ -1622,7 +1622,7 @@ function render(){try{checkMyDeath()}catch(_){}try{if(!$("chatP").hidden)renderC
   active=mine.find(isOpen)||null; hound.active=!!active;
   $("meName").textContent=me;
   let ri=0;RANKS.forEach((r,i)=>{if(xp>=r[0])ri=i});const next=RANKS[ri+1];
-  {const rk="tdl_rank_"+keyOf(me),pv=LS.get(rk);if(pv!=null&&pv!==""&&ri>+pv){celebrate("rank");$("punchMsg").textContent=`Nouveau rang : ${RANKS[ri][1]} !`}if(pv!==String(ri))LS.set(rk,String(ri))}
+  {const rk="tdl_rank_"+keyOf(me),pv=LS.get(rk);if(pv!=null&&pv!==""&&ri>+pv){celebrate("rank");sfx("rank");$("punchMsg").textContent=`Nouveau rang : ${RANKS[ri][1]} !`}if(pv!==String(ri))LS.set(rk,String(ri))}
   $("rankName").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("xpfill").style.width=(next?((xp-RANKS[ri][0])/(next[0]-RANKS[ri][0]))*100:100)+"%";
   $("shopTab").hidden=false;$("bagTab").hidden=false;try{renderShop()}catch(_){}
@@ -1963,7 +1963,7 @@ const bootDesc=k=>{const v=BOOTS[k];return Object.entries(v.a).map(([a,p])=>ABIL
 const myBoot=pl=>pl&&pl.boot&&(pl.boots||[]).includes(pl.boot)&&BOOTS[pl.boot]?pl.boot:"";
 const abil=(m,a)=>{const v=m&&BOOTS[m.bt];return v&&v.a[a]||0};
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-boot]");if(!b)return;e.preventDefault();const k=b.dataset.boot;if(!(player.boots||[]).includes(k))return;
-  const before=stats();player.boot=player.boot===k?"":k;render();try{renderShop()}catch(_){}
+  const before=stats();player.boot=player.boot===k?"":k;sfx("equip");render();try{renderShop()}catch(_){}
   if(!$("itip").hidden&&$("itip").dataset.k===k)showItem(k);
   if(player.boot===k)try{equipFlash(before,stats(),[BOOTS[k].n],[k])}catch(_){}
   try{await savePlayer()}catch(_){$("punchMsg").textContent="Impossible d'enregistrer l'équipement."}});
@@ -2179,7 +2179,7 @@ function hopSound(i){try{actx=actx||new (window.AudioContext||window.webkitAudio
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.11);o.connect(g).connect(A.destination);o.start(t);o.stop(t+.13);
   const len=.08,buf=A.createBuffer(1,A.sampleRate*len,A.sampleRate),d=buf.getChannelData(0);for(let q=0;q<d.length;q++)d[q]=(Math.random()*2-1)*(1-q/d.length);
   const n=A.createBufferSource(),f=A.createBiquadFilter(),g2=A.createGain();n.buffer=buf;f.type="bandpass";f.frequency.value=1800;g2.gain.value=.06;n.connect(f).connect(g2).connect(A.destination);n.start(t)}catch(_){}}
-function coinSound(){tone(988,0,.06,"square",.035);tone(1319,.05,.1,"square",.035)}
+function coinSound(){sfx("coin")}
 let walkHold=null;
 function walkPoints(fromKm,toKm){const a=progressOf(fromKm,player.bosses),b=progressOf(Math.max(fromKm,toKm),player.bosses);
   const pts=[posOf(a)],nodes=[];for(let i=a.idx+1;i<=b.idx;i++){pts.push([NODES[i].x,NODES[i].y]);nodes.push(i)}
@@ -2236,6 +2236,46 @@ async function focusMap(target){
 
 /* ================= Coffre façon Vampire Survivors ================= */
 let actx=null;
+/* ===== ZzFXMicro v1.4.0 — Frank Force — Licence MIT — github.com/KilledByAPixel/ZzFX (adapté : contexte audio partagé) ===== */
+const sfxCtx=()=>{try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx}catch(e){return null}};
+let zzfxV=.32,sfxSeed=12345;const sfxRand=()=>(sfxSeed=(sfxSeed*16807)%2147483647)/2147483647;
+const zzfx=// play sound
+(p=1,k=.05,b=220,e=0,r=0,t=.1,q=0,D=1,u=0,y=0,v=0,z=0,l=0,E=0,A=0,F=0,c=0,w=1,m=0,B=0
+,N=0)=>{let M=Math,d=2*M.PI,R=44100,G=u*=500*d/R/R,C=b*=(1-k+2*k*sfxRand(k=[]))*d/R,
+g=0,H=0,a=0,n=1,I=0,J=0,f=0,h=N<0?-1:1,x=d*h*N*2/R,L=M.cos(x),Z=M.sin,K=Z(x)/4,O=1+K,
+X=-2*L/O,Y=(1-K)/O,P=(1+h*L)/2/O,Q=-(h+L)/O,S=P,T=0,U=0,V=0,W=0;e=R*e+9;m*=R;r*=R;t*=
+R;c*=R;y*=500*d/R**3;A*=d/R;v*=d/R;z*=R;l=R*l|0;p*=zzfxV;for(h=e+m+r+t+c|0;a<h;k[a++]
+=f*p)++J%(100*F|0)||(f=q?1<q?2<q?3<q?4<q?(g/d%1<D/2)*2-1:Z(g**3):M.max(M.min(M.tan(g)
+,1),-1):1-(2*g/d%2+2)%2:1-4*M.abs(M.round(g/d)-g/d):Z(g),f=(l?1-B+B*Z(d*a/l):1)*(4<q?
+f:(f<0?-1:1)*M.abs(f)**D)*(a<e?a/e:a<e+m?1-(a-e)/m*(1-w):a<e+m+r?w:a<h-c?(h-a-c)/t*w:
+0),f=c?f/2+(c>a?0:(a<h-c?1:(h-a)/c)*k[a-c|0]/2/p):f,N?f=W=S*T+Q*(T=U)+P*(U=f)-Y*V-X*(
+V=W):0),x=(b+=u+=y)*M.cos(A*H++),g+=x+x*E*(a*a*d%2-1),n&&++n>z&&(b+=v,C+=v,n=0),!l||++I%l
+||(b=C,u=G,n=n||1);X=sfxCtx();if(!X)return;p=X.createBuffer(1,h,R);p.getChannelData(0).set(k);b=X.
+createBufferSource();b.buffer=p;b.connect(X.destination);b.start()}
+/* bruitages du jeu (paramètres ZzFX) */
+const SFX={
+ quick:[.7,.05,420,0,.01,.06,2,1.5,-8,0,0,0,0,.4,0,0,0,.6,.02],
+ normal:[1,.05,150,0,.02,.12,3,2.2,-2,0,0,0,0,1.1,0,.1,0,.7,.04],
+ heavy:[1.4,.05,85,0,.05,.28,3,2.5,-1,0,0,0,0,1.7,0,.2,.02,.6,.08],
+ crit:[1.3,.05,520,0,.04,.24,2,1.2,0,0,330,.05,0,0,0,0,0,.8,.06],
+ miss:[.55,.05,900,0,.02,.12,0,1.4,-60,0,0,0,0,0,0,0,0,.5,.03],
+ dodge:[.7,.05,620,.02,.03,.15,1,1,40,0,0,0,0,0,0,0,0,.6,.05],
+ repel:[1.1,.05,270,0,.05,.3,1,1.6,0,0,220,.04,0,0,0,0,.08,.7,.1],
+ bossHit:[1.2,.05,70,0,.05,.3,4,2,-.5,0,0,0,0,1.6,0,.25,0,.6,.08],
+ bossHeavy:[1.6,.05,48,0,.08,.45,4,2.4,-.3,0,0,0,0,2.2,0,.35,.03,.6,.12],
+ heal:[.8,.05,520,.04,.1,.25,0,1,0,0,260,.08,.06,0,0,0,0,.8,.08],
+ coin:[.7,.02,1250,0,.03,.12,1,1.5,0,0,620,.04,0,0,0,0,0,.6,.03],
+ buy:[.9,.02,880,0,.04,.18,1,1.5,0,0,440,.06,0,0,0,0,0,.7,.05],
+ sell:[.8,.02,660,0,.04,.15,1,1.5,0,0,-220,.06,0,0,0,0,0,.7,.05],
+ open:[.6,.03,500,.01,.03,.12,1,1.2,0,0,250,.05,0,0,0,0,0,.6,.04],
+ chest:[1.1,.05,190,.02,.15,.4,2,1,6,0,200,.1,0,0,0,0,.05,.7,.1],
+ reveal:[.8,.02,880,0,.06,.25,0,1,0,0,440,.07,0,0,0,0,0,.7,.08],
+ epic:[.9,.02,700,0,.08,.35,1,1,0,0,350,.06,.07,0,0,0,0,.75,.1],
+ legend:[1.1,.02,520,.02,.12,.5,1,1,0,0,260,.08,.08,0,0,0,.05,.8,.15],
+ rank:[1.1,.02,440,.05,.25,.5,1,1,0,0,220,.12,.12,0,0,0,0,.8,.1],
+ equip:[.7,.05,300,0,.03,.1,2,2,0,0,150,.03,0,0,0,0,0,.6,.03],
+ join:[.8,.03,330,.02,.08,.2,1,1,0,0,330,.06,0,0,0,0,0,.7,.06]};
+function sfx(n){const p=SFX[n];if(!p)return;try{zzfx(...p)}catch(_){}}
 /* ===== Musique hip-hop (synthèse WebAudio, originale) ===== */
 const MUS=(()=>{
   const N=(m)=>440*Math.pow(2,(m-69)/12);
@@ -2366,7 +2406,7 @@ function playChest(title,items,equip){
       stage=1;btn.disabled=true;btn.textContent="…";
       ov.classList.remove("shake");ov.classList.add("open");
       const cr=$("vsChest").getBoundingClientRect(),bx=cr.left+cr.width/2,by=cr.top+cr.height*.45;
-      burst(70,bx,by);tone(196,0,.15,"sawtooth",.05);tone(392,.08,.2,"square",.05);
+      burst(70,bx,by);sfx("chest");
       const pool=POOL(),H=76;
       const strips=items.map((it,i)=>{
         const reel=document.createElement("div");reel.className="vs-reel "+it.r;reel.dataset.item=it.k||"";
@@ -2381,7 +2421,7 @@ function playChest(title,items,equip){
         const t0=performance.now(),end=sr.n*H,ease=t=>1-Math.pow(1-t,4);
         const step=now=>{const t=Math.min(1,(now-t0)/sr.dur);sr.strip.style.transform=`translateY(${-end*ease(t)}px)`;
           if(t<1)requestAnimationFrame(step);else{sr.reel.classList.add("done");const r2=sr.reel.getBoundingClientRect();if(sr.reel.classList.contains("legendaire"))celebrate("leg",r2.left+r2.width/2,r2.top+r2.height/2);burst(18,r2.left+r2.width/2,r2.top+r2.height/2);
-            tone(sr.it.r==="legendaire"?1568:sr.it.r==="epique"?1319:1047,0,.25,"triangle",.06);
+            sfx(sr.it.r==="legendaire"?"legend":sr.it.r==="epique"?"epic":"reveal");
             const d=document.createElement("div");d.className="r-"+sr.it.r;d.innerHTML=`${esc(sr.it.n)}<small>${esc(sr.it.d)}</small>`;names.appendChild(d);r()}};
         requestAnimationFrame(step)})));
       ticking=false;fanfare();burst(50,bx,by);
@@ -2656,9 +2696,9 @@ function sparks(id,n,col){const L=$("fFx");if(!L)return;const[x,y]=fxAt(id);for(
   d.style.cssText=`left:${x}px;top:${y+20}px;--dx:${Math.cos(a)*r}px;--dy:${Math.sin(a)*r-15}px;background:${col}`;L.appendChild(d);setTimeout(()=>d.remove(),600)}}
 function shakeArena(){const a=document.querySelector(".arena2");if(!a)return;a.classList.remove("shake");void a.offsetWidth;a.classList.add("shake")}
 function hitBoss(m,kind){const f=F;
-  if(Math.random()>ACC[kind]){flog(`${m.name} rate son attaque.`,"miss");setTimeout(()=>{slash("fig-boss","miss");popNum("fig-boss","RATÉ","miss")},140);return}
+  if(Math.random()>ACC[kind]){flog(`${m.name} rate son attaque.`,"miss");sfx("miss");setTimeout(()=>{slash("fig-boss","miss");popNum("fig-boss","RATÉ","miss")},140);return}
   const crit=Math.random()<.1;let d=Math.round(roll(m.atk)*MULT[kind]*(crit?1.5:1));f.boss.hp-=d;f.crowd=Math.min(100,f.crowd+(kind==="heavy"?14:kind==="normal"?8:5));
-  flog(`${crit?"CRITIQUE ! ":""}${m.name} frappe (${kind==="quick"?"rapide":kind==="heavy"?"lourde":"normale"}) : ${d} dégâts.`,m.me?"me":"al");tone(crit?220:160,0,.08,"sawtooth",.05);
+  flog(`${crit?"CRITIQUE ! ":""}${m.name} frappe (${kind==="quick"?"rapide":kind==="heavy"?"lourde":"normale"}) : ${d} dégâts.`,m.me?"me":"al");sfx(crit?"crit":kind);
   setTimeout(()=>{anim("fig-boss","hit");slash("fig-boss",kind);if(kind==="quick")setTimeout(()=>slash("fig-boss","quick2"),110);
     sparks("fig-boss",kind==="heavy"||crit?14:7,crit?"#ffcf3a":"#ffb347");if(kind==="heavy"||crit)shakeArena();
     popNum("fig-boss",String(d),crit?"crit":kind==="heavy"?"heavy":"")},140);
@@ -2678,7 +2718,7 @@ async function act(a){
   else if(a in COST){m.end-=COST[a];anim("fig-"+f.team.indexOf(m),"lunge");hitBoss(m,a)}
   else if(a==="taunt"){f.boss.taunt=m.key;m.end=Math.min(100,m.end+8);f.crowd=Math.min(100,f.crowd+15);flog(`${m.name} provoque ${f.b.n} et attire sa colère. La foule hurle !`,"me")}
   else if(a==="rest"){m.end=Math.min(100,m.end+30);m.hp=Math.min(m.max,m.hp+Math.round(m.max*.04));flog(`${m.name} se repose.`,"me");popNum("fig-"+F.team.indexOf(m),"+30 END","end")}
-  else if(a==="potion"){m.potion=false;m.hp=Math.min(m.max,m.hp+50);flog(`${m.name} boit la Potion de sang : +50 PV.`,"heal");popNum("fig-"+F.team.indexOf(m),"+50","heal");sparks("fig-"+F.team.indexOf(m),10,"#5aff6a")}
+  else if(a==="potion"){m.potion=false;m.hp=Math.min(m.max,m.hp+50);flog(`${m.name} boit la Potion de sang : +50 PV.`,"heal");sfx("heal");popNum("fig-"+F.team.indexOf(m),"+50","heal");sparks("fig-"+F.team.indexOf(m),10,"#5aff6a")}
   arenaRender();await wait(380);
   await alliesTurn();if(await checkEnd())return;
   await bossTurn();if(await checkEnd())return;
@@ -2693,7 +2733,7 @@ async function alliesTurn(){const f=F;
     else{m.pos=Math.min(f.boss.pos-1,mPos(m)+2);flog(`${m.name} avance.`,"al")}
     arenaRender();await wait(320)}}
 async function bossTurn(){const f=F;if(f.boss.hp<=0)return;setTurn("boss");await wait(400);const reach=bossReach(f);
-  if(f.crowd>=100){f.crowd=30;const alive=f.team.filter(m=>m.alive);alive.forEach(m=>m.hp=Math.min(m.max,m.hp+Math.round(m.max*.2)));flog("La foule lance des offrandes : +20 % PV à l'équipe !","heal");alive.forEach(m=>popNum("fig-"+f.team.indexOf(m),"+"+Math.round(m.max*.2),"heal"));tone(784,0,.2,"triangle",.05)}
+  if(f.crowd>=100){f.crowd=30;const alive=f.team.filter(m=>m.alive);alive.forEach(m=>m.hp=Math.min(m.max,m.hp+Math.round(m.max*.2)));flog("La foule lance des offrandes : +20 % PV à l'équipe !","heal");alive.forEach(m=>popNum("fig-"+f.team.indexOf(m),"+"+Math.round(m.max*.2),"heal"));sfx("heal")}
   if(!reach.length){if(!f.team.some(m=>m.alive))return;f.boss.pos=Math.max(closestPos(f)+1,f.boss.pos-2);flog(`${f.b.n} s'approche.`,"bo");arenaRender();await wait(300);return}
   const tg=typeof f.boss.taunt==="string"&&reach.find(m=>m.key===f.boss.taunt);if(tg&&f.team.filter(m=>m.alive).length>1)flog(`${f.b.n} ne voit plus que ${tg.name} et fonce sur lui !`,"bo");
   const t=tg||reach[(Math.random()*reach.length)|0],enr=f.boss.hp<f.boss.max*.3,heavy=Math.random()<(enr?.45:.25);
@@ -2701,11 +2741,11 @@ async function bossTurn(){const f=F;if(f.boss.hp<=0)return;setTurn("boss");await
   anim("fig-boss","lungeL");await wait(200);
   const tid="fig-"+f.team.indexOf(t);
   const missed=Math.random()>acc,bdf=missed?"":bootDef(t);
-  if(missed){flog(`${f.b.n} rate ${t.name}.`,"miss");slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss")}
-  else if(bdf==="dodge"){flog(`${t.name} esquive grâce à ${BOOTS[t.bt].n} !`,"heal");slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss")}
-  else if(bdf==="repel"){const rd=Math.max(1,Math.round(roll(f.boss.atk)*(heavy?1.6:1)*(enr?1.3:1)*.5));f.boss.hp-=rd;flog(`${t.name} repousse l'attaque (${BOOTS[t.bt].n}) et renvoie ${rd} dégâts !`,"heal");
+  if(missed){flog(`${f.b.n} rate ${t.name}.`,"miss");sfx("dodge");slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss")}
+  else if(bdf==="dodge"){flog(`${t.name} esquive grâce à ${BOOTS[t.bt].n} !`,"heal");sfx("dodge");slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss")}
+  else if(bdf==="repel"){const rd=Math.max(1,Math.round(roll(f.boss.atk)*(heavy?1.6:1)*(enr?1.3:1)*.5));f.boss.hp-=rd;flog(`${t.name} repousse l'attaque (${BOOTS[t.bt].n}) et renvoie ${rd} dégâts !`,"heal");sfx("repel");
     slash(tid,"miss",true);popNum(tid,"REPOUSSÉ","miss");setTimeout(()=>{anim("fig-boss","hit");popNum("fig-boss","-"+rd,"")},200)}
-  else{const d=Math.round(roll(f.boss.atk)*(heavy?1.6:1)*(enr?1.3:1));t.hp-=d;anim(tid,"hit");tone(110,0,.12,"sawtooth",.06);
+  else{const d=Math.round(roll(f.boss.atk)*(heavy?1.6:1)*(enr?1.3:1));t.hp-=d;anim(tid,"hit");sfx(heavy?"bossHeavy":"bossHit");
     slash(tid,heavy?"heavy":"normal",true);sparks(tid,heavy?12:6,"#ff3a2a");if(heavy)shakeArena();popNum(tid,"-"+d,heavy?"hurt big":"hurt");
     flog(`${f.b.n} ${heavy?"écrase":"frappe"} ${t.name} : ${d} dégâts.`,"bo");
     if(heavy&&mPos(t)>0){t.pos=mPos(t)-1;flog(`${t.name} est repoussé.`,"bo")}
@@ -3242,12 +3282,12 @@ function mpBanner(){if(!F||!F.mp||F.over||!mpDoc)return;const d=mpDoc,ban=$("fTu
   else{ban.className="turnban wait";ban.textContent=`Ce n'est pas ton tour · ${m.name} joue… (${left} s)`}}
 function playEv(d){const ev=d.ev;if(!ev)return;const idx=key=>d.team.findIndex(m=>m.key===key);
   if(ev.actor==="boss"){if(ev.move||!ev.target)return;const tid="fig-"+idx(ev.target);anim("fig-boss","lungeL");
-    setTimeout(()=>{if(ev.miss){slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss")}else{anim(tid,"hit");slash(tid,ev.heavy?"heavy":"normal",true);sparks(tid,ev.heavy?12:6,"#ff3a2a");if(ev.heavy)shakeArena();popNum(tid,"-"+ev.dmg,ev.heavy?"hurt big":"hurt");tone(110,0,.12,"sawtooth",.06)}},200);return}
+    setTimeout(()=>{if(ev.miss){slash(tid,"miss",true);popNum(tid,"ESQUIVE","miss");sfx("dodge")}else{anim(tid,"hit");slash(tid,ev.heavy?"heavy":"normal",true);sparks(tid,ev.heavy?12:6,"#ff3a2a");if(ev.heavy)shakeArena();popNum(tid,"-"+ev.dmg,ev.heavy?"hurt big":"hurt");sfx(ev.heavy?"bossHeavy":"bossHit")}},200);return}
   const aid="fig-"+idx(ev.actor);
-  if(ev.kind in COST){anim(aid,"lunge");setTimeout(()=>{if(ev.miss){slash("fig-boss","miss");popNum("fig-boss","RATÉ","miss")}
-    else{anim("fig-boss","hit");slash("fig-boss",ev.kind);if(ev.kind==="quick")setTimeout(()=>slash("fig-boss","quick2"),110);sparks("fig-boss",ev.kind==="heavy"||ev.crit?14:7,ev.crit?"#ffcf3a":"#ffb347");if(ev.kind==="heavy"||ev.crit)shakeArena();popNum("fig-boss",String(ev.dmg),ev.crit?"crit":ev.kind==="heavy"?"heavy":"");tone(ev.crit?220:160,0,.08,"sawtooth",.05)}},140)}
-  else if(ev.kind==="join"){popNum(aid,"ARRIVÉE !","heal");sparks(aid,14,"#ffe08a");tone(660,0,.15,"triangle",.05)}
-  else if(ev.heal)popNum(aid,ev.heal,ev.heal.includes("END")?"end":"heal")}
+  if(ev.kind in COST){anim(aid,"lunge");setTimeout(()=>{if(ev.miss){slash("fig-boss","miss");popNum("fig-boss","RATÉ","miss");sfx("miss")}
+    else{anim("fig-boss","hit");slash("fig-boss",ev.kind);if(ev.kind==="quick")setTimeout(()=>slash("fig-boss","quick2"),110);sparks("fig-boss",ev.kind==="heavy"||ev.crit?14:7,ev.crit?"#ffcf3a":"#ffb347");if(ev.kind==="heavy"||ev.crit)shakeArena();popNum("fig-boss",String(ev.dmg),ev.crit?"crit":ev.kind==="heavy"?"heavy":"");sfx(ev.crit?"crit":ev.kind)}},140)}
+  else if(ev.kind==="join"){popNum(aid,"ARRIVÉE !","heal");sparks(aid,14,"#ffe08a");sfx("join")}
+  else if(ev.heal){popNum(aid,ev.heal,ev.heal.includes("END")?"end":"heal");if(!ev.heal.includes("END"))sfx("heal")}}
 /* résultat appliqué par chaque joueur à lui-même (idempotent) */
 async function mpSelf(S){const k=keyOf(me),fk="tdl_fin_"+k+"_"+S.bi+"_"+S.at;if(mpFinished["s"+S.at]||LS.get(fk))return;
   const m=S.team.find(x=>x.key===k);if(!m)return;mpFinished["s"+S.at]=1;LS.set(fk,"1");
