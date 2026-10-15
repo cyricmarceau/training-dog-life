@@ -815,6 +815,7 @@ body{padding-block:0 210px}
 .th-xp{flex:0 1 110px;height:6px;background:#1a0b09;border:1px solid #3a1a14;border-radius:3px;overflow:hidden}
 .th-xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b3141b,#ff6a1a)}
 .th-b{position:relative;flex:none;width:42px;height:38px;display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:linear-gradient(180deg,#2a1a16,#160d0c);border:1px solid #5a3a30;border-radius:4px;color:var(--bone);cursor:pointer;padding:0}
+.musbtn .mx{display:none}.musbtn.off{opacity:.55}.musbtn.off .mx{display:inline;stroke:#ff4a3a}
 .th-b svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .th-b:hover{border-color:var(--ember);color:#ffe08a}
 .th-menu span{display:block;width:18px;height:2px;background:currentColor;border-radius:1px}
@@ -882,7 +883,7 @@ body{padding-block:0 210px}
 .dbody .menubody{padding:12px 14px 14px}
 body.noscroll{overflow:hidden}
 .who{gap:8px}
-@media (max-width:520px){.who .linkbtn{display:none}.burger{width:42px;height:38px}}
+@media (max-width:520px){.who .linkbtn{display:none}.burger{width:42px;height:38px}.who{flex-wrap:nowrap;gap:4px}.who .chatbtn{width:40px;height:38px;margin-left:0}}
 @media (prefers-reduced-motion:reduce){.drawer{transition:none}}
 
 /* ===== Entraide ===== */
@@ -970,6 +971,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
     <div class="who" id="who" hidden>
       <span class="sync" id="sync"></span>
       <button class="linkbtn" id="switchBtn" type="button">Changer de nom</button>
+      <button class="chatbtn musbtn" id="musicBtn" type="button" aria-pressed="true" aria-label="Couper la musique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path class="mx" d="M3 3l18 18"/></svg></button>
       <button class="chatbtn" id="chatBtn" type="button" aria-label="Ouvrir le chat du clan" aria-controls="chatP"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4Z"/></svg><b class="cbadge" id="chatBadge" hidden>0</b></button>
       <button class="burger" id="menuBtn" type="button" aria-label="Ouvrir le menu" aria-controls="drawer" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
@@ -978,6 +980,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
     <button type="button" class="th-me" id="thMe" aria-label="Ma fiche"><i id="thDot"></i><span><b id="thName">—</b><small id="thRank"></small></span></button>
     <div class="th-xp" aria-hidden="true"><i id="thXp"></i></div>
     <button type="button" class="th-b" id="thMap" aria-label="Aller à la carte"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z M9 4v14 M15 6v14"/></svg></button>
+    <button type="button" class="th-b musbtn" id="thMusic" aria-pressed="true" aria-label="Couper la musique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path class="mx" d="M3 3l18 18"/></svg></button>
     <button type="button" class="th-b" id="thChat" aria-label="Chat du clan"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></svg><b class="cbadge" id="thBadge" hidden>0</b></button>
     <button type="button" class="th-b th-menu" id="thMenu" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
   </nav>
@@ -1973,6 +1976,68 @@ async function focusMap(target){
 
 /* ================= Coffre façon Vampire Survivors ================= */
 let actx=null;
+/* ===== Musique épique (synthèse WebAudio, originale) ===== */
+const MUS=(()=>{
+  const N=(m)=>440*Math.pow(2,(m-69)/12);
+  // Ré mineur : i – VI – III – VII | i – VI – VII – V
+  const PROG=[[50,[62,65,69]],[46,[62,65,70]],[53,[60,65,69]],[48,[60,64,67]],[50,[62,65,69]],[46,[62,65,70]],[48,[60,64,67]],[45,[61,64,69]]];
+  const MEL=[[74,0,6],[72,6,2],[70,8,4],[69,12,4],[65,16,6],[67,22,2],[69,24,8],[74,32,6],[76,38,2],[77,40,4],[76,44,4],[72,48,6],[74,54,2],[76,56,4],[73,60,4]];
+  let on=true,ctx=null,out=null,rev=null,timer=null,step=0,nextT=0,bar=0,started=false;
+  try{on=localStorage.getItem("tdl_music")!=="0"}catch(e){}
+  const BPM=78,S16=60/BPM/4;
+  function intense(){const f=document.getElementById("fight");return !!(f&&!f.hidden)}
+  function init(){
+    if(ctx)return true;
+    try{ctx=actx=actx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){return false}
+    out=ctx.createGain();out.gain.value=0;
+    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
+    out.connect(comp).connect(ctx.destination);
+    rev=ctx.createConvolver();const L=ctx.sampleRate*3.2,b=ctx.createBuffer(2,L,ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,2.6)}
+    rev.buffer=b;const rg=ctx.createGain();rg.gain.value=.55;rev.connect(rg).connect(out);
+    return true}
+  function env(g,t,a,d,v){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.setTargetAtTime(0,t+a+d*.6,d*.35)}
+  function send(node,wet){node.connect(out);const s=ctx.createGain();s.gain.value=wet;node.connect(s).connect(rev)}
+  function voice(f,t,dur,type,v,cut,a=.02,wet=.3,det=0){
+    const o=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.type=type;o.frequency.value=f;o.detune.value=det;lp.type="lowpass";lp.frequency.value=cut;lp.Q.value=.7;
+    env(g,t,a,dur,v);o.connect(lp).connect(g);send(g,wet);o.start(t);o.stop(t+dur+1.5)}
+  function taiko(t,v,f0=110){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(42,t+.25);
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.6);o.connect(g);send(g,.35);o.start(t);o.stop(t+.7);
+    const n=ctx.createBufferSource(),nb=ctx.createBuffer(1,ctx.sampleRate*.12,ctx.sampleRate),d=nb.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+    n.buffer=nb;const bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=700;const ng=ctx.createGain();ng.gain.value=v*.35;
+    n.connect(bp).connect(ng);send(ng,.3);n.start(t)}
+  function tick(t){
+    const s=step%16,ch=PROG[bar%PROG.length],root=ch[0],hot=intense(),phrase=Math.floor(bar/8)%2;
+    // ostinato cordes graves (croches)
+    if(s%2===0)voice(N(s%4===0?root-12:root),t,S16*1.8,"sawtooth",.11,hot?900:650,.01,.15);
+    // chœur / nappe
+    if(s===0)ch[1].forEach((m,i)=>{voice(N(m),t,S16*15,"sawtooth",.032,1300,.5,.6,-7+i*5);voice(N(m-12),t,S16*15,"triangle",.05,900,.6,.6)});
+    // taikos
+    const pat=hot?[0,3,6,8,10,11,12,14]:[0,6,8,14];
+    if(pat.includes(s))taiko(t,s===0||s===8?.9:.55);
+    if(bar%4===3&&s>=12)taiko(t,.5+.12*(s-12),140);
+    // cuivres (mélodie) une phrase sur deux
+    if(phrase===1){const pos=(bar%4)*16+s;MEL.forEach(([m,p,l])=>{if(p===pos){voice(N(m-12),t,S16*l*.95,"sawtooth",.07,1600,.06,.45,4);voice(N(m-12),t,S16*l*.95,"square",.025,1100,.06,.45,-4)}})}
+    step++;if(step%16===0)bar++}
+  function sched(){if(!ctx)return;while(nextT<ctx.currentTime+.25){tick(nextT);nextT+=S16}}
+  function start(){
+    if(!on||!init())return;if(ctx.state==="suspended")ctx.resume();
+    if(timer)return;nextT=ctx.currentTime+.08;timer=setInterval(sched,60);
+    out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setTargetAtTime(.32,ctx.currentTime,1.2);started=true}
+  function stop(){if(timer){clearInterval(timer);timer=null}if(ctx&&out){out.gain.cancelScheduledValues(ctx.currentTime);out.gain.setTargetAtTime(0,ctx.currentTime,.15)}}
+  function paint(){document.querySelectorAll(".musbtn").forEach(b=>{b.classList.toggle("off",!on);b.setAttribute("aria-pressed",String(on));b.setAttribute("aria-label",on?"Couper la musique":"Activer la musique")})}
+  function toggle(){on=!on;try{localStorage.setItem("tdl_music",on?"1":"0")}catch(e){}on?start():stop();paint()}
+  const kick=e=>{if(e.target.closest&&e.target.closest(".musbtn"))return;if(on&&!timer)start()};
+  ["pointerdown","keydown","touchstart"].forEach(e=>document.addEventListener(e,kick,{passive:true}));
+  document.addEventListener("visibilitychange",()=>{document.hidden?stop():(on&&started&&start())});
+  document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".musbtn");if(b){e.stopPropagation();toggle()}},true);
+  paint();
+  return (window.MUS={toggle,start,stop,get on(){return on},get playing(){return !!timer}});
+})();
+
 function tone(f,t,d,type="square",v=.05){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+d);o.connect(g).connect(actx.destination);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+d+.02)}catch(e){}}
 /* Fanfare de victoire originale, style JRPG (cuivres synthétiques) */
 function victoryTheme(){
