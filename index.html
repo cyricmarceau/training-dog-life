@@ -808,6 +808,9 @@ body{padding-block:0 210px}
 .lkchip.on{border-color:#c9a24a;color:#ffe08a;background:#2a1a0e}
 .lkdot{width:26px;height:26px;border-radius:50%;border:2px solid #000;box-shadow:0 0 0 2px transparent;cursor:pointer;padding:0}
 .lkdot.on{box-shadow:0 0 0 2px #ffe08a}
+.wnav{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.wbtn{flex:none;width:30px;height:30px;border:1px solid #5a3a30;border-radius:4px;background:#1a0f0d;color:#ffe08a;font:700 18px/1 var(--body);cursor:pointer;padding:0}
+.wbtn:disabled{opacity:.3;cursor:default}
 .burger:hover{border-color:var(--ember)}.burger:hover span{background:#ffe08a}
 .dback{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:25;animation:dfade .2s ease-out}
 @keyframes dfade{from{opacity:0}}
@@ -986,7 +989,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       </section>
 
       <section class="panel mapwrap">
-        <h3>Monde 1 · Les Enfers <small id="mapKm">0 km</small></h3>
+        <h3 class="maph"><span class="wnav"><button type="button" class="wbtn" id="wPrev" aria-label="Monde précédent">‹</button><span id="mapTitle">Monde 1 · Les Enfers</span><button type="button" class="wbtn" id="wNext" aria-label="Monde suivant">›</button></span> <small id="mapKm">0 km</small></h3>
         <div class="mapbox"><div class="mapscroll"><svg id="map" viewBox="0 0 640 360" role="img" aria-label="Carte du monde 1"></svg></div><button type="button" class="mapzoom" id="mapZoom" aria-label="Dézoomer la carte"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/><path class="zplus" d="M10 7v6"/></svg><span>Dézoomer</span></button></div>
         <div class="friends" id="mapFriends"></div>
         <div class="nodeinfo" id="nodeInfo"></div>
@@ -1373,6 +1376,9 @@ function setSync(){$("sync").innerHTML=mode==="db"?"<b>●</b> Synchronisé avec
   $("thMe").addEventListener("click",()=>showPlayer(keyOf(me)));
   new MutationObserver(()=>{const b=$("chatBadge"),t=$("thBadge");t.hidden=b.hidden;t.textContent=b.textContent}).observe($("chatBadge"),{attributes:true,childList:true,characterData:true,subtree:true});
 })();
+document.addEventListener("click",e=>{const b=e.target.closest("#wPrev,#wNext");if(!b||b.disabled)return;
+  const cur=viewWorld==null?NODES[progressOf(lastKm,player.bosses).idx].w:viewWorld;viewWorld=Math.max(0,Math.min(WORLDS.length-1,cur+(b.id==="wNext"?1:-1)));
+  selAuto=false;selNode=NODES.findIndex(n=>n.w===viewWorld);render()});
 let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
 function render(){try{checkMyDeath()}catch(_){}
 
@@ -1445,10 +1451,48 @@ const NODES=[
  {km:79,x:540,y:300,t:"lvl",n:"Niveau 9 · Rivière de sang"},
  {km:87,x:540,y:220,t:"lvl",n:"Niveau 10 · Cimes brûlées"},
  {km:94,x:540,y:140,t:"lvl",n:"Niveau 11 · Dernier seuil"},
- {km:100,x:540,y:60,t:"boss",boss:2,n:"Citadelle de la Terreur"}
+ {km:100,x:540,y:60,t:"boss",boss:2,big:1,n:"Citadelle de la Terreur"},
+ /* Monde 2 · Glacier des Lamentations */
+ {km:102,w:1,x:50,y:300,t:"portal",n:"Portail de givre"},
+ {km:107,w:1,x:140,y:300,t:"lvl",n:"Niveau 12 · Neiges grises"},
+ {km:113,w:1,x:230,y:300,t:"lvl",n:"Niveau 13 · Lac gelé"},
+ {km:119,w:1,x:320,y:300,t:"item",n:"Coffre de glace"},
+ {km:125,w:1,x:410,y:300,t:"lvl",n:"Niveau 14 · Crocs de glace"},
+ {km:132,w:1,x:500,y:300,t:"lvl",n:"Niveau 15 · Tempête blanche"},
+ {km:140,w:1,x:590,y:240,t:"boss",boss:3,n:"Antre du Wendigo"},
+ {km:147,w:1,x:500,y:190,t:"lvl",n:"Niveau 16 · Grottes bleues"},
+ {km:154,w:1,x:410,y:190,t:"item",n:"Coffre du blizzard"},
+ {km:161,w:1,x:320,y:190,t:"lvl",n:"Niveau 17 · Pics éternels"},
+ {km:168,w:1,x:230,y:190,t:"lvl",n:"Niveau 18 · Mer de glace"},
+ {km:176,w:1,x:140,y:140,t:"lvl",n:"Niveau 19 · Cathédrale gelée"},
+ {km:185,w:1,x:240,y:80,t:"lvl",n:"Niveau 20 · Aurore noire"},
+ {km:195,w:1,x:390,y:70,t:"boss",boss:4,big:1,n:"Trône de la Liche"},
+ /* Monde 3 · Abysses du Néant */
+ {km:197,w:2,x:590,y:300,t:"portal",n:"Faille du Néant"},
+ {km:203,w:2,x:500,y:300,t:"lvl",n:"Niveau 21 · Brume violette"},
+ {km:210,w:2,x:410,y:300,t:"lvl",n:"Niveau 22 · Racines d'ombre"},
+ {km:217,w:2,x:320,y:300,t:"item",n:"Coffre des abysses"},
+ {km:224,w:2,x:230,y:300,t:"lvl",n:"Niveau 23 · Cristaux maudits"},
+ {km:232,w:2,x:140,y:300,t:"lvl",n:"Niveau 24 · Marais des âmes"},
+ {km:240,w:2,x:50,y:240,t:"boss",boss:5,n:"Gouffre de l'Horreur"},
+ {km:248,w:2,x:140,y:190,t:"lvl",n:"Niveau 25 · Spirale sans fond"},
+ {km:256,w:2,x:230,y:190,t:"item",n:"Coffre du vide"},
+ {km:264,w:2,x:320,y:190,t:"lvl",n:"Niveau 26 · Temple englouti"},
+ {km:273,w:2,x:410,y:190,t:"lvl",n:"Niveau 27 · Trône vide"},
+ {km:282,w:2,x:500,y:140,t:"lvl",n:"Niveau 28 · Œil du Néant"},
+ {km:291,w:2,x:400,y:80,t:"lvl",n:"Niveau 29 · Seuil final"},
+ {km:300,w:2,x:250,y:70,t:"boss",boss:6,big:1,n:"Gueule du Dévoreur"}
 ];
+NODES.forEach(n=>{if(n.w==null)n.w=0});
+const WORLDS=[
+ {n:"Monde 1 · Les Enfers",path:"#ff6a1a",frame:"#c9a24a"},
+ {n:"Monde 2 · Glacier des Lamentations",path:"#9fd8ff",frame:"#bfe6ff"},
+ {n:"Monde 3 · Abysses du Néant",path:"#c77dff",frame:"#a070d8"}];
+let viewWorld=null;
 const ITEMS={potion:{n:"Potion de sang",d:"Soigne 50 PV une fois par combat"},epee:{n:"Épée de braise",d:"+12 attaque"},bouclier:{n:"Bouclier d'os",d:"+45 PV"}};
-const BOSSES=[{n:"Le Gardien des Portes",hp:55,atk:8,c:"#8a2b14"},{n:"La Reine des Cendres",hp:160,atk:22,c:"#5a1a3a"},{n:"Le Seigneur de la Terreur",hp:340,atk:42,c:"#3a0505"}];
+const BOSSES=[{n:"Le Gardien des Portes",hp:55,atk:8,c:"#8a2b14"},{n:"La Reine des Cendres",hp:160,atk:22,c:"#5a1a3a"},{n:"Le Seigneur de la Terreur",hp:340,atk:42,c:"#3a0505"},
+ {n:"Le Wendigo des Glaces",hp:500,atk:55,c:"#2a5a7a"},{n:"La Liche du Givre",hp:720,atk:70,c:"#1a3a5a"},
+ {n:"L'Horreur des Profondeurs",hp:980,atk:88,c:"#4a1a6a"},{n:"Le Dévoreur de Mondes",hp:1350,atk:110,c:"#1a0a2a"}];
 const ICON={
  potion:'<path d="M9 2h6v4l3 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10l3-4Z" fill="#b3141b" stroke="#e8dccb" stroke-width="1.2"/><rect x="8" y="1" width="8" height="3" fill="#c9a24a"/>',
  epee:'<path d="M19 2 21 4 9 16l-2-2Z" fill="#ff6a1a" stroke="#ffd9a8" stroke-width=".8"/><path d="M5 13l6 6-2 1-5-5Z" fill="#c9a24a"/><path d="M4 19l-2 3 1 1 3-2Z" fill="#6b3b1a"/>',
@@ -1468,46 +1512,50 @@ function progressOf(km,bosses){
   const nx=NODES[idx+1];const frac=nx?(km-NODES[idx].km)/(nx.km-NODES[idx].km):0;
   return{idx,frac:Math.max(0,Math.min(1,frac)),blocked:-1,km};
 }
-function posOf(pr){const a=NODES[pr.idx],b=NODES[pr.idx+1];if(!b||!pr.frac)return[a.x,a.y];return[a.x+(b.x-a.x)*pr.frac,a.y+(b.y-a.y)*pr.frac]}
+function posOf(pr){const a=NODES[pr.idx],b=NODES[pr.idx+1];if(!b||!pr.frac||a.w!==b.w)return[a.x,a.y];return[a.x+(b.x-a.x)*pr.frac,a.y+(b.y-a.y)*pr.frac]}
 
-function mapStatic(){
-  // décor généré une fois
+function mapStatic(w){
+  const T=[{t1:"#1a0706",t2:"#260a08",dot:"#3a1410",lk:["#ffb347","#ff6a1a","#8a1206"],rim:"#2a0806",rock:"#2c0e0b",rockS:"#120303",fl:["#b3141b","#ff6a1a","#ffe08a"],fr:"#c9a24a",fr2:"#5c0a0d"},
+    {t1:"#0b1722",t2:"#12263a",dot:"#1d3a52",lk:["#e8f6ff","#9fd8ff","#2a6a9a"],rim:"#07121c",rock:"#c9e6f7",rockS:"#4a7a9a",fl:["#2a6a9a","#9fd8ff","#ffffff"],fr:"#bfe6ff",fr2:"#1d3a52"},
+    {t1:"#120a1c",t2:"#1e1030",dot:"#2e1a48",lk:["#f0c8ff","#c77dff","#3a0a5a"],rim:"#0a0412",rock:"#3a1a5a",rockS:"#0a0412",fl:["#5a1a8a","#c77dff","#f0c8ff"],fr:"#a070d8",fr2:"#2e1a48"}][w];
   let s=`<defs>
-   <pattern id="tiles" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="#1a0706"/><path d="M0 40V0h40" fill="none" stroke="#260a08" stroke-width="2"/><circle cx="12" cy="14" r="1.2" fill="#3a1410"/><circle cx="30" cy="29" r="1" fill="#3a1410"/></pattern>
-   <radialGradient id="lava" cx="50%" cy="50%"><stop offset="0" stop-color="#ffb347"/><stop offset=".45" stop-color="#ff6a1a"/><stop offset="1" stop-color="#8a1206"/></radialGradient>
-   <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#b3141b"/><stop offset=".6" stop-color="#ff6a1a"/><stop offset="1" stop-color="#ffe08a"/></linearGradient>
+   <pattern id="tiles${w}" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="${T.t1}"/><path d="M0 40V0h40" fill="none" stroke="${T.t2}" stroke-width="2"/><circle cx="12" cy="14" r="1.2" fill="${T.dot}"/><circle cx="30" cy="29" r="1" fill="${T.dot}"/></pattern>
+   <radialGradient id="lava${w}" cx="50%" cy="50%"><stop offset="0" stop-color="${T.lk[0]}"/><stop offset=".45" stop-color="${T.lk[1]}"/><stop offset="1" stop-color="${T.lk[2]}"/></radialGradient>
+   <linearGradient id="flame${w}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${T.fl[0]}"/><stop offset=".6" stop-color="${T.fl[1]}"/><stop offset="1" stop-color="${T.fl[2]}"/></linearGradient>
   </defs>
-  <rect width="640" height="360" fill="url(#tiles)"/>
-  <rect x="4" y="4" width="632" height="352" fill="none" stroke="#c9a24a" stroke-width="2" rx="6"/>
-  <rect x="9" y="9" width="622" height="342" fill="none" stroke="#5c0a0d" stroke-width="1" rx="4"/>`;
-  // lacs de lave
-  [[60,120,46,30],[420,60,60,26],[610,180,26,60],[360,320,48,20],[40,210,22,40]].forEach(([x,y,rx,ry])=>{
-    s+=`<ellipse cx="${x}" cy="${y}" rx="${rx+5}" ry="${ry+5}" fill="#2a0806"/><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#lava)"/>`;
-  });
-  // pics rocheux
-  [[30,40],[200,40],[250,55],[300,70],[440,130],[610,320],[20,340],[400,270],[480,100],[600,40],[90,175]].forEach(([x,y])=>{
-    s+=`<path d="M${x-12} ${y+10}L${x-3} ${y-12}L${x+2} ${y-2}L${x+6} ${y-16}L${x+14} ${y+10}Z" fill="#2c0e0b" stroke="#120303"/>`;
-  });
-  // flammes animées
-  [[160,40],[340,40],[470,165],[20,270],[330,180],[600,110],[400,330],[170,345]].forEach(([x,y],i)=>{
-    s+=`<g transform="translate(${x} ${y})"><path class="flick" style="transform-origin:0 6px" d="M0 6C-7 6-8-2-3-8c0 4 2 5 3 5C1-6 2-10 0-14c6 3 9 10 6 16-1 3-3 4-6 4Z" fill="url(#flame)"/></g>`;
-  });
-  // ossements
-  [[250,260],[70,260],[490,270],[330,250]].forEach(([x,y])=>{s+=`<g transform="translate(${x} ${y}) rotate(-20)" fill="#d9ccb5" opacity=".7"><rect x="-8" y="-1.5" width="16" height="3" rx="1.5"/><circle cx="-8" cy="-2" r="2"/><circle cx="-8" cy="2" r="2"/><circle cx="8" cy="-2" r="2"/><circle cx="8" cy="2" r="2"/></g>`});
+  <rect width="640" height="360" fill="url(#tiles${w})"/>
+  <rect x="4" y="4" width="632" height="352" fill="none" stroke="${T.fr}" stroke-width="2" rx="6"/>
+  <rect x="9" y="9" width="622" height="342" fill="none" stroke="${T.fr2}" stroke-width="1" rx="4"/>`;
+  const lakes=[[[60,120,46,30],[420,60,60,26],[610,180,26,60],[360,320,48,20],[40,210,22,40]],[[90,40,50,22],[600,120,30,50],[330,250,60,22],[40,180,24,40],[560,340,50,14]],[[560,60,56,30],[30,120,24,50],[330,250,50,20],[600,200,26,40],[120,340,60,14]]][w];
+  lakes.forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx+5}" ry="${ry+5}" fill="${T.rim}"/><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#lava${w})"${w===1?' opacity=".8"':''}/>`+(w===1?`<path d="M${x-rx*.5} ${y-ry*.2}l${rx*.3} ${ry*.3}l${rx*.25} ${-ry*.25}" stroke="#ffffff" stroke-opacity=".6" fill="none"/>`:'')});
+  const rocks=[[[30,40],[200,40],[250,55],[300,70],[440,130],[610,320],[20,340],[400,270],[480,100],[600,40],[90,175]],[[30,90],[180,40],[300,40],[470,40],[560,60],[620,280],[20,330],[300,140],[440,250],[180,240],[620,180]],[[60,40],[150,60],[300,40],[440,40],[620,120],[600,320],[20,200],[300,250],[470,250],[200,120],[60,340]]][w];
+  rocks.forEach(([x,y])=>{
+    if(w===1)s+=`<path d="M${x-10} ${y+10}L${x-4} ${y-18}L${x} ${y-4}L${x+5} ${y-24}L${x+12} ${y+10}Z" fill="${T.rock}" stroke="${T.rockS}"/><path d="M${x+5} ${y-24}L${x+3} ${y+8}" stroke="#ffffff" stroke-opacity=".7"/>`;
+    else if(w===2)s+=`<path d="M${x} ${y-22}L${x+7} ${y-4}L${x+3} ${y+10}H${x-4}L${x-7} ${y-6}Z" fill="${T.rock}" stroke="#c77dff" stroke-opacity=".7"/><path d="M${x} ${y-22}L${x-1} ${y+8}" stroke="#f0c8ff" stroke-opacity=".5"/>`;
+    else s+=`<path d="M${x-12} ${y+10}L${x-3} ${y-12}L${x+2} ${y-2}L${x+6} ${y-16}L${x+14} ${y+10}Z" fill="${T.rock}" stroke="${T.rockS}"/>`});
+  const fls=[[[160,40],[340,40],[470,165],[20,270],[330,180],[600,110],[400,330],[170,345]],[[120,90],[380,110],[560,170],[60,250],[280,330],[620,40],[450,340],[200,350]],[[100,90],[380,110],[560,170],[60,280],[280,330],[620,40],[450,340],[200,350]]][w];
+  fls.forEach(([x,y])=>{
+    if(w===1)s+=`<g transform="translate(${x} ${y})"><path class="flick" style="transform-origin:0 0" d="M0-6V6M-5-3 5 3M-5 3 5-3" stroke="#e8f6ff" stroke-width="1.6" stroke-linecap="round"/></g>`;
+    else s+=`<g transform="translate(${x} ${y})"><path class="flick" style="transform-origin:0 6px" d="M0 6C-7 6-8-2-3-8c0 4 2 5 3 5C1-6 2-10 0-14c6 3 9 10 6 16-1 3-3 4-6 4Z" fill="url(#flame${w})"/></g>`});
+  if(w===0)[[250,260],[70,260],[490,270],[330,250]].forEach(([x,y])=>{s+=`<g transform="translate(${x} ${y}) rotate(-20)" fill="#d9ccb5" opacity=".7"><rect x="-8" y="-1.5" width="16" height="3" rx="1.5"/><circle cx="-8" cy="-2" r="2"/><circle cx="-8" cy="2" r="2"/><circle cx="8" cy="-2" r="2"/><circle cx="8" cy="2" r="2"/></g>`});
+  if(w===1)[[90,250],[560,240],[260,140],[470,120]].forEach(([x,y])=>{s+=`<g transform="translate(${x} ${y})" stroke="#3a5a72" stroke-width="2" fill="none"><path d="M0 14V-12M0-4l-7-6M0 2l7-6M0-10l-4-4"/></g>`});
+  if(w===2)[[90,250],[560,240],[260,140],[470,120]].forEach(([x,y])=>{s+=`<g transform="translate(${x} ${y})"><ellipse rx="9" ry="6" fill="#0a0412" stroke="#c77dff"/><circle r="3" fill="#f0c8ff" class="flick"/></g>`});
   return s;
 }
-const MAP_BG=mapStatic();
+const MAP_BGS=[0,1,2].map(mapStatic);
+
 const FRIEND_COL=["#6aa6ff","#5aff9a","#c77dff","#ff7ab8","#40e0d0","#e6e66a"];let friendsOnMap=[];
 
 function nodeSvg(n,i,pr){
   const reached=pr.km>=n.km&&(pr.blocked<0||i<=pr.blocked);
   let inner="",lab="";
-  if(n.t==="start"){inner=`<rect class="ring" x="-14" y="-14" width="28" height="28" rx="4" fill="#3a0b08" stroke="#c9a24a" stroke-width="2"/><text y="5" text-anchor="middle" font-family="Pirata One,serif" font-size="15" fill="#ffd9a8">D</text>`}
+  if(n.t==="portal"){const c=WORLDS[n.w].path;inner=`<circle class="ring" r="15" fill="#0a0406" stroke="${c}" stroke-width="2"/><path class="flick" style="transform-origin:0 0" d="M0-9a9 9 0 1 1-9 9a6 6 0 1 1 6-6a3 3 0 1 1-3 3" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/>`}
+  else if(n.t==="start"){inner=`<rect class="ring" x="-14" y="-14" width="28" height="28" rx="4" fill="#3a0b08" stroke="#c9a24a" stroke-width="2"/><text y="5" text-anchor="middle" font-family="Pirata One,serif" font-size="15" fill="#ffd9a8">D</text>`}
   else if(n.t==="lvl"){const num=n.n.match(/\d+/)[0];inner=`<rect class="ring" x="-13" y="-13" width="26" height="26" rx="3" fill="${reached?"#7d0b10":"#2a1210"}" stroke="${reached?"#ff6a1a":"#5a3a30"}" stroke-width="2"/><text y="5" text-anchor="middle" font-family="Pirata One,serif" font-size="15" fill="${reached?"#fff3e6":"#8a7468"}">${num}</text>`}
   else if(n.t==="item"){const got=(player.chests||[]).includes(i);inner=`<rect class="ring" x="-15" y="-12" width="30" height="24" rx="3" fill="${got?"#2a1210":"#6b3b1a"}" stroke="${reached&&!got?"#ffe08a":"#c9a24a"}" stroke-width="2"/><rect x="-15" y="-3" width="30" height="3" fill="#c9a24a"/><rect x="-3" y="-4" width="6" height="7" fill="#ffd9a8"/>${got?'<path d="M-8 0l5 5 11-11" stroke="#6fae5a" stroke-width="3" fill="none"/>':""}`}
-  else{const beat=player.bosses.includes(n.boss);const big=n.boss===2;const w=big?22:17;const sos=raidOf(n.boss);
+  else{const beat=player.bosses.includes(n.boss);const big=!!n.big;const w=big?22:17;const sos=raidOf(n.boss);
     inner=`<path class="ring" d="M${-w} 14V${-6}h5v-6h5v6h${w*2-20}v-6h5v6h5V14Z" fill="${beat?"#2a1210":"#3a0505"}" stroke="${beat?"#6fae5a":"#b3141b"}" stroke-width="2"/><path d="M-5 14v-9a5 5 0 0 1 10 0v9" fill="#0c0303"/>${beat?'':'<circle cx="-3" cy="-1" r="1.5" fill="#ff6a1a"/><circle cx="3" cy="-1" r="1.5" fill="#ff6a1a"/>'}${big?'<path d="M-22 -12l-4-10 8 6M22 -12l4-10-8 6" fill="#c9a24a"/>':''}`}
-  if(n.t==="boss"&&raidOf(n.boss))inner+=`<g class="sosb" transform="translate(${n.boss===2?20:16} -20)"><circle r="9" fill="#ff3a2a" stroke="#fff3e6" stroke-width="1.5"/><text y="3.5" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="Alegreya Sans,sans-serif">SOS</text></g>`;
+  if(n.t==="boss"&&raidOf(n.boss))inner+=`<g class="sosb" transform="translate(${n.big?20:16} -20)"><circle r="9" fill="#ff3a2a" stroke="#fff3e6" stroke-width="1.5"/><text y="3.5" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="Alegreya Sans,sans-serif">SOS</text></g>`;
   return `<g class="node${selNode===i?" sel":""}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(n.n)}" transform="translate(${n.x} ${n.y})">${inner}</g>`;
 }
 
@@ -1515,13 +1563,16 @@ function renderMap(xp,km){
   lastXp=xp;lastKm=km;
   const pr=progressOf(km,player.bosses);
   $("mapKm").textContent=`${km.toLocaleString("fr-CA",{maximumFractionDigits:1})} km parcourus`;
-  if(selNode===null||selAuto)selNode=pr.idx;
+  if(selNode===null||selAuto){selNode=pr.idx;viewWorld=null}
+  const pw=NODES[pr.idx].w,vw=viewWorld==null?pw:viewWorld,W_=WORLDS[vw];
+  if(NODES[selNode].w!==vw)selNode=NODES.findIndex(n=>n.w===vw);
+  {const t=$("mapTitle");if(t)t.textContent=W_.n;const a=$("wPrev"),b=$("wNext");if(a){a.disabled=vw<=0;b.disabled=vw>=WORLDS.length-1}}
   // chemin
   let path="",done="";
-  for(let i=0;i<NODES.length-1;i++){const a=NODES[i],b=NODES[i+1];path+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
+  for(let i=0;i<NODES.length-1;i++){const a=NODES[i],b=NODES[i+1];if(a.w===vw&&b.w===vw)path+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
   const [px,py]=posOf(pr);
-  for(let i=0;i<pr.idx;i++){const a=NODES[i],b=NODES[i+1];done+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
-  if(pr.frac){const a=NODES[pr.idx];done+=`M${a.x} ${a.y}L${px} ${py}`}
+  for(let i=0;i<pr.idx;i++){const a=NODES[i],b=NODES[i+1];if(a.w===vw&&b.w===vw)done+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
+  if(pr.frac&&pw===vw){const a=NODES[pr.idx];done+=`M${a.x} ${a.y}L${px} ${py}`}
   // autres joueurs
   const me_=keyOf(me);let others="";
   const kmBy={};punches.forEach(p=>{if(!isAct(p))return;kmBy[p.key]=kmBy[p.key]||{name:p.name,km:0};kmBy[p.key].km+=+p.km||0});
@@ -1532,7 +1583,9 @@ function renderMap(xp,km){
     const ang=-Math.PI/2+(n%2?1:-1)*(0.7+Math.floor((n+1)/2)*0.55),fx=ox+(n?Math.cos(ang)*26:0),fy=oy-20+(n?Math.sin(ang)*14+12:0);
     const col=colorOf(k,FRIEND_COL[j%FRIEND_COL.length]);
     const where=fpr.blocked>=0?`devant ${BOSSES[NODES[fpr.blocked].boss].n}`:NODES[fpr.idx].n;
-    friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fpr.blocked>=0?fpr.blocked:fpr.idx});
+    const fnode=fpr.blocked>=0?fpr.blocked:fpr.idx,fw=NODES[fnode].w;
+    friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fnode,w:fw});
+    if(fw!==vw)return;
     others+=`<g class="friend" data-fk="${esc(k)}" transform="translate(${fx.toFixed(1)} ${fy.toFixed(1)})"><title>${esc(v.name)} · ${esc(where)}</title>
       <ellipse cx="0" cy="17" rx="7" ry="2.5" fill="rgba(0,0,0,.5)"/>
       <path d="M-8 -3 -11 -12 -4 -7ZM8 -3l3-9-7 5Z" fill="${col}"/>
@@ -1551,11 +1604,11 @@ function renderMap(xp,km){
     <circle cx="-4.5" cy="0" r="2" fill="#ffe08a"/><circle cx="4.5" cy="0" r="2" fill="#ffe08a"/>
     <path d="M-4 7l2 3 2-2 2 2 2-3" stroke="#ff6a1a" stroke-width="1.4" fill="none"/></g>
     <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
-  $("map").innerHTML=MAP_BG+
+  $("map").innerHTML=MAP_BGS[vw]+
     `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
      <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
-     <path d="${done}" stroke="#ff6a1a" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+
-    NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+others+tok;
+     <path d="${done}" stroke="${W_.path}" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+
+    NODES.map((n,i)=>n.w===vw?nodeSvg(n,i,pr):"").join("")+others+(pw===vw?tok:"");
   if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
   prevTok=[px,py];
   const myWhere=pr.blocked>=0?`devant ${BOSSES[NODES[pr.blocked].boss].n}`:NODES[pr.idx].n;
@@ -1646,7 +1699,7 @@ function renderInv(){
   const lb=lootBonus(),st=stats(),k=keyOf(me),mine=punches.filter(p=>p.key===k&&isAct(p));
   let ri=0;RANKS.forEach((r,i)=>{if(lastXp>=r[0])ri=i});
   const nb=Object.values(player.loot||{}).reduce((a,c)=>a+c,0),beat=player.bosses.length;
-  $("invSum").textContent=`${st.hp} PV · ${st.atk} ATQ`;{const ne=Object.values(eqLoot(player)).reduce((a,c)=>a+c,0)+eqItems(player).length,no=nb+player.items.length;$("invSum2").textContent=`${ne}/${no} équipé${ne>1?"s":""} · ${beat}/3 boss`;}
+  $("invSum").textContent=`${st.hp} PV · ${st.atk} ATQ`;{const ne=Object.values(eqLoot(player)).reduce((a,c)=>a+c,0)+eqItems(player).length,no=nb+player.items.length;$("invSum2").textContent=`${ne}/${no} équipé${ne>1?"s":""} · ${beat}/${BOSSES.length} boss`;}
   $("heroSvg").innerHTML=heroSvg();
   const TROPHY='<path d="M12 3c-5 0-8 3-8 7 0 3 2 4 3 5v4h10v-4c1-1 3-2 3-5 0-4-3-7-8-7Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="9" cy="11" r="2" fill="#170404"/><circle cx="15" cy="11" r="2" fill="#170404"/><path d="M10 19v-3M14 19v-3" stroke="#3a2c28"/>';
   const L=eqLoot(player),OWN=player.loot||{};
@@ -1666,7 +1719,7 @@ function renderInv(){
     ["","Km",lastKm.toLocaleString("fr-CA",{maximumFractionDigits:1})],
     ["","Séances gym",gym],
     ["","Courses",runs],
-    ["","Boss",`${beat} / 3`],
+    ["","Boss",`${beat} / ${BOSSES.length}`],
     ["","Potion",st.potion?"Prête":"—"]
   ].map(([c,l,v])=>`<div class="${c}"><dt>${l}</dt><dd>${v}</dd></div>`).join("");
   const own=player.loot||{},off=player.lootOff||{},ue=player.unequip||[];
@@ -1712,6 +1765,7 @@ function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function focusMap(target){
   const sec=document.querySelector(".mapwrap");if(!sec)return;
+  if(!target&&viewWorld!=null){viewWorld=null;render()}
   sec.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
   if(reduce)return;
   const tok=++camTok;
@@ -2237,7 +2291,7 @@ function renderClan(){
     return{k,name:nameOf(k),c,st,ri,where,last,open,deaths,week,loot:Object.values(c.pl.loot||{}).reduce((a,x)=>a+x,0)}})
     .sort((a,b)=>b.c.xp-a.c.xp);
   $("clanSum").textContent=`${rows.length} membre${rows.length>1?"s":""} · ${rows.filter(r=>r.open).length} en séance`;
-  const reqs=[0,1,2].map(bi=>({bi,r:raidOf(bi)})).filter(x=>x.r);
+  const reqs=BOSSES.map((_,bi)=>({bi,r:raidOf(bi)})).filter(x=>x.r);
   const reqHtml=reqs.length?`<div class="helpreq"><h5 class="lh">🆘 Demandes d'aide</h5>${reqs.map(({bi,r})=>{const k=keyOf(me),inR=(r.members||[]).includes(k),can=canHelp(k,bi);
     return `<div class="hrow"><div><b>${(r.members||[]).filter(x=>!(r.helpers||[]).includes(x)).map(x=>esc(nameOf(x))).join(", ")}</b> contre ${esc(BOSSES[bi].n)}${(r.helpers||[]).length?` · ${(r.helpers||[]).length} renfort${(r.helpers||[]).length>1?"s":""}`:""}</div>
       ${inR?`<span class="hin">Dans le groupe</span>`:can?`<button class="btn" data-raid="help" data-b="${bi}">Aider</button>`:`<span class="hin">Tu n'as pas encore passé ce boss</span>`}</div>`}).join("")}</div>`:"";
@@ -2250,7 +2304,7 @@ function renderClan(){
       <div><dt>XP semaine</dt><dd>${r.week.toLocaleString("fr-CA")}</dd></div>
       <div><dt>PV / ATQ</dt><dd>${r.st.hp} / ${r.st.atk}</dd></div>
       <div><dt>Km carte</dt><dd>${r.c.km.toLocaleString("fr-CA",{maximumFractionDigits:1})}</dd></div>
-      <div><dt>Boss</dt><dd>${r.c.pl.bosses.length} / 3</dd></div>
+      <div><dt>Boss</dt><dd>${r.c.pl.bosses.length} / ${BOSSES.length}</dd></div>
       <div><dt>Morts</dt><dd>${r.deaths}</dd></div>
     </dl>
     <div class="memf"><span class="where">📍 ${esc(r.where)}</span>
@@ -2386,7 +2440,7 @@ function showPlayer(k){
 document.addEventListener("click",e=>{if(e.target.closest("#itAct [data-fight],#itAct [data-mpjoin],#itAct [data-mpback]"))$("itip").hidden=true},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-pfocus]");if(!b)return;const k=b.dataset.pfocus;$("itip").hidden=true;
   if(k===keyOf(me)){selAuto=true;render();focusMap();return}
-  const f=friendsOnMap.find(x=>x.k===k);if(f){selAuto=false;selNode=f.node;render();focusMap([f.x,f.y])}});
+  const f=friendsOnMap.find(x=>x.k===k);if(f){selAuto=false;viewWorld=f.w;selNode=f.node;render();const g=friendsOnMap.find(x=>x.k===k)||f;focusMap([g.x,g.y])}});
 function showItem(k){
   const isMap=!!ITEMS[k],isLoot=!!LOOT[k];
   if(k==="trophy"){const beat=player.bosses||[];
