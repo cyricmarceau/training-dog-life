@@ -479,7 +479,7 @@ header.top{padding-block:16px 14px;border-bottom:0}
 .trainb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .trainb .btn{padding:8px 6px;font-size:12px}
 .trainnote{color:#9ad;font-size:15px;border:1px solid #2d4a7a;background:rgba(45,74,122,.15);padding:10px 12px;margin:6px 0}
-.feed .death{color:#ff5a4a}.feed .vict{color:var(--gold)}
+.feed .fdeath{color:#ff5a4a}.feed .vict{color:var(--gold)}
 @media (max-width:520px){.acts{grid-template-columns:repeat(4,minmax(0,1fr))}.acts button{font-size:12px;padding:8px 2px}.acts button small{display:none}.arena2{height:160px}.fig svg{width:46px;height:70px}.fig.boss svg{width:76px;height:92px}.fbars{grid-template-columns:1fr}.bossbar{text-align:left}}
 @media (prefers-reduced-motion:reduce){.fig,.fig svg{transition:none;animation:none!important}}
 
@@ -1593,9 +1593,9 @@ function render(){try{checkMyDeath()}catch(_){}try{if(!$("chatP").hidden)renderC
 
   const list=punches.slice().sort((a,b)=>b.at-a.at).slice(0,30);
   {const live=punches.filter(p=>isAct(p)&&isOpen(p)).length;$("feedSum").textContent=live?`${live} en séance`:list.length?`dernier ${ago(list[0].at)}`:"";}
-  const evTxt=p=>p.type==="death"?`<span class="death">est mort face à ${esc(p.boss)}. ☠ Permadeath.</span>`:`<span class="vict">ont terrassé ${esc(p.boss)} !</span>`;
+  const evTxt=p=>p.type==="death"?`<span class="fdeath">est mort face à ${esc(p.boss)}. ☠ Permadeath.</span>`:`<span class="vict">ont terrassé ${esc(p.boss)} !</span>`;
   $("feed").innerHTML=list.length?list.map(p=>{const o=isOpen(p),mn=minsOf(p);
-    return `<li><div class="av" aria-hidden="true" style="${isAct(p)?`background:${colorOf(p.key,"")||"var(--blood)"}`:""}">${p.type==="death"?"☠":p.type==="victory"?"⚔":esc(p.name.charAt(0).toUpperCase())}</div><div class="t"><b>${esc(p.name)}</b> ${!isAct(p)?evTxt(p):o?`<span class="live">● ${p.type==="gym"?"au gym":"en course"} en ce moment</span>`:`${p.type==="gym"?"a fait du gym":"a couru"} · ${mn} min${p.km?` · ${p.km} km`:""} · <span class="xpg">+${mn} XP</span>${p.loot&&p.loot.length?` · butin : ${p.loot.map(k=>LOOT[k]?`<span class="r-${LOOT[k].r}">${esc(LOOT[k].n)}</span>`:"").join(", ")}`:""}`}</div><span class="w">${ago(p.at)}</span></li>`}).join("")
+    return `<li><div class="av" aria-hidden="true" style="${isAct(p)?`background:${colorOf(p.key,"")||"var(--blood)"}`:""}">${p.type==="death"?"☠":p.type==="victory"?"⚔":esc(p.name.charAt(0).toUpperCase())}</div><div class="t"><b>${esc(p.name)}</b> ${!isAct(p)?evTxt(p):o?`<span class="live">● ${p.type==="gym"?"au gym":"en course"} en ce moment</span>`:`${p.type==="gym"?"a fait du gym":"a couru"} · ${mn} min${p.km?` · ${p.km} km`:""} · <span class="xpg">+${mn} XP</span>${p.loot&&p.loot.some(k=>LOOT[k])?` · butin : ${p.loot.filter(k=>LOOT[k]).map(k=>`<span class="r-${LOOT[k].r}">${esc(LOOT[k].n)}</span>`).join(", ")}`:""}`}</div><span class="w">${ago(p.at)}</span></li>`}).join("")
     :`<li class="empty" style="display:block">Personne n'a encore punché. Sois le premier.</li>`;
 
   const agg={};punches.forEach(p=>{if(p.at<ws||!isAct(p))return;(agg[p.key]||(agg[p.key]={name:p.name,c:0})).c+=minsOf(p)});
