@@ -2396,11 +2396,11 @@ function equipFlash(before,after,names,keys){
   $("punchMsg").textContent=`Équipé : ${names.join(", ")}`;
 }
 let chestBusy=false;
-async function checkNewChests(){if(chestBusy||!me)return 0;chestBusy=true;let n=0;
+async function checkNewChests(){if(chestBusy||!me)return 0;chestBusy=true;let opened=0;
   try{for(let i=0;i<NODES.length;i++){const km=charOf(keyOf(me)).km,pr=progressOf(km,player.bosses),n=NODES[i];
-    if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i);n++}}}
+    if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i);opened++}}}
   finally{chestBusy=false}
-  return n}
+  return opened}
 /* coffres dépassés pendant qu'un boss bloquait la route : on les ouvre dès que la voie est libre */
 let chestLaterT=0;function chestsLater(ms=900){clearTimeout(chestLaterT);chestLaterT=setTimeout(async()=>{
   if(!me||!$("fight").hidden||!$("vs").hidden||walkHold||chestBusy){chestsLater(1500);return}
@@ -2692,12 +2692,14 @@ $("fEnter").addEventListener("click",()=>{if(F&&!F.training)F=buildF(F.bi,false)
   setTimeout(()=>{const m=F&&F.team.find(x=>x.me);if(m&&m.alive)setTurn(m.key)},50);flog(F.training?`Entraînement contre ${F.b.n}. Rien n'est en jeu.`:`Les portes de l'arène s'ouvrent. ${F.b.n} entre sous les huées.`,"");arenaRender();
   if(!F.team.find(m=>m.me).alive)autoPlay()});
 $("fFlee").addEventListener("click",()=>{$("fight").hidden=true;F=null});
-$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render();chestsLater()});
+$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;try{localStorage.setItem("tdl_mpdis",JSON.stringify(mpDismissed))}catch(_){}if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render();chestsLater()});
 $("fActs").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b&&!b.disabled)act(b.dataset.act)});
 document.addEventListener("click",async e=>{const r=e.target.closest("[data-raid]");if(!r)return;r.disabled=true;
   try{if(r.dataset.raid==="join")await raidJoin(+r.dataset.b);else if(r.dataset.raid==="help"){await raidJoin(+r.dataset.b,true);$("punchMsg").textContent="Tu es en renfort. Tu combattras quand ton ami lancera le combat."}else await raidLeave(+r.dataset.b)}catch(_){$("punchMsg").textContent="Impossible de modifier le groupe."}render()});
 function checkMandatoryBoss(){const c=charOf(keyOf(me)),pr=progressOf(c.km,player.bosses);
-  if(pr.blocked>=0&&!player.bosses.includes(NODES[pr.blocked].boss)){selNode=pr.blocked;render();$("punchMsg").textContent=`Boss obligatoire : ${BOSSES[NODES[pr.blocked].boss].n} bloque la route.`;openFight(NODES[pr.blocked].boss)}}
+  if(pr.blocked>=0&&!player.bosses.includes(NODES[pr.blocked].boss)){const bi=NODES[pr.blocked].boss,fd=typeof fights!=="undefined"&&fights["b"+bi];
+    if(fd&&fd.status==="fight"&&fd.team&&fd.team.some(m=>m.key===keyOf(me))){$("punchMsg").textContent=`Ton combat contre ${BOSSES[bi].n} continue : l'IA joue pour toi. Retourne dans l'arène avec le bouton du boss.`;return}
+    selNode=pr.blocked;render();$("punchMsg").textContent=`Boss obligatoire : ${BOSSES[NODES[pr.blocked].boss].n} bloque la route.`;openFight(NODES[pr.blocked].boss)}}
 
 /* ================= Clan & cimetière ================= */
 function rankIdx(xp){let ri=0;RANKS.forEach((r,i)=>{if(xp>=r[0])ri=i});return ri}
@@ -3087,7 +3089,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("drawer").classLi
 document.addEventListener("click",e=>{if(e.target.closest("#drawer [data-train]"))closeDrawer()});
 
 /* ================= Combat multijoueur en direct (tour par tour) ================= */
-let fCol=null,fights={},mpDoc=null,mpSeen=0,mpDismissed={},mpBossBusy=false,mpFinished={};
+let fCol=null,fights={},mpDoc=null,mpSeen=0,mpDismissed=(()=>{try{const o=JSON.parse(localStorage.getItem("tdl_mpdis")||"{}"),now=Date.now(),r={};Object.keys(o).forEach(k=>{if(now-(+k.split(":")[1]||0)<864e5)r[k]=true});return r}catch(_){return{}}})(),mpBossBusy=false,mpFinished={};
 const TURN_MS=10000;
 const autoKey=k=>"auto_"+slug(k);
 const isAuto=(d,k)=>!!(d&&d[autoKey(k)]);
