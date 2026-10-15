@@ -1925,7 +1925,7 @@ function renderLobby(){
     $("fLobby").hidden=false;$("fLobbyBtn").hidden=true;
     $("fLobbyList").innerHTML=F.team.map(m=>`<li class="ready"><i style="background:${m.col}"></i><span class="ln"><b>${esc(m.name)}${m.me?" (toi)":""}</b><small>${m.max} PV · ${m.atk} ATQ · ${m.me?"renfort (boss déjà vaincu)":"devant le boss"}</small></span><em class="ok">✔ Dans l'équipe</em></li>`).join("");
     const al=F.team.filter(m=>!m.me).map(m=>m.name);
-    $("fLobbyHint").textContent=al.length?`Tu entres en renfort. ${al.join(", ")} ${al.length>1?"sont entraînés":"est entraîné"} dans l'arène avec toi et ${al.length>1?"jouent leur":"joue son"} tour (sinon l'IA joue après 25 s).`:"Personne n'est devant ce boss pour l'instant.";
+    $("fLobbyHint").textContent=al.length?`Tu entres en renfort. ${al.join(", ")} ${al.length>1?"sont entraînés":"est entraîné"} dans l'arène avec toi et ${al.length>1?"jouent leur":"joue son"} tour (sinon l'IA joue après 10 s).`:"Personne n'est devant ce boss pour l'instant.";
     $("fPrepTeam").innerHTML=F.team.map(m=>`<li><b>${esc(m.name)}</b> · ${m.max} PV · ${m.atk} ATQ${m.potion?" · potion":""}</li>`).join("");
     {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&!fd.team.some(m=>m.key===k)){$("fLobbyHint").textContent=`Combat en cours : ${fd.team.filter(m=>m.alive).map(m=>m.name).join(", ")}. Entre pour les rejoindre dans l'arène.`;$("fEnter").textContent="Rejoindre le combat";$("fPrepBoss").textContent=`${F.b.n} · ${Math.max(0,fd.boss.hp)}/${fd.boss.max} PV`;return}}
     $("fEnter").textContent=al.length?`Combattre avec ${al.join(", ")}`:"Entrer dans l'arène seul";
@@ -2351,7 +2351,7 @@ document.addEventListener("click",e=>{if(e.target.closest("#drawer [data-train]"
 
 /* ================= Combat multijoueur en direct (tour par tour) ================= */
 let fCol=null,fights={},mpDoc=null,mpSeen=0,mpDismissed={},mpBossBusy=false,mpFinished={};
-const TURN_MS=25000;
+const TURN_MS=10000;
 const jclone=o=>JSON.parse(JSON.stringify(o));
 function mpOrder(S){return S.team.filter(m=>m.alive).map(m=>m.key)}
 function mpNext(S){const o=mpOrder(S);if(!o.length){S.turn=null;return}
