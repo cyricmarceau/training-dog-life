@@ -347,15 +347,16 @@ header.top{padding-block:16px 14px;border-bottom:0}
 }
 
 #map{min-width:0}
+.mapscroll #map{width:300%}
 /* carte agrandie */
 .wrap{max-width:1180px}
 .abin{max-width:1180px}
-@media (max-width:760px){#map{min-width:760px}.mapscroll{scrollbar-width:thin}}
+@media (max-width:760px){.mapscroll #map{min-width:2280px}.mapscroll{scrollbar-width:thin}}
 .mapbox{position:relative}
-.mapzoom{display:none;position:absolute;top:8px;right:8px;z-index:3;align-items:center;gap:6px;padding:7px 10px;font:800 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:#ffe08a;background:rgba(10,3,3,.82);border:1px solid #c9a24a;border-radius:4px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.mapzoom{display:inline-flex;position:absolute;top:8px;right:8px;z-index:3;align-items:center;gap:6px;padding:7px 10px;font:800 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:#ffe08a;background:rgba(10,3,3,.82);border:1px solid #c9a24a;border-radius:4px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.6)}
 .mapzoom svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
 .mapzoom .zplus{display:none}.mapbox.fit .mapzoom .zplus{display:inline}
-@media (max-width:760px){.mapzoom{display:inline-flex}.mapbox.fit #map{min-width:0}}
+.mapbox.fit .mapscroll #map{min-width:0;width:100%}
 .panel h3{flex-wrap:wrap}
 @media (max-width:520px){
   .panel h3,.fold>summary{font-size:22px}
@@ -990,7 +991,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 
       <section class="panel mapwrap">
         <h3 class="maph"><span class="wnav"><button type="button" class="wbtn" id="wPrev" aria-label="Monde précédent">‹</button><span id="mapTitle">Monde 1 · Les Enfers</span><button type="button" class="wbtn" id="wNext" aria-label="Monde suivant">›</button></span> <small id="mapKm">0 km</small></h3>
-        <div class="mapbox"><div class="mapscroll"><svg id="map" viewBox="0 0 640 360" role="img" aria-label="Carte du monde 1"></svg></div><button type="button" class="mapzoom" id="mapZoom" aria-label="Dézoomer la carte"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/><path class="zplus" d="M10 7v6"/></svg><span>Dézoomer</span></button></div>
+        <div class="mapbox"><div class="mapscroll"><svg id="map" viewBox="0 0 1920 360" role="img" aria-label="Carte des mondes"></svg></div><button type="button" class="mapzoom" id="mapZoom" aria-label="Dézoomer la carte"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/><path class="zplus" d="M10 7v6"/></svg><span>Dézoomer</span></button></div>
         <div class="friends" id="mapFriends"></div>
         <div class="nodeinfo" id="nodeInfo"></div>
       </section>
@@ -1376,9 +1377,14 @@ function setSync(){$("sync").innerHTML=mode==="db"?"<b>●</b> Synchronisé avec
   $("thMe").addEventListener("click",()=>showPlayer(keyOf(me)));
   new MutationObserver(()=>{const b=$("chatBadge"),t=$("thBadge");t.hidden=b.hidden;t.textContent=b.textContent}).observe($("chatBadge"),{attributes:true,childList:true,characterData:true,subtree:true});
 })();
-document.addEventListener("click",e=>{const b=e.target.closest("#wPrev,#wNext");if(!b||b.disabled)return;
-  const cur=viewWorld==null?NODES[progressOf(lastKm,player.bosses).idx].w:viewWorld;viewWorld=Math.max(0,Math.min(WORLDS.length-1,cur+(b.id==="wNext"?1:-1)));
-  selAuto=false;selNode=NODES.findIndex(n=>n.w===viewWorld);render()});
+function mapWorldInView(){const sc=document.querySelector(".mapscroll");if(!sc||sc.scrollWidth<=sc.clientWidth+4)return NODES[progressOf(lastKm,player.bosses).idx].w;
+  return Math.max(0,Math.min(WORLDS.length-1,Math.floor((sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth*WORLDS.length)))}
+function updateWorldTitle(){const sc=document.querySelector(".mapscroll"),fit=sc&&sc.scrollWidth<=sc.clientWidth+4,w=mapWorldInView(),t=$("mapTitle");if(!t)return;
+  t.textContent=fit?"Les 3 mondes":WORLDS[w].n;$("wPrev").disabled=fit||w<=0;$("wNext").disabled=fit||w>=WORLDS.length-1}
+document.addEventListener("click",e=>{const b=e.target.closest("#wPrev,#wNext");if(!b||b.disabled)return;const sc=document.querySelector(".mapscroll");if(!sc)return;
+  const w=Math.max(0,Math.min(WORLDS.length-1,mapWorldInView()+(b.id==="wNext"?1:-1)));
+  sc.scrollTo({left:(w+.5)/WORLDS.length*sc.scrollWidth-sc.clientWidth/2,behavior:reduce?"auto":"smooth"})});
+(()=>{const sc=document.querySelector(".mapscroll");if(sc)sc.addEventListener("scroll",()=>{if(!sc._t)sc._t=requestAnimationFrame(()=>{sc._t=0;updateWorldTitle()})},{passive:true})})();
 let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
 function render(){try{checkMyDeath()}catch(_){}
 
@@ -1453,42 +1459,42 @@ const NODES=[
  {km:94,x:540,y:140,t:"lvl",n:"Niveau 11 · Dernier seuil"},
  {km:100,x:540,y:60,t:"boss",boss:2,big:1,n:"Citadelle de la Terreur"},
  /* Monde 2 · Glacier des Lamentations */
- {km:102,w:1,x:50,y:300,t:"portal",n:"Portail de givre"},
- {km:107,w:1,x:140,y:300,t:"lvl",n:"Niveau 12 · Neiges grises"},
- {km:113,w:1,x:230,y:300,t:"lvl",n:"Niveau 13 · Lac gelé"},
- {km:119,w:1,x:320,y:300,t:"item",n:"Coffre de glace"},
- {km:125,w:1,x:410,y:300,t:"lvl",n:"Niveau 14 · Crocs de glace"},
- {km:132,w:1,x:500,y:300,t:"lvl",n:"Niveau 15 · Tempête blanche"},
- {km:140,w:1,x:590,y:240,t:"boss",boss:3,n:"Antre du Wendigo"},
- {km:147,w:1,x:500,y:190,t:"lvl",n:"Niveau 16 · Grottes bleues"},
- {km:154,w:1,x:410,y:190,t:"item",n:"Coffre du blizzard"},
+ {km:102,w:1,x:50,y:60,t:"portal",n:"Portail de givre"},
+ {km:107,w:1,x:60,y:175,t:"lvl",n:"Niveau 12 · Neiges grises"},
+ {km:113,w:1,x:130,y:290,t:"lvl",n:"Niveau 13 · Lac gelé"},
+ {km:119,w:1,x:230,y:300,t:"item",n:"Coffre de glace"},
+ {km:125,w:1,x:330,y:300,t:"lvl",n:"Niveau 14 · Crocs de glace"},
+ {km:132,w:1,x:430,y:300,t:"lvl",n:"Niveau 15 · Tempête blanche"},
+ {km:140,w:1,x:560,y:260,t:"boss",boss:3,n:"Antre du Wendigo"},
+ {km:147,w:1,x:520,y:180,t:"lvl",n:"Niveau 16 · Grottes bleues"},
+ {km:154,w:1,x:420,y:190,t:"item",n:"Coffre du blizzard"},
  {km:161,w:1,x:320,y:190,t:"lvl",n:"Niveau 17 · Pics éternels"},
- {km:168,w:1,x:230,y:190,t:"lvl",n:"Niveau 18 · Mer de glace"},
- {km:176,w:1,x:140,y:140,t:"lvl",n:"Niveau 19 · Cathédrale gelée"},
- {km:185,w:1,x:240,y:80,t:"lvl",n:"Niveau 20 · Aurore noire"},
- {km:195,w:1,x:390,y:70,t:"boss",boss:4,big:1,n:"Trône de la Liche"},
+ {km:168,w:1,x:220,y:170,t:"lvl",n:"Niveau 18 · Mer de glace"},
+ {km:176,w:1,x:200,y:90,t:"lvl",n:"Niveau 19 · Cathédrale gelée"},
+ {km:185,w:1,x:330,y:60,t:"lvl",n:"Niveau 20 · Aurore noire"},
+ {km:195,w:1,x:520,y:60,t:"boss",boss:4,big:1,n:"Trône de la Liche"},
  /* Monde 3 · Abysses du Néant */
- {km:197,w:2,x:590,y:300,t:"portal",n:"Faille du Néant"},
- {km:203,w:2,x:500,y:300,t:"lvl",n:"Niveau 21 · Brume violette"},
- {km:210,w:2,x:410,y:300,t:"lvl",n:"Niveau 22 · Racines d'ombre"},
+ {km:197,w:2,x:50,y:160,t:"portal",n:"Faille du Néant"},
+ {km:203,w:2,x:130,y:290,t:"lvl",n:"Niveau 21 · Brume violette"},
+ {km:210,w:2,x:230,y:300,t:"lvl",n:"Niveau 22 · Racines d'ombre"},
  {km:217,w:2,x:320,y:300,t:"item",n:"Coffre des abysses"},
- {km:224,w:2,x:230,y:300,t:"lvl",n:"Niveau 23 · Cristaux maudits"},
- {km:232,w:2,x:140,y:300,t:"lvl",n:"Niveau 24 · Marais des âmes"},
- {km:240,w:2,x:50,y:240,t:"boss",boss:5,n:"Gouffre de l'Horreur"},
- {km:248,w:2,x:140,y:190,t:"lvl",n:"Niveau 25 · Spirale sans fond"},
- {km:256,w:2,x:230,y:190,t:"item",n:"Coffre du vide"},
+ {km:224,w:2,x:410,y:300,t:"lvl",n:"Niveau 23 · Cristaux maudits"},
+ {km:232,w:2,x:500,y:300,t:"lvl",n:"Niveau 24 · Marais des âmes"},
+ {km:240,w:2,x:590,y:240,t:"boss",boss:5,n:"Gouffre de l'Horreur"},
+ {km:248,w:2,x:500,y:190,t:"lvl",n:"Niveau 25 · Spirale sans fond"},
+ {km:256,w:2,x:410,y:190,t:"item",n:"Coffre du vide"},
  {km:264,w:2,x:320,y:190,t:"lvl",n:"Niveau 26 · Temple englouti"},
- {km:273,w:2,x:410,y:190,t:"lvl",n:"Niveau 27 · Trône vide"},
- {km:282,w:2,x:500,y:140,t:"lvl",n:"Niveau 28 · Œil du Néant"},
- {km:291,w:2,x:400,y:80,t:"lvl",n:"Niveau 29 · Seuil final"},
- {km:300,w:2,x:250,y:70,t:"boss",boss:6,big:1,n:"Gueule du Dévoreur"}
+ {km:273,w:2,x:230,y:190,t:"lvl",n:"Niveau 27 · Trône vide"},
+ {km:282,w:2,x:140,y:130,t:"lvl",n:"Niveau 28 · Œil du Néant"},
+ {km:291,w:2,x:240,y:70,t:"lvl",n:"Niveau 29 · Seuil final"},
+ {km:300,w:2,x:400,y:60,t:"boss",boss:6,big:1,n:"Gueule du Dévoreur"}
 ];
-NODES.forEach(n=>{if(n.w==null)n.w=0});
+NODES.forEach(n=>{if(n.w==null)n.w=0;n.x+=n.w*640});
 const WORLDS=[
  {n:"Monde 1 · Les Enfers",path:"#ff6a1a",frame:"#c9a24a"},
  {n:"Monde 2 · Glacier des Lamentations",path:"#9fd8ff",frame:"#bfe6ff"},
  {n:"Monde 3 · Abysses du Néant",path:"#c77dff",frame:"#a070d8"}];
-let viewWorld=null;
+let viewWorld=null;const MAPW=640*WORLDS.length;
 const ITEMS={potion:{n:"Potion de sang",d:"Soigne 50 PV une fois par combat"},epee:{n:"Épée de braise",d:"+12 attaque"},bouclier:{n:"Bouclier d'os",d:"+45 PV"}};
 const BOSSES=[{n:"Le Gardien des Portes",hp:55,atk:8,c:"#8a2b14"},{n:"La Reine des Cendres",hp:160,atk:22,c:"#5a1a3a"},{n:"Le Seigneur de la Terreur",hp:340,atk:42,c:"#3a0505"},
  {n:"Le Wendigo des Glaces",hp:500,atk:55,c:"#2a5a7a"},{n:"La Liche du Givre",hp:720,atk:70,c:"#1a3a5a"},
@@ -1512,7 +1518,7 @@ function progressOf(km,bosses){
   const nx=NODES[idx+1];const frac=nx?(km-NODES[idx].km)/(nx.km-NODES[idx].km):0;
   return{idx,frac:Math.max(0,Math.min(1,frac)),blocked:-1,km};
 }
-function posOf(pr){const a=NODES[pr.idx],b=NODES[pr.idx+1];if(!b||!pr.frac||a.w!==b.w)return[a.x,a.y];return[a.x+(b.x-a.x)*pr.frac,a.y+(b.y-a.y)*pr.frac]}
+function posOf(pr){const a=NODES[pr.idx],b=NODES[pr.idx+1];if(!b||!pr.frac)return[a.x,a.y];return[a.x+(b.x-a.x)*pr.frac,a.y+(b.y-a.y)*pr.frac]}
 
 function mapStatic(w){
   const T=[{t1:"#1a0706",t2:"#260a08",dot:"#3a1410",lk:["#ffb347","#ff6a1a","#8a1206"],rim:"#2a0806",rock:"#2c0e0b",rockS:"#120303",fl:["#b3141b","#ff6a1a","#ffe08a"],fr:"#c9a24a",fr2:"#5c0a0d"},
@@ -1543,6 +1549,8 @@ function mapStatic(w){
   return s;
 }
 const MAP_BGS=[0,1,2].map(mapStatic);
+const MAP_BG=MAP_BGS.map((b,w)=>`<g transform="translate(${w*640} 0)">${b}<text x="22" y="30" font-family="Pirata One,serif" font-size="17" fill="${WORLDS[w].frame}" opacity=".85">${WORLDS[w].n}</text></g>`).join("")+
+  [1,2].map(w=>`<rect x="${w*640-6}" y="0" width="12" height="360" fill="#000" opacity=".55"/>`).join("");
 
 const FRIEND_COL=["#6aa6ff","#5aff9a","#c77dff","#ff7ab8","#40e0d0","#e6e66a"];let friendsOnMap=[];
 
@@ -1563,16 +1571,14 @@ function renderMap(xp,km){
   lastXp=xp;lastKm=km;
   const pr=progressOf(km,player.bosses);
   $("mapKm").textContent=`${km.toLocaleString("fr-CA",{maximumFractionDigits:1})} km parcourus`;
-  if(selNode===null||selAuto){selNode=pr.idx;viewWorld=null}
-  const pw=NODES[pr.idx].w,vw=viewWorld==null?pw:viewWorld,W_=WORLDS[vw];
-  if(NODES[selNode].w!==vw)selNode=NODES.findIndex(n=>n.w===vw);
-  {const t=$("mapTitle");if(t)t.textContent=W_.n;const a=$("wPrev"),b=$("wNext");if(a){a.disabled=vw<=0;b.disabled=vw>=WORLDS.length-1}}
+  if(selNode===null||selAuto)selNode=pr.idx;
+  const pw=NODES[pr.idx].w,W_=WORLDS[pw];
   // chemin
   let path="",done="";
-  for(let i=0;i<NODES.length-1;i++){const a=NODES[i],b=NODES[i+1];if(a.w===vw&&b.w===vw)path+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
+  for(let i=0;i<NODES.length-1;i++){const a=NODES[i],b=NODES[i+1];path+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
   const [px,py]=posOf(pr);
-  for(let i=0;i<pr.idx;i++){const a=NODES[i],b=NODES[i+1];if(a.w===vw&&b.w===vw)done+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
-  if(pr.frac&&pw===vw){const a=NODES[pr.idx];done+=`M${a.x} ${a.y}L${px} ${py}`}
+  for(let i=0;i<pr.idx;i++){const a=NODES[i],b=NODES[i+1];done+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
+  if(pr.frac){const a=NODES[pr.idx];done+=`M${a.x} ${a.y}L${px} ${py}`}
   // autres joueurs
   const me_=keyOf(me);let others="";
   const kmBy={};punches.forEach(p=>{if(!isAct(p))return;kmBy[p.key]=kmBy[p.key]||{name:p.name,km:0};kmBy[p.key].km+=+p.km||0});
@@ -1585,7 +1591,6 @@ function renderMap(xp,km){
     const where=fpr.blocked>=0?`devant ${BOSSES[NODES[fpr.blocked].boss].n}`:NODES[fpr.idx].n;
     const fnode=fpr.blocked>=0?fpr.blocked:fpr.idx,fw=NODES[fnode].w;
     friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fnode,w:fw});
-    if(fw!==vw)return;
     others+=`<g class="friend" data-fk="${esc(k)}" transform="translate(${fx.toFixed(1)} ${fy.toFixed(1)})"><title>${esc(v.name)} · ${esc(where)}</title>
       <ellipse cx="0" cy="17" rx="7" ry="2.5" fill="rgba(0,0,0,.5)"/>
       <path d="M-8 -3 -11 -12 -4 -7ZM8 -3l3-9-7 5Z" fill="${col}"/>
@@ -1595,7 +1600,7 @@ function renderMap(xp,km){
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
   // jeton du joueur : petite tête de chien infernal
   tokPos=[px,py];
-  {const sc=document.querySelector(".mapscroll"),kk=px+","+py;if(sc&&sc.scrollWidth>sc.clientWidth+4&&sc.dataset.tk!==kk){sc.dataset.tk=kk;requestAnimationFrame(()=>{sc.scrollLeft=px/640*sc.scrollWidth-sc.clientWidth/2})}}
+  {const sc=document.querySelector(".mapscroll"),kk=px+","+py;if(sc&&sc.scrollWidth>sc.clientWidth+4&&sc.dataset.tk!==kk){sc.dataset.tk=kk;requestAnimationFrame(()=>{sc.scrollLeft=px/MAPW*sc.scrollWidth-sc.clientWidth/2})}}
   const from=prevTok||[px,py];
   const tok=`<g class="tok" id="tok" style="transform:translate(${from[0]}px,${from[1]-20}px)"><g class="bob">
     <ellipse cx="0" cy="22" rx="9" ry="3" fill="rgba(0,0,0,.5)"/>
@@ -1604,17 +1609,17 @@ function renderMap(xp,km){
     <circle cx="-4.5" cy="0" r="2" fill="#ffe08a"/><circle cx="4.5" cy="0" r="2" fill="#ffe08a"/>
     <path d="M-4 7l2 3 2-2 2 2 2-3" stroke="#ff6a1a" stroke-width="1.4" fill="none"/></g>
     <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
-  $("map").innerHTML=MAP_BGS[vw]+
+  $("map").innerHTML=MAP_BG+
     `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
      <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
      <path d="${done}" stroke="${W_.path}" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+
-    NODES.map((n,i)=>n.w===vw?nodeSvg(n,i,pr):"").join("")+others+(pw===vw?tok:"");
+    NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+others+tok;
   if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
   prevTok=[px,py];
   const myWhere=pr.blocked>=0?`devant ${BOSSES[NODES[pr.blocked].boss].n}`:NODES[pr.idx].n;
   $("mapFriends").innerHTML=`<button type="button" class="fchip me" data-fme="1" style="border-color:${myColor()}"><i style="background:${myColor()}"></i>Toi · ${esc(myWhere)}</button>`+
     friendsOnMap.map(f=>`<button type="button" class="fchip" data-fk="${esc(f.k)}"><i style="background:${f.col}"></i>${esc(f.name)} · ${esc(f.where)}</button>`).join("");
-  renderNodeInfo(pr);renderInv();
+  renderNodeInfo(pr);renderInv();requestAnimationFrame(updateWorldTitle);
   {const cta=$("bossCta");if(cta){const bi=pr.blocked>=0?NODES[pr.blocked].boss:-1;
     if(bi>=0&&!player.bosses.includes(bi)){const fd=(typeof fights!=="undefined")&&fights["b"+bi],live=fd&&fd.status==="fight"&&fd.team.some(m=>m.key===keyOf(me));
       const r=raidOf(bi),grp=r&&(r.members||[]).length>1,joinable=!live&&fd&&fd.status==="fight";
@@ -1754,8 +1759,8 @@ let tokPos=[50,300],prevTok=null,camAnim=null;
 let camFX=null;
 function setMapFit(on){const mb=document.querySelector(".mapbox");if(!mb)return;mb.classList.toggle("fit",on);
   const b=$("mapZoom");if(b){b.querySelector("span").textContent=on?"Zoomer":"Dézoomer";b.setAttribute("aria-label",on?"Zoomer la carte":"Dézoomer la carte")}
-  LS.set("tdl_mapfit",on?"1":"");const sc=document.querySelector(".mapscroll");if(sc){if(on)sc.scrollLeft=0;else{sc.dataset.tk="";requestAnimationFrame(()=>{sc.scrollLeft=tokPos[0]/640*sc.scrollWidth-sc.clientWidth/2})}}}
-document.addEventListener("click",e=>{if(!e.target.closest("#mapZoom"))return;cancelAnimationFrame(camAnim);camFX=null;setVB([0,0,640,360]);setMapFit(!document.querySelector(".mapbox").classList.contains("fit"))});
+  LS.set("tdl_mapfit",on?"1":"");requestAnimationFrame(()=>{try{updateWorldTitle()}catch(_){}});const sc=document.querySelector(".mapscroll");if(sc){if(on)sc.scrollLeft=0;else{sc.dataset.tk="";requestAnimationFrame(()=>{sc.scrollLeft=tokPos[0]/MAPW*sc.scrollWidth-sc.clientWidth/2})}}}
+document.addEventListener("click",e=>{if(!e.target.closest("#mapZoom"))return;cancelAnimationFrame(camAnim);camFX=null;setVB([0,0,MAPW,360]);setMapFit(!document.querySelector(".mapbox").classList.contains("fit"))});
 try{if(LS.get("tdl_mapfit")==="1")setTimeout(()=>setMapFit(true),0)}catch(_){}
 function setVB(a){$("map").setAttribute("viewBox",a.map(v=>v.toFixed(1)).join(" "));
   if(camFX!=null){const sc=document.querySelector(".mapscroll");if(sc&&sc.scrollWidth>sc.clientWidth+4)sc.scrollLeft=(camFX-a[0])/a[2]*sc.scrollWidth-sc.clientWidth/2}}
@@ -1765,17 +1770,16 @@ function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function focusMap(target){
   const sec=document.querySelector(".mapwrap");if(!sec)return;
-  if(!target&&viewWorld!=null){viewWorld=null;render()}
   sec.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
   if(reduce)return;
   const tok=++camTok;
   await wait(500);if(tok!==camTok)return;
-  const W2=280,H2=158,[px,py]=target||tokPos;camFX=px;setVB([0,0,640,360]);
-  const box=[Math.max(0,Math.min(640-W2,px-W2/2)),Math.max(0,Math.min(360-H2,py-20-H2/2)),W2,H2];
-  await animVB([0,0,640,360],box,750);if(tok!==camTok)return;
+  const Z=2.3,W2=MAPW/Z,H2=360/Z,[px,py]=target||tokPos;camFX=px;setVB([0,0,MAPW,360]);
+  const box=[Math.max(0,Math.min(MAPW-W2,px-W2/2)),Math.max(0,Math.min(360-H2,py-20-H2/2)),W2,H2];
+  await animVB([0,0,MAPW,360],box,750);if(tok!==camTok)return;
   await wait(1500);if(tok!==camTok)return;
-  await animVB(box,[0,0,640,360],800);if(tok!==camTok)return;
-  setVB([0,0,640,360]);camFX=null;
+  await animVB(box,[0,0,MAPW,360],800);if(tok!==camTok)return;
+  setVB([0,0,MAPW,360]);camFX=null;
 }
 
 /* ================= Coffre façon Vampire Survivors ================= */
@@ -2006,7 +2010,7 @@ function bossPanel(bi){
     h+=`<div class="bbtns">`;
     if(!inR)h+=`<button class="btn ghost" data-raid="join" data-b="${bi}">${r?"Rejoindre le groupe":"🆘 Demander de l'aide"}</button>`;
     else h+=`<button class="btn ghost" data-raid="leave" data-b="${bi}">Quitter le groupe</button>`;
-    h+=`<button class="btn" data-fight="${bi}">${team.length>1?`Combattre en équipe (${team.length})`:"Combattre seul"}</button></div>`;
+    {const n=lobbyCands(bi).length;h+=`<button class="btn" data-fight="${bi}">${n>1?`⚔ Combattre (${n} disponibles)`:"⚔ Combattre"}</button></div>`;}
   }else h+=`<div class="bbtns"><button class="btn" data-fight="${bi}">Combattre</button></div>`;
   return h+`</div>`;
 }
@@ -2440,7 +2444,7 @@ function showPlayer(k){
 document.addEventListener("click",e=>{if(e.target.closest("#itAct [data-fight],#itAct [data-mpjoin],#itAct [data-mpback]"))$("itip").hidden=true},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-pfocus]");if(!b)return;const k=b.dataset.pfocus;$("itip").hidden=true;
   if(k===keyOf(me)){selAuto=true;render();focusMap();return}
-  const f=friendsOnMap.find(x=>x.k===k);if(f){selAuto=false;viewWorld=f.w;selNode=f.node;render();const g=friendsOnMap.find(x=>x.k===k)||f;focusMap([g.x,g.y])}});
+  const f=friendsOnMap.find(x=>x.k===k);if(f){selAuto=false;selNode=f.node;render();focusMap([f.x,f.y])}});
 function showItem(k){
   const isMap=!!ITEMS[k],isLoot=!!LOOT[k];
   if(k==="trophy"){const beat=player.bosses||[];
