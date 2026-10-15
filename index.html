@@ -783,6 +783,22 @@ body{padding-block:0 210px}
 .dzstamp{transform-origin:160px 172px;animation:dzstamp .5s cubic-bezier(.2,1.6,.4,1) .9s both}
 @keyframes dzstamp{from{transform:scale(2.6) rotate(-14deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.death,.dzstamp{animation:none}}
+.tophud{position:fixed;left:0;right:0;top:0;z-index:24;display:flex;align-items:center;gap:8px;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));
+  background:linear-gradient(180deg,#160b09,#0f0807);border-bottom:1px solid #4a1a14;box-shadow:0 6px 18px rgba(0,0,0,.55);transform:translateY(-110%);transition:transform .22s ease}
+.tophud.show{transform:none}
+.th-me{display:flex;align-items:center;gap:8px;min-width:0;flex:1;background:none;border:0;color:var(--bone);padding:0;text-align:left;cursor:pointer}
+.th-me i{flex:none;width:12px;height:12px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.th-me span{display:flex;flex-direction:column;min-width:0}
+.th-me b{font-family:var(--display);font-weight:400;font-size:19px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th-me small{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#c9a24a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th-xp{flex:0 1 110px;height:6px;background:#1a0b09;border:1px solid #3a1a14;border-radius:3px;overflow:hidden}
+.th-xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b3141b,#ff6a1a)}
+.th-b{position:relative;flex:none;width:42px;height:38px;display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:linear-gradient(180deg,#2a1a16,#160d0c);border:1px solid #5a3a30;border-radius:4px;color:var(--bone);cursor:pointer;padding:0}
+.th-b svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.th-b:hover{border-color:var(--ember);color:#ffe08a}
+.th-menu span{display:block;width:18px;height:2px;background:currentColor;border-radius:1px}
+@media (max-width:420px){.th-xp{display:none}}
+@media (prefers-reduced-motion:reduce){.tophud{transition:none}}
 .burger:hover{border-color:var(--ember)}.burger:hover span{background:#ffe08a}
 .dback{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:25;animation:dfade .2s ease-out}
 @keyframes dfade{from{opacity:0}}
@@ -891,6 +907,13 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       <button class="burger" id="menuBtn" type="button" aria-label="Ouvrir le menu" aria-controls="drawer" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </header>
+  <nav class="tophud" id="topHud" aria-label="Accès rapide" hidden>
+    <button type="button" class="th-me" id="thMe" aria-label="Ma fiche"><i id="thDot"></i><span><b id="thName">—</b><small id="thRank"></small></span></button>
+    <div class="th-xp" aria-hidden="true"><i id="thXp"></i></div>
+    <button type="button" class="th-b" id="thMap" aria-label="Aller à la carte"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z M9 4v14 M15 6v14"/></svg></button>
+    <button type="button" class="th-b" id="thChat" aria-label="Chat du clan"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></svg><b class="cbadge" id="thBadge" hidden>0</b></button>
+    <button type="button" class="th-b th-menu" id="thMenu" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+  </nav>
 
   <div class="stage">
     <canvas id="hound" aria-label="Chien des enfers qui court"></canvas>
@@ -1211,7 +1234,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 const cv=document.getElementById("hound"),ctx=cv.getContext("2d");
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const hound={active:false};let W=0,H=0,dpr=1,boost=0,embers=[],rocks=[],t0=performance.now();
-function resize(){dpr=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+function resize(){dpr=Math.min(1.5,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
 addEventListener("resize",resize);resize();
 for(let i=0;i<14;i++)rocks.push({x:Math.random()*1400,h:6+Math.random()*26,w:10+Math.random()*30});
 
@@ -1221,7 +1244,9 @@ function leg(x,y,a,len,lower,bend){ // upper + lower segment
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
   ctx.beginPath();ctx.arc(fx,fy,2.6,0,7);ctx.fill();
 }
+let _hLast=0;
 function draw(now){
+  if(now-_hLast<31){if(houndVis&&!document.hidden)requestAnimationFrame(draw);else houndRun=false;return}_hLast=now;
   const dt=Math.min(.05,(now-t0)/1000);t0=now;
   boost=Math.max(0,boost-dt*0.6);
   const speed=(hound.active?1.7:1)+boost*2.2, time=now/1000;
@@ -1301,8 +1326,12 @@ function draw(now){
   // ombre
   ctx.fillStyle="rgba(0,0,0,.45)";ctx.beginPath();ctx.ellipse(cx+6*s,ground+3,70*s*(1-bob/40),5,0,0,7);ctx.fill();
 
-  requestAnimationFrame(draw);
+  if(houndVis&&!document.hidden)requestAnimationFrame(draw);else houndRun=false;
 }
+let houndVis=true,houndRun=true;
+function houndWake(){if(!houndRun&&houndVis&&!document.hidden){houndRun=true;t0=performance.now();requestAnimationFrame(draw)}}
+try{new IntersectionObserver(es=>{houndVis=es[0].isIntersecting;houndWake()}).observe(cv)}catch(_){}
+document.addEventListener("visibilitychange",houndWake);
 requestAnimationFrame(draw);
 
 /* ================= Punch ================= */
@@ -1321,9 +1350,19 @@ function ago(ts){const s=(Date.now()-ts)/1000;if(s<60)return"à l'instant";if(s<
 
 let me=(LS.get("tdl_name")||"").trim(), punches=[], mode="local", col=null;
 function loadLocal(){try{punches=JSON.parse(LS.get("tdl_punches")||"[]")}catch(e){punches=[]}}
-function saveLocal(){LS.set("tdl_punches",JSON.stringify(punches))}
+function saveLocal(){try{_li.src=null}catch(_){}LS.set("tdl_punches",JSON.stringify(punches))}
 function setSync(){$("sync").innerHTML=mode==="db"?"<b>●</b> Synchronisé avec le clan":"● Local · cet appareil seulement"}
 
+/* HUD fixe : apparaît dès que l'en-tête sort de l'écran */
+(()=>{const hud=$("topHud"),head=document.querySelector("header.top");if(!hud||!head)return;
+  try{new IntersectionObserver(es=>{const show=!es[0].isIntersecting&&!!me;hud.hidden=!me;hud.classList.toggle("show",show)}).observe(head)}catch(_){}
+  $("thMenu").addEventListener("click",()=>$("menuBtn").click());
+  $("thChat").addEventListener("click",()=>$("chatBtn").click());
+  $("thMap").addEventListener("click",()=>{const m=document.querySelector(".mapwrap");if(m)m.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})});
+  $("thMe").addEventListener("click",()=>showPlayer(keyOf(me)));
+  new MutationObserver(()=>{const b=$("chatBadge"),t=$("thBadge");t.hidden=b.hidden;t.textContent=b.textContent}).observe($("chatBadge"),{attributes:true,childList:true,characterData:true,subtree:true});
+})();
+let _rq=0;function scheduleRender(){if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;render()})}
 function render(){try{checkMyDeath()}catch(_){}
 
   if(!me)return;
@@ -1334,6 +1373,8 @@ function render(){try{checkMyDeath()}catch(_){}
   let ri=0;RANKS.forEach((r,i)=>{if(xp>=r[0])ri=i});const next=RANKS[ri+1];
   $("rankName").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("xpfill").style.width=(next?((xp-RANKS[ri][0])/(next[0]-RANKS[ri][0]))*100:100)+"%";
+  $("thName").textContent=me;$("thRank").textContent=`Rang ${ri+1} · ${RANKS[ri][1]} · ${xp.toLocaleString("fr-CA")} XP`;$("thXp").style.width=$("xpfill").style.width;
+  {const c=myColor();$("thDot").style.background=c;$("thDot").style.color=c}
   $("xpmeta").textContent=`${xp.toLocaleString("fr-CA")} XP · `+(next?`${(next[0]-xp).toLocaleString("fr-CA")} XP avant ${next[1]}`:"rang maximal");
   const ws=weekStart();
   $("sCount").textContent=n;
@@ -1640,20 +1681,22 @@ document.addEventListener("click",e=>{if(!e.target.closest("#mapZoom"))return;ca
 try{if(LS.get("tdl_mapfit")==="1")setTimeout(()=>setMapFit(true),0)}catch(_){}
 function setVB(a){$("map").setAttribute("viewBox",a.map(v=>v.toFixed(1)).join(" "));
   if(camFX!=null){const sc=document.querySelector(".mapscroll");if(sc&&sc.scrollWidth>sc.clientWidth+4)sc.scrollLeft=(camFX-a[0])/a[2]*sc.scrollWidth-sc.clientWidth/2}}
-function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);const t0=performance.now(),ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-  const step=now=>{const t=Math.min(1,(now-t0)/dur),e=ease(t);setVB(a.map((v,i)=>v+(b[i]-v)*e));if(t<1)camAnim=requestAnimationFrame(step);else res()};camAnim=requestAnimationFrame(step)})}
+let camRes=null,camTok=0;
+function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);if(camRes)camRes();camRes=res;const t0=performance.now(),ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const step=now=>{const t=Math.min(1,(now-t0)/dur),e=ease(t);setVB(a.map((v,i)=>v+(b[i]-v)*e));if(t<1)camAnim=requestAnimationFrame(step);else{camRes=null;res()}};camAnim=requestAnimationFrame(step)})}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function focusMap(target){
   const sec=document.querySelector(".mapwrap");if(!sec)return;
   sec.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
   if(reduce)return;
-  await wait(500);
+  const tok=++camTok;
+  await wait(500);if(tok!==camTok)return;
   const W2=280,H2=158,[px,py]=target||tokPos;camFX=px;setVB([0,0,640,360]);
   const box=[Math.max(0,Math.min(640-W2,px-W2/2)),Math.max(0,Math.min(360-H2,py-20-H2/2)),W2,H2];
-  await animVB([0,0,640,360],box,750);
-  await wait(1500);
-  await animVB(box,[0,0,640,360],800);
-  camFX=null;
+  await animVB([0,0,640,360],box,750);if(tok!==camTok)return;
+  await wait(1500);if(tok!==camTok)return;
+  await animVB(box,[0,0,640,360],800);if(tok!==camTok)return;
+  setVB([0,0,640,360]);camFX=null;
 }
 
 /* ================= Coffre façon Vampire Survivors ================= */
@@ -1816,8 +1859,19 @@ async function checkNewChests(){
 /* ================= Combat d'arène (Swords & Sandals) · permadeath · équipe ================= */
 const isAct=p=>p.type!=="death"&&p.type!=="victory";
 function normPlayer(v){v=v||{};return{chests:Array.isArray(v.chests)?[...v.chests]:NODES.map((n,i)=>n.t==="item"&&(v.items||[]).includes(n.item)?i:-1).filter(i=>i>=0),unequip:[...(v.unequip||[])],lootOff:{...(v.lootOff||{})},items:[...(v.items||[])],bosses:[...(v.bosses||[])],loot:{...(v.loot||{})},xpOff:+v.xpOff||0,kmOff:+v.kmOff||0,deaths:+v.deaths||0}}
-function lifeOf(k){let xp=0,km=0;punches.forEach(p=>{if(p.key===k&&isAct(p)){xp+=minsOf(p);km+=+p.km||0}});return{xp,km}}
-function charOf(k){const pl=k===keyOf(me)?player:normPlayer(playersAll[k]);const L=lifeOf(k);return{pl,xp:Math.max(0,L.xp-pl.xpOff),km:Math.max(0,L.km-pl.kmOff)}}
+/* index des punchs terminés par joueur (reconstruit seulement quand la liste change) */
+let _li={src:null,n:-1,sig:"",closed:new Map(),open:[]};
+function lifeIndex(){const last=punches.length?punches[punches.length-1]:null,sig=last?(last.id||"")+":"+(last.end||0):"";
+  if(_li.src===punches&&_li.n===punches.length&&_li.sig===sig)return _li;
+  const closed=new Map(),open=[];
+  for(const p of punches){if(!isAct(p))continue;if(!p.end){open.push(p);continue}
+    let o=closed.get(p.key);if(!o){o={xp:0,km:0};closed.set(p.key,o)}o.xp+=minsOf(p);o.km+=+p.km||0}
+  _li={src:punches,n:punches.length,sig,closed,open};return _li}
+function lifeOf(k){const I=lifeIndex(),c=I.closed.get(k);let xp=c?c.xp:0,km=c?c.km:0;
+  for(const p of I.open)if(p.key===k){xp+=minsOf(p);km+=+p.km||0}return{xp,km}}
+const _npCache=new WeakMap();
+function normCached(v){if(!v||typeof v!=="object")return normPlayer(v);let r=_npCache.get(v);if(!r){r=normPlayer(v);_npCache.set(v,r)}return r}
+function charOf(k){const pl=k===keyOf(me)?player:normCached(playersAll[k]);const L=lifeOf(k);return{pl,xp:Math.max(0,L.xp-pl.xpOff),km:Math.max(0,L.km-pl.kmOff)}}
 function lootBonusOf(loot){let atk=0,hp=0;Object.entries(loot||{}).forEach(([k,c])=>{const v=LOOT[k];if(v){atk+=(v.atk||0)*c;hp+=(v.hp||0)*c}});return{atk,hp}}
 function eqItems(pl){const off=pl.unequip||[];return(pl.items||[]).filter(x=>!off.includes(x))}
 function eqLoot(pl){const o={},off=pl.lootOff||{};Object.entries(pl.loot||{}).forEach(([k,c])=>{o[k]=Math.max(0,c-(off[k]||0))});return o}
@@ -1864,7 +1918,8 @@ function bossPanel(bi){
   const team=inR?(r.members||[]).filter(eligible(bi)):[k];
   let h=`<div class="bossbox"><p class="must">⚔ Boss obligatoire · ${esc(b.n)} · ${b.hp} PV · ${b.atk} ATQ</p>
     <p class="perma">☠ Permadeath : si tu tombes, ton personnage meurt et recommence à la Porte des Damnés (items, butin, boss et progression perdus).</p>`;
-  {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&fd.team.some(m=>m.key===k))h+=`<p class="sos">⚔ Ton équipe combat en ce moment.</p><div class="bbtns"><button class="btn" data-mpback="${bi}">Retourner dans l'arène</button></div>`;}
+  {const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&fd.team.some(m=>m.key===k)){const me_=fd.team.find(m=>m.key===k);
+    return h+`<p class="sos">⚔ ${me_&&me_.alive?"Tu es en combat contre ce boss":"Ton équipe combat ce boss"}${isAuto(fd,k)?" · l'IA joue pour toi":""}.</p><div class="bbtns"><button class="btn" data-mpback="${bi}">Retourner dans l'arène</button></div></div>`}}
   if(rCol){
     h+=`<p class="party">${others.length?`Au même endroit : <b>${others.map(x=>esc(nameOf(x))).join(", ")}</b>`:"Personne d'autre n'est rendu ici pour l'instant."}</p>`;
     if(r)h+=`<p class="party">Groupe : <b>${(r.members||[]).map(x=>esc(nameOf(x))+((r.helpers||[]).includes(x)?" (renfort)":"")).join(", ")}</b></p>`;
@@ -1909,6 +1964,7 @@ function buildF(bi,training){
 }
 function openFight(bi,opt){
   const training=!!(opt&&opt.training);
+  if(!training){const fd=fights["b"+bi];if(fd&&fd.status==="fight"&&fd.team.some(m=>m.key===keyOf(me))){delete mpDismissed[fd.bi+":"+fd.at];mpDoc=null;onFights();return}}
   F=buildF(bi,training);
   $("fTitle").textContent=(training?"Entraînement · ":"")+F.b.n;
   $("fPerma").hidden=training;$("fTrainNote").hidden=!training;
@@ -2076,7 +2132,7 @@ $("fEnter").addEventListener("click",()=>{if(F&&!F.training)F=buildF(F.bi,false)
   setTimeout(()=>{const m=F&&F.team.find(x=>x.me);if(m&&m.alive)setTurn(m.key)},50);flog(F.training?`Entraînement contre ${F.b.n}. Rien n'est en jeu.`:`Les portes de l'arène s'ouvrent. ${F.b.n} entre sous les huées.`,"");arenaRender();
   if(!F.team.find(m=>m.me).alive)autoPlay()});
 $("fFlee").addEventListener("click",()=>{$("fight").hidden=true;F=null});
-$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null});
+$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render()});
 $("fActs").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b&&!b.disabled)act(b.dataset.act)});
 document.addEventListener("click",async e=>{const r=e.target.closest("[data-raid]");if(!r)return;r.disabled=true;
   try{if(r.dataset.raid==="join")await raidJoin(+r.dataset.b);else if(r.dataset.raid==="help"){await raidJoin(+r.dataset.b,true);$("punchMsg").textContent="Tu es en renfort. Tu combattras quand ton ami lancera le combat."}else await raidLeave(+r.dataset.b)}catch(_){$("punchMsg").textContent="Impossible de modifier le groupe."}render()});
@@ -2345,6 +2401,9 @@ document.addEventListener("click",e=>{if(e.target.closest("#drawer [data-train]"
 /* ================= Combat multijoueur en direct (tour par tour) ================= */
 let fCol=null,fights={},mpDoc=null,mpSeen=0,mpDismissed={},mpBossBusy=false,mpFinished={};
 const TURN_MS=10000;
+const autoKey=k=>"auto_"+slug(k);
+const isAuto=(d,k)=>!!(d&&d[autoKey(k)]);
+let autoClearAt=0;
 const jclone=o=>JSON.parse(JSON.stringify(o));
 function mpOrder(S){return S.team.filter(m=>m.alive).map(m=>m.key)}
 function mpNext(S){const o=mpOrder(S);if(!o.length){S.turn=null;return}
@@ -2378,7 +2437,7 @@ function mpBoss(S){const b=BOSSES[S.bi],reach=bossReach(S);const ev={actor:"boss
 function mpCheck(S){if(S.boss.hp<=0){S.boss.hp=0;S.status="over";S.result="win";mpLog(S,`${BOSSES[S.bi].n} est vaincu !`,"win")}
   else if(!S.team.some(m=>m.alive)){S.status="over";S.result="lose";mpLog(S,`L'équipe est anéantie par ${BOSSES[S.bi].n}.`,"dead")}}
 async function mpCommit(S,ev){S.seq=(S.seq||0)+1;ev.seq=S.seq;S.ev=ev;mpCheck(S);if(S.status==="fight")mpNext(S);
-  mpDoc=S;fights["b"+S.bi]=S;mpShow(S,false);
+  fights["b"+S.bi]=S;if(!mpDismissed[S.bi+":"+S.at]&&!deathHandled){mpDoc=S;mpShow(S,false)}
   try{await fCol.doc("b"+S.bi).set(S)}catch(_){$("punchMsg").textContent="Connexion perdue avec l'arène."}
   if(S.status==="over"){mpSelf(S);if(S.host===keyOf(me))mpFinish(S)}}
 async function mpStart(){
@@ -2403,6 +2462,7 @@ async function mpJoin(bi){
   try{await fCol.doc("b"+bi).set(S)}catch(_){$("punchMsg").textContent="Impossible de rejoindre le combat."}}
 function mpShow(d,fresh){
   const k=keyOf(me);
+  if(d.status==="fight"&&isAuto(d,k)&&fCol&&Date.now()-autoClearAt>3000){autoClearAt=Date.now();try{fCol.doc("b"+d.bi).update({[autoKey(k)]:false})}catch(_){}}
   F={...jclone(d),b:BOSSES[d.bi],training:false,mp:true,over:d.status==="over",busy:d.turn!==k||d.status!=="fight"};
   F.team.forEach(m=>m.me=m.key===k);
   $("fight").hidden=false;$("fPrep").hidden=true;$("fPlay").hidden=false;$("fTitle").textContent=F.b.n+" · en équipe";
@@ -2420,6 +2480,7 @@ function mpShow(d,fresh){
 function mpBanner(){if(!F||!F.mp||F.over||!mpDoc)return;const d=mpDoc,ban=$("fTurn"),left=Math.max(0,Math.ceil((TURN_MS-(Date.now()-(d.turnAt||0)))/1000));
   if(d.turn==="boss")return;const m=d.team.find(x=>x.key===d.turn);if(!m)return;
   if(m.key===keyOf(me)){ban.className="turnban mine";ban.textContent=`À toi de jouer ! · ${left} s`}
+  else if(isAuto(d,m.key)){ban.className="turnban wait";ban.textContent=`${m.name} est absent : l'IA joue pour lui…`}
   else{ban.className="turnban wait";ban.textContent=`Ce n'est pas ton tour · ${m.name} joue… (${left} s)`}}
 function playEv(d){const ev=d.ev;if(!ev)return;const idx=key=>d.team.findIndex(m=>m.key===key);
   if(ev.actor==="boss"){if(ev.move||!ev.target)return;const tid="fig-"+idx(ev.target);anim("fig-boss","lungeL");
@@ -2449,22 +2510,24 @@ async function mpFinish(S){if(mpFinished[S.at])return;mpFinished[S.at]=1;const w
     if(rCol&&raidOf(S.bi))await rCol.doc("b"+S.bi).delete()}catch(_){}
   render()}
 function mpSettle(){if(!me)return;const k=keyOf(me);
-  Object.values(fights).forEach(x=>{if(!x||!x.team||x.status!=="over"||!x.team.some(m=>m.key===k))return;
+  Object.values(fights).forEach(x=>{if(!x||!x.team)return;const mm=x.team.find(m=>m.key===k);
+    if(mm&&!mm.alive&&!deathHandled&&Date.now()-(x.turnAt||x.at||0)<3*3600000&&!(myAcc&&myAcc.at>x.at))setTimeout(()=>triggerMyDeath(BOSSES[x.bi].n),900);
+    if(x.status!=="over"||!mm)return;
     if(Date.now()-(x.turnAt||x.at||0)>3*3600000||(myAcc&&myAcc.at>x.at))return;
     mpSelf(x);if(x.host===k||Date.now()-(x.hb||0)>15000)mpFinish(x)})}
-function onFights(){const k=keyOf(me);if(!me)return;try{mpSettle()}catch(_){}
+function onFights(){const k=keyOf(me);if(!me)return;try{mpSettle()}catch(_){}if(deathHandled)return;
   const d=Object.values(fights).filter(x=>x&&x.team&&x.team.some(m=>m.key===k)&&!mpDismissed[x.bi+":"+x.at]&&(x.status==="fight"||(x.status==="over"&&Date.now()-(x.at||0)<3600000))).sort((a,b)=>b.at-a.at)[0];
   if(!d)return;
   const fresh=!mpDoc||mpDoc.at!==d.at||!F||!F.mp;mpDoc=d;mpShow(d,fresh)}
 setInterval(async()=>{
   if(F&&F.mp)mpBanner();
-  const d=mpDoc,k=keyOf(me);if(!d||d.status!=="fight"||!fCol)return;
+  const k=keyOf(me),d=(mpDoc&&mpDoc.status==="fight")?mpDoc:me&&Object.values(fights).find(x=>x&&x.status==="fight"&&x.team&&x.team.some(m=>m.key===k));if(!d||d.status!=="fight"||!fCol)return;
   if(d.host!==k){if(d.team.some(m=>m.key===k)&&Date.now()-(d.hb||0)>15000){try{await fCol.doc("b"+d.bi).update({host:k,hb:Date.now()});d.host=k}catch(_){}}return}
   if(Date.now()-(d.hb||0)>5000){d.hb=Date.now();try{await fCol.doc("b"+d.bi).update({hb:d.hb})}catch(_){}}
   if(mpBossBusy)return;
   if(d.turn==="boss"&&Date.now()-(d.turnAt||0)>900){mpBossBusy=true;const S=jclone(d);await mpCommit(S,mpBoss(S));mpBossBusy=false}
-  else if(d.turn&&d.turn!=="boss"&&Date.now()-(d.turnAt||0)>TURN_MS){mpBossBusy=true;const S=jclone(d),m=S.team.find(x=>x.key===d.turn);
-    if(m&&m.alive){mpLog(S,`${m.name} n'a pas joué à temps : l'IA joue pour lui.`,"miss");const ev=mpAI(S,m);ev.auto=true;await mpCommit(S,ev)}else{mpNext(S);await mpCommit(S,{actor:"sys",kind:"skip"})}
+  else if(d.turn&&d.turn!=="boss"&&(Date.now()-(d.turnAt||0)>TURN_MS||(isAuto(d,d.turn)&&Date.now()-(d.turnAt||0)>900))){mpBossBusy=true;const S=jclone(d),m=S.team.find(x=>x.key===d.turn);
+    if(m&&m.alive){if(!isAuto(d,m.key)){mpLog(S,`${m.name} n'a pas joué à temps : l'IA joue pour lui.`,"miss");S[autoKey(m.key)]=true}const ev=mpAI(S,m);ev.auto=true;await mpCommit(S,ev)}else{mpNext(S);await mpCommit(S,{actor:"sys",kind:"skip"})}
     mpBossBusy=false}
 },700);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-mpjoin]");if(b)mpJoin(+b.dataset.mpjoin)});
@@ -2541,19 +2604,19 @@ showGate("gateLoading");
   function subscribe(){
     if(subscribed)return;subscribed=true;
     col=db.collection("punches");mode="db";setSync();
-    col.onSnapshot(snap=>{punches=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.name&&p.at);render()},
-      ()=>{mode="local";col=null;loadLocal();setSync();render()});
+    col.onSnapshot(snap=>{punches=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.name&&p.at);scheduleRender()},
+      ()=>{mode="local";col=null;loadLocal();setSync();scheduleRender()});
     pCol=db.collection("players");
     pCol.onSnapshot(snap=>{playersAll={};snap.docs.forEach(d=>{const v=d.data();if(v&&v.key)playersAll[v.key]=v});
-      const mine=playersAll[keyOf(me)];if(mine)player=normPlayer(mine);render()},()=>{pCol=null});
-    aCol.onSnapshot(snap=>{accounts={};snap.docs.forEach(d=>{accounts[d.id]=d.data()});if(uid&&accounts[uid])myAcc=accounts[uid];renderAccounts();if(me)render()},()=>{});
+      const mine=playersAll[keyOf(me)];if(mine)player=normPlayer(mine);scheduleRender()},()=>{pCol=null});
+    aCol.onSnapshot(snap=>{accounts={};snap.docs.forEach(d=>{accounts[d.id]=d.data()});if(uid&&accounts[uid])myAcc=accounts[uid];renderAccounts();if(me)scheduleRender()},()=>{});
     fCol=db.collection("fights");
     let fSig="";fCol.onSnapshot(snap=>{fights={};snap.docs.forEach(d=>{fights[d.id]=d.data()});onFights();
-      const sg=Object.values(fights).map(x=>x&&x.team?x.bi+x.status+x.at+x.team.length:"").join("|");if(sg!==fSig){fSig=sg;if(me&&$("fight").hidden)render()}},()=>{fCol=null});
+      const sg=Object.values(fights).map(x=>x&&x.team?x.bi+x.status+x.at+x.team.length:"").join("|");if(sg!==fSig){fSig=sg;if(me&&$("fight").hidden)scheduleRender()}},()=>{fCol=null});
     chCol=db.collection("chat");
     chCol.onSnapshot(snap=>{chat=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m&&m.t&&m.at).sort((a,b)=>a.at-b.at);renderChat()},()=>{chCol=null});
     rCol=db.collection("raids");
-    rCol.onSnapshot(snap=>{raids={};snap.docs.forEach(d=>{raids[d.id]=d.data()});render()},()=>{rCol=null});
+    rCol.onSnapshot(snap=>{raids={};snap.docs.forEach(d=>{raids[d.id]=d.data()});scheduleRender()},()=>{rCol=null});
   }
   auth.onAuthStateChanged(async u=>{
     if(!u){uid=null;myAcc=null;setAuthMode(false);showGate("gateAuth");return}
