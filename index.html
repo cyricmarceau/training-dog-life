@@ -834,7 +834,11 @@ body{padding-block:0 210px}
 .wbtn:disabled{opacity:.3;cursor:default}
 .shoptab{position:fixed;right:0;top:46%;z-index:23;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid #c9a24a;border-right:0;border-radius:6px 0 0 6px;
   background:linear-gradient(180deg,#3a250e,#1a1006);color:#ffe08a;cursor:pointer;box-shadow:-4px 4px 14px rgba(0,0,0,.6)}
-.shoptab[hidden]{display:none}
+.shoptab[hidden],.shoptab{display:none!important}
+.cchead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ccbtns{display:inline-flex;gap:6px;margin-left:auto}
+.ccb{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid #c9a24a;border-radius:4px;background:linear-gradient(180deg,#3a250e,#1a1006);color:#ffe08a;font:800 11px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.ccb svg{width:18px;height:18px}.ccb:hover{background:linear-gradient(180deg,#5a3a14,#2a1808)}
 .bagtab{top:calc(46% + 96px)}
 .shoptab svg{width:22px;height:22px}.shoptab span{writing-mode:vertical-rl;transform:rotate(180deg);font:800 12px/1 var(--body);letter-spacing:.25em}
 .shoptab:hover{background:linear-gradient(180deg,#5a3a14,#2a1808)}
@@ -1032,7 +1036,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
   <div id="mapTop" class="flow" hidden>
     <div class="scene">
       <section class="panel charcard" aria-label="Ton personnage">
-        <h3>Ton personnage <small id="invSum"></small></h3>
+        <h3 class="cchead"><span>Ton personnage <small id="invSum"></small></span><span class="ccbtns"><button type="button" class="ccb" id="ccShop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#c9a24a" stroke="#7a5a20" stroke-width="1.5"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#3a2a10" stroke-width="1.6" fill="none"/></svg>Shop</button><button type="button" class="ccb" id="ccBag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l2 12H5Z" fill="#7a4a24" stroke="#3a1a10" stroke-width="1.4"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#c9a24a" stroke-width="1.6"/></svg>Sac</button></span></h3>
         <div class="doll">
           <div class="slots" id="slotsL"></div>
           <svg class="hero-svg" id="heroSvg" viewBox="0 0 160 220" role="img" aria-label="Ton personnage"></svg>
@@ -1488,6 +1492,8 @@ function renderShop(){if($("shopP").hidden)return;const g=goldOf();$("shopGold")
 function openShop(){$("shopP").hidden=false;renderShop();try{tone(660,0,.06,"triangle",.04);tone(880,.07,.08,"triangle",.04)}catch(_){}}
 function closeShop(){$("shopP").hidden=true}
 $("shopTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="buy")closeShop();else{shopTab="buy";openShop()}});
+$("ccShop").addEventListener("click",()=>{shopTab="buy";openShop()});
+$("ccBag").addEventListener("click",()=>{shopTab="sell";openShop()});
 $("bagTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="sell")closeShop();else{shopTab="sell";openShop()}});
 $("shopClose").addEventListener("click",closeShop);
 $("stBuy").addEventListener("click",()=>{shopTab="buy";renderShop()});
