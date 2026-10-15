@@ -11,6 +11,16 @@
 html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
 .cform input{width:100%;box-sizing:border-box}
 .authtabs{display:flex;gap:4px;justify-content:center;margin-top:16px}
+.authchoice{display:flex;flex-direction:column;gap:14px;max-width:440px;margin:18px auto 0;padding:0 4px}
+.bigchoice{display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:18px 20px;border-radius:6px;cursor:pointer;color:#fff3e6;border:2px solid #c9a24a;box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 24px rgba(255,106,26,.12);transition:transform .12s,box-shadow .12s}
+.bigchoice:hover,.bigchoice:focus-visible{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.6),0 0 0 3px rgba(255,224,138,.35)}
+.bigchoice.new{background:linear-gradient(180deg,#b3141b,#5c0a0d);min-height:120px}
+.bigchoice.back{background:linear-gradient(180deg,#2a1a16,#140c0b);border-color:#5a3a30;min-height:84px}
+.bigchoice svg{flex:none;width:56px;height:76px}.bigchoice.back svg{width:34px;height:34px;color:#ffe08a}
+.bigchoice b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(26px,7vw,34px);line-height:1.05}
+.bigchoice.back b{font-size:clamp(20px,5.5vw,24px)}
+.bigchoice small{display:block;margin-top:4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#ffd9a8;opacity:.85}
+.authback{display:block;margin:6px auto 0}
 .authtabs button{background:var(--abyss);border:1px solid var(--ash);color:var(--bone-dim);padding:9px 16px;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
 .authtabs button[aria-selected="true"]{border-color:var(--ember);color:#fff3e6;background:linear-gradient(180deg,#7d0b10,#3d0507)}
 #gateSetup code{font-family:var(--mono);color:var(--gold)}
@@ -717,6 +727,13 @@ header.top{padding-block:16px 14px;border-bottom:0}
 .pceq{display:flex;flex-wrap:wrap;gap:6px}.pceq span{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:var(--abyss);border:1px solid var(--ash);padding:4px 7px}
 .pceq svg{width:18px;height:18px}
 #map .tok{cursor:pointer}
+#map .tok.walking .bob{animation-duration:.18s}
+#map .dust{fill:#d9ccb5;opacity:.55;animation:dust .9s ease-out forwards;pointer-events:none}
+@keyframes dust{to{opacity:0;transform:translateY(-6px)}}
+#map .node.passed .ring{animation:npass .6s ease-out}
+@keyframes npass{40%{stroke:#ffe08a;stroke-width:5}}
+#map .kmpop{font:800 15px var(--body);fill:#ffe08a;stroke:#1a0603;stroke-width:3;paint-order:stroke;animation:kmpop 1.8s ease-out forwards;pointer-events:none}
+@keyframes kmpop{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
 .itl.stat{color:#8ab4ff;font-weight:800;font-size:16px}
 .itl.tot{color:#5aff6a;font-weight:700}
 .itl.no{color:var(--bone-dim)}
@@ -945,6 +962,12 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
   <section class="gate" id="gate">
     <div id="gateLoading" class="gload">Ouverture des portes du sanctuaire…</div>
     <div id="gateAuth" hidden>
+      <div class="authchoice" id="authChoice">
+        <button type="button" class="bigchoice new" id="goSignup"><svg viewBox="0 0 60 90" aria-hidden="true"><path d="M22 50 18 86h9l3-30 3 30h9l-4-36Z" fill="#2a1a16"/><path d="M16 26Q30 18 44 26L46 54Q30 60 14 54Z" fill="#b3141b" stroke="#0c0606"/><path d="M20 12Q30 2 40 12V26Q30 32 20 26Z" fill="#4a3a36" stroke="#0c0606"/><path d="M22 16h16l-2 5H24Z" fill="#050101"/><circle cx="27" cy="18" r="1.4" fill="#ffe08a"/><circle cx="33" cy="18" r="1.4" fill="#ffe08a"/><path d="M44 30 50 46" stroke="#4a3a36" stroke-width="5"/><path d="M50 46 56 14" stroke="#d9ccb5" stroke-width="3"/></svg><span><b>Créer un gladiateur Dog Life</b><small>Nouveau personnage</small></span></button>
+        <button type="button" class="bigchoice back" id="goLogin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Reconnexion</b><small>Personnage existant</small></span></button>
+      </div>
+      <div id="authPane" hidden>
+      <button type="button" class="linkbtn authback" id="authBack">← Retour</button>
       <h2 id="authTitle">Entre dans le sanctuaire</h2>
       <div class="authtabs" role="tablist">
         <button type="button" role="tab" id="tabLogin" aria-selected="true">Se connecter</button>
@@ -959,6 +982,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
         <p class="cmsg" id="cMsg" role="alert"></p>
         <button class="btn" type="submit" id="cBtn">Se connecter</button>
       </form>
+      </div>
     </div>
     <div id="gateSetup" hidden>
       <h2>Configuration requise</h2>
@@ -1604,9 +1628,7 @@ function renderMap(xp,km){
     friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fnode,w:fw});
     others+=`<g class="friend" data-fk="${esc(k)}" transform="translate(${fx.toFixed(1)} ${fy.toFixed(1)})"><title>${esc(v.name)} · ${esc(where)}</title>
       <ellipse cx="0" cy="17" rx="7" ry="2.5" fill="rgba(0,0,0,.5)"/>
-      <path d="M-8 -3 -11 -12 -4 -7ZM8 -3l3-9-7 5Z" fill="${col}"/>
-      <path d="M-8.5 -5Q0 -11 8.5 -5L9 4Q4.5 10 0 10Q-4.5 10 -9 4Z" fill="#160d0c" stroke="${col}" stroke-width="1.6"/>
-      <circle cx="-3.4" cy="0" r="1.5" fill="${col}"/><circle cx="3.4" cy="0" r="1.5" fill="${col}"/>
+      ${tokenFig(lookOf(k),col,.8)}
       <g transform="translate(0 -21)"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
   // jeton du joueur : petite tête de chien infernal
@@ -1615,17 +1637,15 @@ function renderMap(xp,km){
   const from=prevTok||[px,py];
   const tok=`<g class="tok" id="tok" style="transform:translate(${from[0]}px,${from[1]-20}px)"><g class="bob">
     <ellipse cx="0" cy="22" rx="9" ry="3" fill="rgba(0,0,0,.5)"/>
-    <path d="M-10 -4 -14 -16 -5 -9ZM10 -4 14 -16 5 -9Z" fill="#c9a24a"/>
-    <path d="M-11 -6Q0 -14 11 -6L12 6Q6 13 0 13Q-6 13 -12 6Z" fill="#3a0b08" stroke="${myColor()}" stroke-width="2"/>
-    <circle cx="-4.5" cy="0" r="2" fill="#ffe08a"/><circle cx="4.5" cy="0" r="2" fill="#ffe08a"/>
-    <path d="M-4 7l2 3 2-2 2 2 2-3" stroke="#ff6a1a" stroke-width="1.4" fill="none"/></g>
+    ${tokenFig(lookOf(keyOf(me)),myColor(),1)}</g>
     <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
   $("map").innerHTML=MAP_BG+
     `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
      <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
      <path d="${done}" stroke="${W_.path}" stroke-width="3.5" stroke-dasharray="2 8" fill="none" stroke-linecap="round"/>`+
     NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+others+tok;
-  if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
+  if(walkHold){const t=$("tok");if(t){t.style.transition="none";t.style.transform=`translate(${walkHold[0]}px,${walkHold[1]-20}px)`}}
+  else if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
   prevTok=[px,py];
   const myWhere=pr.blocked>=0?`devant ${BOSSES[NODES[pr.blocked].boss].n}`:NODES[pr.idx].n;
   $("mapFriends").innerHTML=`<button type="button" class="fchip me" data-fme="1" style="border-color:${myColor()}"><i style="background:${myColor()}"></i>Toi · ${esc(myWhere)}</button>`+
@@ -1683,6 +1703,7 @@ function helmBig(l,g){const eyes=(y)=>`<circle cx="72" cy="${y}" r="2.4" fill="$
   const base=`<path d="M60 30Q80 14 100 30L102 58Q80 70 58 58Z" fill="#2c2220" stroke="#0c0606"/><path d="M64 44h32l-3 8H67Z" fill="#050101"/>${eyes(47)}`;
   if(l.helm==="couronne")return base+`<path d="M60 30 62 12 69 23 74 4 80 20 86 4 91 23 98 12 100 30Q80 22 60 30Z" fill="#c9a24a" stroke="#7a5a20"/><circle cx="80" cy="25" r="2.5" fill="#b3141b"/>`;
   return base+`<path d="M66 28 62 18 70 24ZM94 28l4-10-8 6Z" fill="#6a5048"/>`}
+function tokenFig(l,col,sc){return `<g transform="scale(${sc}) translate(-30 -22)"><path d="M14 46Q30 30 46 46L44 54H16Z" fill="${col}" stroke="#0c0606" stroke-width="1.5"/><path d="M20 40Q30 34 40 40" stroke="#000" stroke-opacity=".35" fill="none"/>${helmSmall(l,l.eyes,col)}</g>`}
 function helmSmall(l,g,c){const eyes=(y,x1=27,x2=33)=>`<circle cx="${x1}" cy="${y}" r="1.4" fill="${g}"/><circle cx="${x2}" cy="${y}" r="1.4" fill="${g}"/>`;
   if(l.helm==="capuche")return `<path d="M17 30Q14 6 30 0Q46 6 43 30Q30 24 17 30Z" fill="${l.cape}" stroke="#0c0606"/><path d="M23 14Q30 10 37 14L36 26Q30 29 24 26Z" fill="#050101"/>${eyes(18)}`;
   if(l.helm==="crane")return `<path d="M21 14Q30 2 39 14Q41 22 37 26L35 29H25L23 26Q19 22 21 14Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="26.5" cy="17" r="2.8" fill="#170404"/><circle cx="33.5" cy="17" r="2.8" fill="#170404"/>${eyes(17,26.5,33.5)}`;
@@ -1779,6 +1800,39 @@ let camRes=null,camTok=0;
 function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);if(camRes)camRes();camRes=res;const t0=performance.now(),ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
   const step=now=>{const t=Math.min(1,(now-t0)/dur),e=ease(t);setVB(a.map((v,i)=>v+(b[i]-v)*e));if(t<1)camAnim=requestAnimationFrame(step);else{camRes=null;res()}};camAnim=requestAnimationFrame(step)})}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+/* ---------- le personnage marche le long du chemin après une course ---------- */
+let walkHold=null;
+function walkPoints(fromKm,toKm){const a=progressOf(fromKm,player.bosses),b=progressOf(Math.max(fromKm,toKm),player.bosses);
+  const pts=[posOf(a)],nodes=[];for(let i=a.idx+1;i<=b.idx;i++){pts.push([NODES[i].x,NODES[i].y]);nodes.push(i)}
+  const end=posOf(b),last=pts[pts.length-1];if(end[0]!==last[0]||end[1]!==last[1])pts.push(end);return{pts,nodes}}
+async function walkMap(fromKm,toKm){
+  const sec=document.querySelector(".mapwrap");if(!sec){render();return}
+  const {pts,nodes}=walkPoints(fromKm,toKm);
+  let L=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);L+=d}
+  if(reduce||L<2){render();await focusMap();return}
+  walkHold=pts[0];render();
+  sec.scrollIntoView({behavior:"smooth",block:"center"});
+  const tok=++camTok,Z=2.3,W2=MAPW/Z,H2=360/Z;
+  const boxAt=([x,y])=>[Math.max(0,Math.min(MAPW-W2,x-W2/2)),Math.max(0,Math.min(360-H2,y-20-H2/2)),W2,H2];
+  await wait(450);if(tok!==camTok){walkHold=null;render();return}
+  camFX=pts[0][0];await animVB([0,0,MAPW,360],boxAt(pts[0]),650);if(tok!==camTok){walkHold=null;render();return}
+  const t=$("tok");if(t){t.style.transition="none";t.classList.add("walking")}
+  const dur=Math.max(1400,Math.min(7000,L/110*1000)),t0=performance.now();let lastDust=0,passed=0;
+  await new Promise(res=>{const step=now=>{if(tok!==camTok){res();return}
+    const k=Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;let d=e*L,i=0;while(i<seg.length-1&&d>seg[i]){d-=seg[i];i++}
+    const a=pts[i],b=pts[i+1]||a,f=seg[i]?Math.min(1,d/seg[i]):1,x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
+    const tt=$("tok");if(tt){tt.style.transition="none";tt.style.transform=`translate(${x}px,${y-20}px)`;tt.classList.add("walking")}
+    camFX=x;setVB(boxAt([x,y]));
+    if(now-lastDust>110){lastDust=now;const m=$("map");if(m){const g=document.createElementNS("http://www.w3.org/2000/svg","circle");g.setAttribute("cx",x+(Math.random()*6-3));g.setAttribute("cy",y+2);g.setAttribute("r",2.5+Math.random()*2);g.setAttribute("class","dust");m.appendChild(g);setTimeout(()=>g.remove(),900)}}
+    while(passed<nodes.length&&i>=passed+1){const n=document.querySelector(`#map .node[data-i="${nodes[passed]}"]`);if(n){n.classList.add("passed");tone(520+passed*60,0,.08,"triangle",.04)}passed++}
+    if(k<1)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
+  const tt=$("tok");if(tt)tt.classList.remove("walking");
+  walkHold=null;prevTok=null;render();
+  if(tok!==camTok)return;
+  {const end=pts[pts.length-1],m=$("map");if(m&&toKm>fromKm){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",end[0]);tx.setAttribute("y",end[1]-48);tx.setAttribute("class","kmpop");tx.setAttribute("text-anchor","middle");tx.textContent=`+${(Math.round((toKm-fromKm)*10)/10).toLocaleString("fr-CA")} km`;m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}
+  await wait(1100);if(tok!==camTok)return;
+  await animVB(boxAt(pts[pts.length-1]),[0,0,MAPW,360],750);if(tok!==camTok)return;
+  setVB([0,0,MAPW,360]);camFX=null}
 async function focusMap(target){
   const sec=document.querySelector(".mapwrap");if(!sec)return;
   sec.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});
@@ -2343,13 +2397,18 @@ const EMAIL_DOMAIN="joueurs.trainingdoglife.app";
 const emailOf=name=>`${slug(keyOf(name))}@${EMAIL_DOMAIN}`;
 function myColor(){return(myAcc&&myAcc.color)||"#ff6a1a"}
 function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);return a&&a.color||fallback}
-function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forEach(id=>$(id).hidden=id!==which);$("gate").hidden=false;
+function showAuthChoice(){$("authChoice").hidden=false;$("authPane").hidden=true}
+function openAuthPane(up){setAuthMode(up);$("authChoice").hidden=true;$("authPane").hidden=false;setTimeout(()=>$("cName").focus(),30)}
+function showGate(which){["gateLoading","gateAuth","gateSetup","gateLocal"].forEach(id=>$(id).hidden=id!==which);$("gate").hidden=false;if(which==="gateAuth")showAuthChoice();
   $("app").hidden=true;$("mapTop").hidden=true;$("hud").hidden=true;$("who").hidden=true}
 function setAuthMode(up){signup=up;$("tabLogin").setAttribute("aria-selected",String(!up));$("tabSignup").setAttribute("aria-selected",String(up));
   $("colorField").hidden=!up;if(up)try{renderSignupLook()}catch(_){}$("cBtn").textContent=up?"Créer mon personnage":"Se connecter";$("authTitle").textContent=up?"Crée ton personnage":"Entre dans le sanctuaire";
   $("cPass").setAttribute("autocomplete",up?"new-password":"current-password");$("cMsg").textContent=""}
 $("tabLogin").addEventListener("click",()=>setAuthMode(false));
 $("tabSignup").addEventListener("click",()=>setAuthMode(true));
+$("goSignup").addEventListener("click",()=>openAuthPane(true));
+$("goLogin").addEventListener("click",()=>openAuthPane(false));
+$("authBack").addEventListener("click",showAuthChoice);
 $("goLocal").addEventListener("click",()=>{showGate("gateLocal");$("gateName").focus()});
 function renderAccounts(){
   if(!$("acctList"))return;
@@ -2674,7 +2733,8 @@ $("punchBtn").addEventListener("click",async()=>{
         if(mode==="db")await col.doc(active.id).update({end,km});else{active.end=end;active.km=km;saveLocal()}
         $("kmIn").value="";
         m.textContent=`Course terminée · ${gain} min · +${gain} XP`+(km?` · ${km} km sur la carte`:"");
-        after=async()=>{await wait(400);render();await focusMap();await checkNewChests();checkMandatoryBoss()};
+        const fromKm=lastKm;
+        after=async()=>{await wait(300);await walkMap(fromKm,km);await checkNewChests();checkMandatoryBoss()};
       }
     }
     render();
