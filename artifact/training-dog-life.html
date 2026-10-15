@@ -1027,9 +1027,9 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 #map .halo{transform-box:fill-box;transform-origin:center;animation:halo 3s ease-in-out infinite}
 #map .rose{transform-box:fill-box;transform-origin:center;animation:rose 60s linear infinite}
 #map #mapNight{transition:opacity 1.5s}
-.mapbox.dusk #mapNight{opacity:.28}.mapbox.night #mapNight{opacity:.5}
+
 .mapbox.night #map .tglow{transform:scale(2.3);opacity:.45}.mapbox.dusk #map .tglow{transform:scale(1.6);opacity:.32}
-.mapbox::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 18px rgba(0,0,0,.75);border-radius:inherit;z-index:2}
+
 .mapfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .mapdragon{position:absolute;left:0;top:18%;width:150px;pointer-events:none;z-index:1;opacity:0}
 .mapdragon.fly{animation:dragon 7s linear forwards}
@@ -1563,7 +1563,7 @@ try{new IntersectionObserver(es=>{houndVis=es[0].isIntersecting;houndWake()}).ob
 
 /* ===== Atelier de la carte : premier plan en parallaxe (7), particules et dragon (11), jour/nuit (12) ===== */
 function buildMapFore(){const g=$("mapFore");if(!g||g.dataset.ok)return;g.dataset.ok="1";
-  let s="";for(let i=0;i<14;i++){const x=i*170+40,y=40+((i*97)%260),r=60+((i*37)%50);s+=`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.36}" fill="#000" opacity=".16"/>`}
+  let s="";for(let i=0;i<14;i++){const x=i*170+40,y=40+((i*97)%260),r=60+((i*37)%50);s+=`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.36}" fill="#000" opacity="0"/>`}
   g.innerHTML=`<g id="foreClouds" filter="url(#mapBlur)">${s}</g>`;mapParallax()}
 function mapParallax(){const sc=document.querySelector(".mapscroll"),fc=$("foreClouds");if(!sc||!fc)return;
   const f=sc.scrollWidth>sc.clientWidth+4?sc.scrollLeft/sc.scrollWidth*1920:0;fc.setAttribute("transform",`translate(${(-f*.35).toFixed(1)} 0)`)}
@@ -1835,9 +1835,9 @@ function progressOf(km,bosses){
 function posOf(pr){const a=NODES[pr.idx],b=NODES[pr.idx+1];if(!b||!pr.frac)return[a.x,a.y];return[a.x+(b.x-a.x)*pr.frac,a.y+(b.y-a.y)*pr.frac]}
 
 function mapStatic(w){
-  const T=[{t1:"#1a0706",t2:"#260a08",dot:"#3a1410",lk:["#ffb347","#ff6a1a","#8a1206"],rim:"#2a0806",rock:"#2c0e0b",rockS:"#120303",fl:["#b3141b","#ff6a1a","#ffe08a"],fr:"#c9a24a",fr2:"#5c0a0d"},
-    {t1:"#0b1722",t2:"#12263a",dot:"#1d3a52",lk:["#e8f6ff","#9fd8ff","#2a6a9a"],rim:"#07121c",rock:"#c9e6f7",rockS:"#4a7a9a",fl:["#2a6a9a","#9fd8ff","#ffffff"],fr:"#bfe6ff",fr2:"#1d3a52"},
-    {t1:"#120a1c",t2:"#1e1030",dot:"#2e1a48",lk:["#f0c8ff","#c77dff","#3a0a5a"],rim:"#0a0412",rock:"#3a1a5a",rockS:"#0a0412",fl:["#5a1a8a","#c77dff","#f0c8ff"],fr:"#a070d8",fr2:"#2e1a48"}][w];
+  const T=[{t1:"#26100b",t2:"#361511",dot:"#3a1410",lk:["#ffb347","#ff6a1a","#8a1206"],rim:"#2a0806",rock:"#2c0e0b",rockS:"#120303",fl:["#b3141b","#ff6a1a","#ffe08a"],fr:"#c9a24a",fr2:"#5c0a0d"},
+    {t1:"#122434",t2:"#1a3550",dot:"#1d3a52",lk:["#e8f6ff","#9fd8ff","#2a6a9a"],rim:"#07121c",rock:"#c9e6f7",rockS:"#4a7a9a",fl:["#2a6a9a","#9fd8ff","#ffffff"],fr:"#bfe6ff",fr2:"#1d3a52"},
+    {t1:"#1c1029",t2:"#2a1843",dot:"#2e1a48",lk:["#f0c8ff","#c77dff","#3a0a5a"],rim:"#0a0412",rock:"#3a1a5a",rockS:"#0a0412",fl:["#5a1a8a","#c77dff","#f0c8ff"],fr:"#a070d8",fr2:"#2e1a48"}][w];
   let s=`<defs>
    <pattern id="tiles${w}" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="${T.t1}"/><path d="M0 40V0h40" fill="none" stroke="${T.t2}" stroke-width="2"/><circle cx="12" cy="14" r="1.2" fill="${T.dot}"/><circle cx="30" cy="29" r="1" fill="${T.dot}"/></pattern>
    <radialGradient id="lava${w}" cx="50%" cy="50%"><stop offset="0" stop-color="${T.lk[0]}"/><stop offset=".45" stop-color="${T.lk[1]}"/><stop offset="1" stop-color="${T.lk[2]}"/></radialGradient>
@@ -1889,7 +1889,7 @@ function bossFig(n,beat){const big=!!n.big;
   return `<g transform="translate(0 -20) scale(${sc})"><circle r="34" fill="url(#bossAura)" class="aurap"/><g class="breathe"><path d="M-17 18L-20 -6Q-22 -26 -9 -34L-13 -48-4 -38Q0 -41 4 -38L13 -48 9 -34Q22 -26 20 -6L17 18Z" fill="${c}" stroke="#0c0606" stroke-width="2"/><path d="M-8 -24l5 3-5 1zM8 -24l-5 3 5 1z" fill="#ffe08a"/><path d="M-6 -12h12l-3 4h-6z" fill="#ff6a1a"/></g>
     <g class="crow"><path d="M30 -30l5-2 3 3 5-2-4 4h-7z" fill="#0c0606"/></g><g class="crow r2"><path d="M-36 -18l5-2 3 3 5-2-4 4h-7z" fill="#0c0606"/></g></g>`}
 const MAP_BGS=[0,1,2].map(w=>mapStatic(w)+mapDeco(w));
-const MAP_TILE=["#1a0706","#0b1722","#120a1c"];
+const MAP_TILE=["#26100b","#122434","#1c1029"];
 const MAP_BG=`<defs>
   <filter id="mapBlur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
   <filter id="fogBlur" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="16"/></filter>
@@ -1982,7 +1982,7 @@ function renderMap(xp,km){
       if(d)flows+=`<path d="${d}" stroke="#000" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/><path class="donepath" d="${d}" stroke="url(#flow${w})" stroke-width="3.6" stroke-dasharray="13 6" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 0 3px ${WORLDS[w].path})"/>`});
     const lastRev=Math.min(NODES.length-1,(pr.blocked>=0?pr.blocked:pr.idx)+2);let holes="";for(let i=0;i<=lastRev;i++)holes+=`<circle cx="${NODES[i].x}" cy="${NODES[i].y}" r="${i===lastRev?62:84}"/>`;
     const fog=`<mask id="fogM" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="360"><rect width="1920" height="360" fill="#fff"/><g fill="#000" filter="url(#fogBlur)">${holes}</g></mask>
-      <g mask="url(#fogM)" pointer-events="none"><rect width="1920" height="360" fill="#060203" opacity=".8"/><g class="fogcl" fill="#2a1c1a" opacity=".45">${[[200,80,120],[620,250,140],[1000,120,150],[1350,280,130],[1700,100,150],[1500,180,110],[860,320,120]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.32}"/>`).join("")}</g></g>`;
+      <g mask="url(#fogM)" pointer-events="none"><rect width="1920" height="360" fill="#060203" opacity=".32"/><g class="fogcl" fill="#4a3a36" opacity=".22">${[[200,80,120],[620,250,140],[1000,120,150],[1350,280,130],[1700,100,150],[1500,180,110],[860,320,120]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.32}"/>`).join("")}</g></g>`;
     const html=flows+NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+fog+others+tok;
     if(dy._h!==html||!$("tok")){dy.innerHTML=html;dy._h=html}}
   if(walkHold){const t=$("tok");if(t){t.style.transition="none";t.style.transform=`translate(${walkHold[0]}px,${walkHold[1]-20}px)`}}
