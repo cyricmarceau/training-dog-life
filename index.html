@@ -970,6 +970,14 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 @keyframes dogrun{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-2px) rotate(2deg)}}
 @keyframes dogtail{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
 @media (prefers-reduced-motion:reduce){#map .dog .dl,#map .dog .dbody,#map .dog .dtail{animation:none}}
+.photopick{display:flex;align-items:center;gap:12px;padding:8px;border:1px dashed #6b5a40;border-radius:6px;cursor:pointer;background:rgba(0,0,0,.25);margin:4px 0 6px}
+.photopick:hover{border-color:#c9a24a}.phprev{flex:none;width:56px;height:56px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#1a0b09;border:2px solid #c9a24a}
+.phprev img{width:100%;height:100%;object-fit:cover}.phprev svg{width:26px;height:26px;fill:none;stroke:#c9a24a;stroke-width:1.6}
+.phtxt{display:flex;flex-direction:column;gap:2px;text-transform:none;letter-spacing:normal}.phtxt b{font-size:14px}.phtxt b{color:var(--bone)}.phtxt small{font-size:11px;color:var(--bone-dim)}
+.pcphoto{display:block;width:min(220px,70%);aspect-ratio:1;object-fit:cover;margin:2px auto 12px;border-radius:50%;border:3px solid #c9a24a;box-shadow:0 0 18px rgba(201,162,74,.35)}
+.bioin{width:100%;box-sizing:border-box;resize:vertical;min-height:52px;font:inherit;font-size:14px;color:var(--bone);background:#0f0807;border:1px solid #4a2a20;border-radius:4px;padding:8px}
+.bioin:focus{outline:none;border-color:#c9a24a}.biorow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}.biorow small{color:var(--bone-dim);font-size:11px}
+.pcbio{margin:0 0 12px;text-align:center;font-style:italic;color:var(--bone);line-height:1.4;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -1027,6 +1035,8 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
         <label class="fl" id="nameField">Nom de gladiateur<input id="cName" maxlength="24" autocomplete="username" placeholder="Ex. : Cyric"></label>
         <label class="fl">Mot secret<input id="cPass" type="password" minlength="6" required autocomplete="current-password" placeholder="6 caractères minimum"></label>
         <fieldset class="fl" id="colorField" hidden><legend>Ton personnage</legend>
+          <div id="cPhotoBox"></div>
+          <label class="fl" style="display:block">Bio <small style="opacity:.7">(optionnelle)</small><textarea class="bioin" id="cBio" maxlength="160" rows="2" placeholder="Ex. : Je cours le matin avant le travail."></textarea></label>
           <div class="lookbox"><svg class="lookprev" id="lookPrev" viewBox="0 0 160 220" aria-label="Aperçu de ton personnage"></svg><div class="lookopts" id="lookOpts"></div></div>
           <span class="lklab">Couleur (carte et aura)</span><div class="sws"><label class="sw"><input type="radio" name="cCol" value="#ff6a1a" checked><i style="background:#ff6a1a"></i></label><label class="sw"><input type="radio" name="cCol" value="#6aa6ff"><i style="background:#6aa6ff"></i></label><label class="sw"><input type="radio" name="cCol" value="#5aff9a"><i style="background:#5aff9a"></i></label><label class="sw"><input type="radio" name="cCol" value="#c77dff"><i style="background:#c77dff"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff7ab8"><i style="background:#ff7ab8"></i></label><label class="sw"><input type="radio" name="cCol" value="#40e0d0"><i style="background:#40e0d0"></i></label><label class="sw"><input type="radio" name="cCol" value="#e6e66a"><i style="background:#e6e66a"></i></label><label class="sw"><input type="radio" name="cCol" value="#ff4a3a"><i style="background:#ff4a3a"></i></label></div></fieldset>
         <p class="cmsg" id="cMsg" role="alert"></p>
@@ -1751,8 +1761,8 @@ function renderMap(xp,km){
     friendsOnMap.push({k,name:v.name,x:fx,y:fy+20,col,where,node:fnode,w:fw});
     others+=`<g class="friend" data-fk="${esc(k)}" transform="translate(${fx.toFixed(1)} ${fy.toFixed(1)})"><title>${esc(v.name)} · ${esc(where)}</title>
       <ellipse cx="0" cy="17" rx="7" ry="2.5" fill="rgba(0,0,0,.5)"/>
-      ${tokenFig(lookOf(k),col,.8)}
-      <g transform="translate(0 -21)"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
+      ${tokenFig(lookOf(k),col,.8)}${photoBadge(k,col,.8)}
+      <g transform="translate(0 ${photoOf(k)?-54:-21})"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
   // jeton du joueur : chien infernal qui court
   tokPos=[px,py];
@@ -1760,8 +1770,8 @@ function renderMap(xp,km){
   const from=prevTok||[px,py];
   const tok=`<g class="tok" id="tok" style="transform:translate(${from[0]}px,${from[1]-20}px)"><g class="bob">
     <ellipse cx="0" cy="22" rx="9" ry="3" fill="rgba(0,0,0,.5)"/>
-    ${tokenFig(lookOf(keyOf(me)),myColor(),1)}</g>
-    <g transform="translate(0 -27)"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
+    ${tokenFig(lookOf(keyOf(me)),myColor(),1)}${photoBadge(keyOf(me),myColor(),1)}</g>
+    <g transform="translate(0 ${photoOf(keyOf(me))?-67:-27})"><rect x="-14" y="-6" width="28" height="11" rx="2" fill="${myColor()}"/><text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#1a0603" font-family="Alegreya Sans,sans-serif">TOI</text></g></g>`;
   $("map").innerHTML=MAP_BG+
     `<path d="${path}" stroke="#0c0303" stroke-width="9" fill="none" stroke-linecap="round"/>
      <path d="${path}" stroke="#d9ccb5" stroke-width="3" stroke-dasharray="2 8" fill="none" stroke-linecap="round" opacity=".55"/>
@@ -2686,15 +2696,18 @@ $("goLogin").addEventListener("click",()=>openAuthPane(false));
 $("authBack").addEventListener("click",showAuthChoice);
 $("goLocal").addEventListener("click",()=>{showGate("gateLocal");$("gateName").focus()});
 function renderAccounts(){
-  if(!$("acctList"))return;
+  if(!$("acctList"))return;const _bi=$("acctBio"),_keep=_bi&&document.activeElement===_bi?[_bi.value,_bi.selectionStart]:null;
   const list=Object.values(accounts).sort((a,b)=>(a.at||0)-(b.at||0));
   $("acctSum").textContent=`${list.length} inscrit${list.length>1?"s":""}`;
   $("acctList").innerHTML=list.length?list.map(a=>`<li><i style="background:${esc(a.color||"#a8988a")}"></i><b>${esc(a.name)}</b>${myAcc&&a.uid===myAcc.uid?" <em>(toi)</em>":""}<span>inscrit le ${new Date(a.at||Date.now()).toLocaleDateString("fr-CA",{day:"numeric",month:"long"})}</span></li>`).join(""):`<li class="empty">Aucun compte pour l'instant.</li>`;
   if(myAcc){$("acctMe").innerHTML=`<div class="accrow"><i class="accdot" style="background:${esc(myAcc.color)}"></i><div><b>${esc(myAcc.name)}</b><span>Connecté · ce compte te suit sur tous tes appareils</span></div></div>
      <div class="fl"><span>Changer ta couleur</span><div class="sws">${ACC_COLS.map(c=>`<button type="button" class="swb ${c===myAcc.color?"on":""}" data-col="${c}" style="background:${c}" aria-label="Couleur ${c}"></button>`).join("")}</div></div>
+     <div class="fl"><span>Ta photo</span>${photoPickHtml("acctPhoto",myAcc.photo)}</div>
+     <div class="fl"><span>Ta bio <small style="opacity:.7">(optionnelle)</small></span><textarea class="bioin" id="acctBio" maxlength="160" rows="2" placeholder="Quelques mots sur toi">${esc(myAcc.bio||"")}</textarea><div class="biorow"><small>160 caractères max</small><button class="btn ghost" type="button" id="acctBioSave">Enregistrer la bio</button></div></div>
      <div class="fl"><span>Ton apparence</span><div class="lookbox"><svg class="lookprev" viewBox="0 0 160 220" aria-hidden="true">${heroSvg({look:normLook(myAcc.look),color:myAcc.color,bare:true,sx:"a"})}</svg><div class="lookopts" id="acctLook">${lookPickerHtml(normLook(myAcc.look))}</div></div></div>
      <div><button class="btn ghost" type="button" id="logoutBtn">Se déconnecter</button></div>`}
-  else $("acctMe").innerHTML=`<p class="pplsub" style="margin:0">Mode local : tes données restent sur cet appareil et tu n'apparais pas sur la carte des autres.</p>`;
+  if(_keep&&$("acctBio")){const t=$("acctBio");t.value=_keep[0];t.focus();try{t.setSelectionRange(_keep[1],_keep[1])}catch(_){}}
+  if(!myAcc)$("acctMe").innerHTML=`<p class="pplsub" style="margin:0">Mode local : tes données restent sur cet appareil et tu n'apparais pas sur la carte des autres.</p>`;
 }
 document.addEventListener("click",async e=>{
   if(e.target.closest("#logoutBtn")&&auth){try{await auth.signOut()}catch(_){};LS.set("tdl_name","");location.reload();return}
@@ -2702,12 +2715,38 @@ document.addEventListener("click",async e=>{
   const prev=myAcc;myAcc={...myAcc,color:b.dataset.col};if(uid)accounts[uid]=myAcc;renderAccounts();render();
   if(!aCol)return;
   try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Couleur changée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render();$("punchMsg").textContent="Impossible de changer la couleur."}});
+
+/* ===== Photo du personnage ===== */
+let signupPhoto="";
+const okPhoto=p=>typeof p==="string"&&p.length<90000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p);
+function photoOf(k){let p;if(myAcc&&me&&k===keyOf(me))p=myAcc.photo;else{const a=Object.values(accounts).find(x=>x.key===k);p=a&&a.photo}return okPhoto(p)?p:""}
+function shrinkPhoto(file,S=192){return new Promise((res,rej)=>{if(!file||!/^image\//.test(file.type||"image/")){rej(new Error("type"));return}
+  const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{try{const c=document.createElement("canvas");c.width=c.height=S;const g=c.getContext("2d"),m=Math.min(img.width,img.height);
+    g.fillStyle="#000";g.fillRect(0,0,S,S);g.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);URL.revokeObjectURL(url);
+    let q=.75,d=c.toDataURL("image/jpeg",q);while(d.length>60000&&q>.3){q-=.1;d=c.toDataURL("image/jpeg",q)}res(d)}catch(e){rej(e)}};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("load"))};img.src=url})}
+function photoBadge(k,col,sc){const p=photoOf(k);if(!p)return "";const id="ph-"+slug(k),r=13*sc,cy=-46*sc,cx=5*sc;
+  return `<g class="phb"><clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><circle cx="${cx}" cy="${cy}" r="${r+2}" fill="${col}" stroke="#0c0606"/><image href="${p}" x="${cx-r}" y="${cy-r}" width="${2*r}" height="${2*r}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/></g>`}
+function photoPickHtml(id,p){return `<label class="photopick"><input type="file" accept="image/*" id="${id}" hidden><span class="phprev">${okPhoto(p)?`<img src="${p}" alt="">`:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></svg>`}</span><span class="phtxt"><b>${okPhoto(p)?"Changer la photo":"Ajouter une photo"}</b><small>Elle s'affiche sur la carte et sur ta fiche</small></span></label>${okPhoto(p)?`<button type="button" class="linkbtn" data-phdel="${id}">Retirer la photo</button>`:""}`}
+document.addEventListener("change",async e=>{const t=e.target;if(t.id!=="cPhoto"&&t.id!=="acctPhoto")return;const f=t.files&&t.files[0];if(!f)return;
+  let d;try{d=await shrinkPhoto(f)}catch(_){$("punchMsg").textContent="Impossible de lire cette image.";return}
+  if(t.id==="cPhoto"){signupPhoto=d;$("cPhotoBox").innerHTML=photoPickHtml("cPhoto",d);return}
+  if(!myAcc)return;const prev=myAcc;myAcc={...myAcc,photo:d};if(uid)accounts[uid]=myAcc;renderAccounts();render();
+  if(aCol&&uid){try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Photo ajoutée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render();$("punchMsg").textContent="Impossible d'enregistrer la photo."}}});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-phdel]");if(!b)return;e.preventDefault();
+  if(b.dataset.phdel==="cPhoto"){signupPhoto="";$("cPhotoBox").innerHTML=photoPickHtml("cPhoto","");return}
+  if(!myAcc)return;const prev=myAcc;myAcc={...myAcc,photo:""};if(uid)accounts[uid]=myAcc;renderAccounts();render();
+  if(aCol&&uid){try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent="Photo retirée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();render()}}});
+function bioOf(k){let a;if(myAcc&&me&&k===keyOf(me))a=myAcc;else a=Object.values(accounts).find(x=>x.key===k);const b=a&&a.bio;return typeof b==="string"?b.slice(0,160):""}
+document.addEventListener("click",async e=>{if(!e.target.closest("#acctBioSave")||!myAcc)return;const v=($("acctBio").value||"").trim().replace(/\s+/g," ").slice(0,160);
+  const prev=myAcc;myAcc={...myAcc,bio:v};if(uid)accounts[uid]=myAcc;renderAccounts();
+  if(aCol&&uid){try{await aCol.doc(uid).set(myAcc);$("punchMsg").textContent=v?"Bio enregistrée.":"Bio retirée."}catch(_){myAcc=prev;if(uid)accounts[uid]=prev;renderAccounts();$("punchMsg").textContent="Impossible d'enregistrer la bio."}}});
 let signupLook=normLook();
 function lookPickerHtml(l){
   return `<div><span class="lklab">Casque</span><div class="lkrow">${LOOKS.helm.map(([v,n])=>`<button type="button" class="lkchip ${l.helm===v?"on":""}" data-lk="helm" data-lv="${v}" aria-pressed="${l.helm===v}">${n}</button>`).join("")}</div></div>
   <div><span class="lklab">Yeux</span><div class="lkrow">${LOOKS.eyes.map(c=>`<button type="button" class="lkdot ${l.eyes===c?"on":""}" data-lk="eyes" data-lv="${c}" style="background:${c}" aria-label="Yeux ${c}" aria-pressed="${l.eyes===c}"></button>`).join("")}</div></div>
   <div><span class="lklab">Cape</span><div class="lkrow">${LOOKS.cape.map(c=>`<button type="button" class="lkdot ${l.cape===c?"on":""}" data-lk="cape" data-lv="${c}" style="background:${c}" aria-label="Cape ${c}" aria-pressed="${l.cape===c}"></button>`).join("")}</div></div>`}
-function renderSignupLook(){const col=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
+function renderSignupLook(){if($("cPhotoBox")&&!$("cPhotoBox").innerHTML)$("cPhotoBox").innerHTML=photoPickHtml("cPhoto",signupPhoto);const col=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
   $("lookOpts").innerHTML=lookPickerHtml(signupLook);$("lookPrev").innerHTML=heroSvg({look:signupLook,color:col,bare:true,sx:"p"})}
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-lk]");if(!b)return;e.preventDefault();
   if(b.closest("#lookOpts")){signupLook={...signupLook,[b.dataset.lk]:b.dataset.lv};renderSignupLook();return}
@@ -2735,7 +2774,7 @@ $("authForm").addEventListener("submit",async e=>{e.preventDefault();
       const cred=await auth.createUserWithEmailAndPassword(emailOf(name),pass);
       try{await cred.user.updateProfile({displayName:name})}catch(_){}
       const color=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
-      uid=cred.user.uid;myAcc={uid,name,key:keyOf(name),color,look:normLook(signupLook),at:Date.now()};
+      uid=cred.user.uid;myAcc={uid,name,key:keyOf(name),color,look:normLook(signupLook),photo:okPhoto(signupPhoto)?signupPhoto:"",bio:(($("cBio")||{}).value||"").trim().replace(/\s+/g," ").slice(0,160),at:Date.now()};
       await aCol.doc(uid).set(myAcc);accounts[uid]=myAcc;
       player=normPlayer({});delete playersAll[keyOf(name)];LS.set("tdl_player_"+keyOf(name),"");
       try{if(pCol)await pCol.doc(slug(keyOf(name))).set({name,key:keyOf(name),items:[],bosses:[],loot:{},chests:[],unequip:[],lootOff:{},xpOff:0,kmOff:0,deaths:0})}catch(_){}
@@ -2802,7 +2841,7 @@ function showPlayer(k){
   $("itIcon").innerHTML=`<circle cx="12" cy="12" r="10" fill="${col}" stroke="#0c0606"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">${esc(nm.charAt(0).toUpperCase())}</text>`;
   $("itName").textContent=nm+(isMe?" (toi)":"");$("itName").className="r-legendaire";
   $("itType").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
-  $("itBody").innerHTML=`<div class="itl stat">${st.hp} PV · ${st.atk} ATQ${st.potion?" · potion":""}</div>
+  $("itBody").innerHTML=`${photoOf(k)?`<img class="pcphoto" src="${photoOf(k)}" alt="Photo de ${esc(nm)}">`:""}${bioOf(k)?`<p class="pcbio">« ${esc(bioOf(k))} »</p>`:""}<div class="itl stat">${st.hp} PV · ${st.atk} ATQ${st.potion?" · potion":""}</div>
     <div class="itl">XP du personnage <span>${c.xp.toLocaleString("fr-CA")}${nextR?` · ${(nextR[0]-c.xp).toLocaleString("fr-CA")} avant ${esc(nextR[1])}`:""}</span></div>
     <div class="itl">Km sur la carte <span>${c.km.toLocaleString("fr-CA",{maximumFractionDigits:1})}</span></div>
     <div class="itl">📍 ${esc(where)}</div>
