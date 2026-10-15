@@ -2287,9 +2287,17 @@ function showPlayer(k){
     <div class="itl ${open?"tot":"no"}">${open?`● En séance · ${open.type==="gym"?"gym":"course"}`:last?`Vu ${ago(last)}`:"Jamais punché"}</div>
     <h5 class="lh">Équipé</h5>
     <div class="pceq">${it.map(x=>`<span title="${esc(ITEMS[x].n)}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[x]}</svg>${esc(ITEMS[x].n)}</span>`).join("")}${lt.map(([x,n])=>`<span title="${esc(LOOT[x].n)}"><svg viewBox="0 0 24 24" aria-hidden="true">${LOOT_ICON[x]}</svg>${esc(LOOT[x].n)}${n>1?` ×${n}`:""}</span>`).join("")||(it.length?"":`<em class="itl no">Rien d'équipé</em>`)}</div>`;
-  $("itAct").innerHTML=`<button type="button" class="btn ghost" data-pfocus="${esc(k)}">Voir sur la carte</button>`;
+  let help="";
+  if(!isMe&&pr.blocked>=0){const bi=NODES[pr.blocked].boss,fd=fights["b"+bi],live=fd&&fd.status==="fight";
+    if(live&&fd.team.some(m=>m.key===keyOf(me)))help=`<button type="button" class="btn" data-mpback="${bi}">⚔ Retourner dans l'arène</button>`;
+    else if(live&&player.bosses.includes(bi))help=`<button type="button" class="btn" data-mpjoin="${bi}">⚔ Rejoindre son combat</button>`;
+    else if(player.bosses.includes(bi))help=`<button type="button" class="btn" data-fight="${bi}">⚔ Combattre avec ${esc(nm)}</button>`;
+    else{const myPr=progressOf(charOf(keyOf(me)).km,player.bosses);help=myPr.blocked===pr.blocked?`<button type="button" class="btn" data-fight="${bi}">⚔ Combattre ensemble</button>`:`<p class="itl no">Pour l'aider contre ${esc(BOSSES[bi].n)}, tu dois d'abord vaincre ce boss.</p>`}}
+  else if(!isMe)help=`<p class="itl no">${esc(nm)} n'est pas bloqué par un boss : il avance en faisant des km.</p>`;
+  $("itAct").innerHTML=help+`<button type="button" class="btn ghost" data-pfocus="${esc(k)}">Voir sur la carte</button>`;
   $("itip").dataset.k="";$("itip").hidden=false;$("itClose").focus();
 }
+document.addEventListener("click",e=>{if(e.target.closest("#itAct [data-fight],#itAct [data-mpjoin],#itAct [data-mpback]"))$("itip").hidden=true},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-pfocus]");if(!b)return;const k=b.dataset.pfocus;$("itip").hidden=true;
   if(k===keyOf(me)){selAuto=true;render();focusMap();return}
   const f=friendsOnMap.find(x=>x.k===k);if(f){selAuto=false;selNode=f.node;render();focusMap([f.x,f.y])}});
