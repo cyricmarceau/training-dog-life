@@ -960,16 +960,6 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 @keyframes gemb{from{transform:translateY(0);opacity:0}30%{opacity:1}to{transform:translateY(-34px);opacity:0}}
 .grune{animation:reye 1.8s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.gemb,.grune{animation:none}}
-#map .dog .dl{transform-box:fill-box;transform-origin:50% 0;animation:dogleg .34s ease-in-out infinite alternate}
-#map .dog .dl.f1,#map .dog .dl.b2{animation-delay:-.17s}
-#map .dog .dl.f2{animation-delay:-.08s}#map .dog .dl.b1{animation-delay:-.25s}
-#map .dog .dbody{animation:dogrun .34s ease-in-out infinite alternate}
-#map .dog .dtail{transform-box:fill-box;transform-origin:100% 100%;animation:dogtail .34s ease-in-out infinite alternate}
-#map .tok.walking .dog .dl,#map .tok.hopping .dog .dl,#map .tok.walking .dog .dbody,#map .tok.hopping .dog .dbody,#map .tok.walking .dog .dtail,#map .tok.hopping .dog .dtail{animation-duration:.17s}
-@keyframes dogleg{from{transform:rotate(32deg)}to{transform:rotate(-32deg)}}
-@keyframes dogrun{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-2px) rotate(2deg)}}
-@keyframes dogtail{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
-@media (prefers-reduced-motion:reduce){#map .dog .dl,#map .dog .dbody,#map .dog .dtail{animation:none}}
 .photopick{display:flex;align-items:center;gap:12px;padding:8px;border:1px dashed #6b5a40;border-radius:6px;cursor:pointer;background:rgba(0,0,0,.25);margin:4px 0 6px}
 .photopick:hover{border-color:#c9a24a}.phprev{flex:none;width:56px;height:56px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#1a0b09;border:2px solid #c9a24a}
 .phprev img{width:100%;height:100%;object-fit:cover}.phprev svg{width:26px;height:26px;fill:none;stroke:#c9a24a;stroke-width:1.6}
@@ -1764,7 +1754,7 @@ function renderMap(xp,km){
       ${tokenFig(lookOf(k),col,.8)}${photoBadge(k,col,.8)}
       <g transform="translate(0 ${photoOf(k)?-54:-21})"><rect x="${-(v.name.length*2.9+6)}" y="-6" width="${v.name.length*5.8+12}" height="11" rx="2" fill="#0c0606" stroke="${col}" stroke-width="1"/>
       <text y="2.6" text-anchor="middle" font-size="8" font-weight="800" fill="#e8dccb" font-family="Alegreya Sans,sans-serif">${esc(v.name)}</text></g></g>`});
-  // jeton du joueur : chien infernal qui court
+  // jeton du joueur : jeton de chien enragé
   tokPos=[px,py];
   {const sc=document.querySelector(".mapscroll"),kk=px+","+py;if(sc&&sc.scrollWidth>sc.clientWidth+4&&sc.dataset.tk!==kk){sc.dataset.tk=kk;requestAnimationFrame(()=>{sc.scrollLeft=px/MAPW*sc.scrollWidth-sc.clientWidth/2})}}
   const from=prevTok||[px,py];
@@ -1887,18 +1877,23 @@ function helmBig(l,g){const eyes=(y)=>`<circle cx="72" cy="${y}" r="2.4" fill="$
   const base=`<path d="M60 30Q80 14 100 30L102 58Q80 70 58 58Z" fill="#2c2220" stroke="#0c0606"/><path d="M64 44h32l-3 8H67Z" fill="#050101"/>${eyes(47)}`;
   if(l.helm==="couronne")return base+`<path d="M60 30 62 12 69 23 74 4 80 20 86 4 91 23 98 12 100 30Q80 22 60 30Z" fill="#c9a24a" stroke="#7a5a20"/><circle cx="80" cy="25" r="2.5" fill="#b3141b"/>`;
   return base+`<path d="M66 28 62 18 70 24ZM94 28l4-10-8 6Z" fill="#6a5048"/>`}
-function tokenFig(l,col,sc){const o='stroke="#0c0606" stroke-width="1.1" stroke-linejoin="round"',dk="rgba(0,0,0,.35)";
-  return `<g class="dog" transform="translate(-2 4) scale(${sc*.85})"><g class="dbody">
-  <path class="dtail" d="M-14 -4Q-22 -8 -24 -17" stroke="${col}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
-  <path class="dl b2" d="M-12 0l-2 18h4l3-17Z" fill="${col}" ${o}/><path class="dl f2" d="M8 0l1 18h4l-1-18Z" fill="${col}" ${o}/>
-  <path d="M-16 -2Q-16 -9 -6 -9H8Q15 -9 15 -3Q15 5 6 5H-8Q-16 5 -16 -2Z" fill="${col}" ${o}/>
-  <path d="M-10 -9Q-1 -13 9 -9L8 -2Q-1 -5 -9 -2Z" fill="${l.cape}" ${o}/>
-  <path class="dl b1" d="M-9 0l-1 18h4l2-17Z" fill="${col}" ${o}/><path class="dl f1" d="M10 0l3 18h4l-2-18Z" fill="${col}" ${o}/>
-  <path d="M9 -6Q11 -16 19 -16L28 -12Q30 -7 25 -6L17 -4Q12 -1 9 -6Z" fill="${col}" ${o}/>
-  <path d="M15 -14 13 -23 19 -16Z" fill="${col}" ${o}/><path d="M15.5 -15 14.4 -20 17.5 -16Z" fill="${dk}"/>
-  <path d="M24 -8 28 -9" stroke="#0c0606" stroke-width="1"/><path d="M25 -7.6l.8 2 .8-1.8" fill="#e8dccb"/>
-  <circle cx="21" cy="-12" r="1.6" fill="${l.eyes}"/><circle cx="21" cy="-12" r="3" fill="${l.eyes}" opacity=".25"/>
-  <circle cx="28.4" cy="-11.6" r="1.2" fill="#0c0606"/></g></g>`}
+function tokenFig(l,col,sc){const o='stroke="#0c0606" stroke-width="1" stroke-linejoin="round"';
+  return `<g class="dogcoin" transform="scale(${sc*1.25})">
+  <circle r="16.5" fill="#0c0606"/><circle r="15.5" fill="#1a0b09" stroke="${col}" stroke-width="2.4"/><circle r="12.8" fill="none" stroke="${col}" stroke-opacity=".35" stroke-dasharray="1.5 2"/>
+  <path d="M-10.5 -2 -12.5 -14.5 -4.5 -8.5Z" fill="${col}" ${o}/><path d="M10.5 -2 12.5 -14.5 4.5 -8.5Z" fill="${col}" ${o}/>
+  <path d="M-11.2 -12.2-10 -4-6.4 -7.6Z" fill="rgba(0,0,0,.35)"/><path d="M11.2 -12.2 10 -4 6.4 -7.6Z" fill="rgba(0,0,0,.35)"/>
+  <path d="M-9 -8Q0 -12.5 9 -8L10 2Q7 10.5 0 12.5Q-7 10.5 -10 2Z" fill="${col}" ${o}/>
+  <path d="M-4 1.5Q0 -1 4 1.5L3.4 5.4H-3.4Z" fill="rgba(0,0,0,.28)"/>
+  <path d="M-8.2 -5.6-2.2 -2.4M8.2 -5.6 2.2 -2.4" stroke="#0c0606" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M-7.4 -3.4-3.2 -1.4-7.2 -.2Z" fill="${l.eyes}"/><path d="M7.4 -3.4 3.2 -1.4 7.2 -.2Z" fill="${l.eyes}"/>
+  <circle cx="-5.6" cy="-1.6" r="3.2" fill="${l.eyes}" opacity=".25"/><circle cx="5.6" cy="-1.6" r="3.2" fill="${l.eyes}" opacity=".25"/>
+  <path d="M-2.6 -.6l1.6 1.2M2.6 -.6l-1.6 1.2M-1.2 -3.4h2.4" stroke="#0c0606" stroke-width=".7" opacity=".7"/>
+  <ellipse cy="1.6" rx="2.2" ry="1.3" fill="#0c0606"/>
+  <path d="M-6.4 5.2Q0 12 6.4 5.2Q0 8.2 -6.4 5.2Z" fill="#3a0505" stroke="#0c0606" stroke-width=".8"/>
+  <path d="M-4.8 5.6l1.1 3 1-2.7ZM4.8 5.6l-1.1 3-1-2.7Z" fill="#f2e8d8"/><path d="M-1.6 8.9l.8-1.7.8 1.7ZM.8 8.9l.8-1.7.8 1.7Z" fill="#f2e8d8"/>
+  <path d="M-6.8 6.4q-.6 1.6.2 2.6M6.6 6.6q.7 1.4 0 2.4" stroke="#e8f4ff" stroke-width=".8" fill="none" opacity=".8"/>
+  <path d="M-8.4 11.4Q0 16 8.4 11.4" stroke="${l.cape}" stroke-width="2.6" fill="none"/>
+  <path d="M-5 13.2l-.6 2.2 1.6-1.6ZM0 14.2v2.4l1-2.2ZM5 13.2l.6 2.2-1.6-1.6Z" fill="#c9a24a"/></g>`}
 function helmSmall(l,g,c){const eyes=(y,x1=27,x2=33)=>`<circle cx="${x1}" cy="${y}" r="1.4" fill="${g}"/><circle cx="${x2}" cy="${y}" r="1.4" fill="${g}"/>`;
   if(l.helm==="capuche")return `<path d="M17 30Q14 6 30 0Q46 6 43 30Q30 24 17 30Z" fill="${l.cape}" stroke="#0c0606"/><path d="M23 14Q30 10 37 14L36 26Q30 29 24 26Z" fill="#050101"/>${eyes(18)}`;
   if(l.helm==="crane")return `<path d="M21 14Q30 2 39 14Q41 22 37 26L35 29H25L23 26Q19 22 21 14Z" fill="#d9ccb5" stroke="#3a2c28"/><circle cx="26.5" cy="17" r="2.8" fill="#170404"/><circle cx="33.5" cy="17" r="2.8" fill="#170404"/>${eyes(17,26.5,33.5)}`;
