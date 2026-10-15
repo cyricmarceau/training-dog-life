@@ -1530,8 +1530,7 @@ function mapStatic(w){
    <linearGradient id="flame${w}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${T.fl[0]}"/><stop offset=".6" stop-color="${T.fl[1]}"/><stop offset="1" stop-color="${T.fl[2]}"/></linearGradient>
   </defs>
   <rect width="640" height="360" fill="url(#tiles${w})"/>
-  <rect x="4" y="4" width="632" height="352" fill="none" stroke="${T.fr}" stroke-width="2" rx="6"/>
-  <rect x="9" y="9" width="622" height="342" fill="none" stroke="${T.fr2}" stroke-width="1" rx="4"/>`;
+`;
   const lakes=[[[60,120,46,30],[420,60,60,26],[610,180,26,60],[360,320,48,20],[40,210,22,40]],[[90,40,50,22],[600,120,30,50],[330,250,60,22],[40,180,24,40],[560,340,50,14]],[[560,60,56,30],[30,120,24,50],[330,250,50,20],[600,200,26,40],[120,340,60,14]]][w];
   lakes.forEach(([x,y,rx,ry])=>{s+=`<ellipse cx="${x}" cy="${y}" rx="${rx+5}" ry="${ry+5}" fill="${T.rim}"/><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#lava${w})"${w===1?' opacity=".8"':''}/>`+(w===1?`<path d="M${x-rx*.5} ${y-ry*.2}l${rx*.3} ${ry*.3}l${rx*.25} ${-ry*.25}" stroke="#ffffff" stroke-opacity=".6" fill="none"/>`:'')});
   const rocks=[[[30,40],[200,40],[250,55],[300,70],[440,130],[610,320],[20,340],[400,270],[480,100],[600,40],[90,175]],[[30,90],[180,40],[300,40],[470,40],[560,60],[620,280],[20,330],[300,140],[440,250],[180,240],[620,180]],[[60,40],[150,60],[300,40],[440,40],[620,120],[600,320],[20,200],[300,250],[470,250],[200,120],[60,340]]][w];
@@ -1549,8 +1548,20 @@ function mapStatic(w){
   return s;
 }
 const MAP_BGS=[0,1,2].map(mapStatic);
-const MAP_BG=MAP_BGS.map((b,w)=>`<g transform="translate(${w*640} 0)">${b}<text x="22" y="30" font-family="Pirata One,serif" font-size="17" fill="${WORLDS[w].frame}" opacity=".85">${WORLDS[w].n}</text></g>`).join("")+
-  [1,2].map(w=>`<rect x="${w*640-6}" y="0" width="12" height="360" fill="#000" opacity=".55"/>`).join("");
+const MAP_TILE=["#1a0706","#0b1722","#120a1c"];
+const MAP_BG=`<defs>
+  <linearGradient id="frameG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9a24a"/><stop offset=".30" stop-color="#c9a24a"/><stop offset=".37" stop-color="#bfe6ff"/><stop offset=".63" stop-color="#bfe6ff"/><stop offset=".70" stop-color="#a070d8"/><stop offset="1" stop-color="#a070d8"/></linearGradient>
+  ${[1,2].map(w=>`<linearGradient id="seam${w}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${MAP_TILE[w-1]}" stop-opacity="0"/><stop offset=".42" stop-color="${MAP_TILE[w-1]}" stop-opacity=".95"/><stop offset=".58" stop-color="${MAP_TILE[w]}" stop-opacity=".95"/><stop offset="1" stop-color="${MAP_TILE[w]}" stop-opacity="0"/></linearGradient>
+  <radialGradient id="mist${w}"><stop offset="0" stop-color="${w===1?"#d8ecff":"#c9a0ff"}" stop-opacity=".22"/><stop offset="1" stop-color="${w===1?"#d8ecff":"#c9a0ff"}" stop-opacity="0"/></radialGradient>`).join("")}
+ </defs>`+
+  MAP_BGS.map((b,w)=>`<g transform="translate(${w*640} 0)">${b}<text x="${w?40:22}" y="30" font-family="Pirata One,serif" font-size="17" fill="${WORLDS[w].frame}" opacity=".85">${WORLDS[w].n}</text></g>`).join("")+
+  [1,2].map(w=>{const x=w*640;let t=`<rect x="${x-110}" y="0" width="220" height="360" fill="url(#seam${w})"/>`;
+    [[-40,70,70],[10,180,90],[-20,300,80],[30,40,60]].forEach(([dx,y,r])=>{t+=`<ellipse cx="${x+dx}" cy="${y}" rx="${r}" ry="${r*.55}" fill="url(#mist${w})"/>`});
+    for(let i=0;i<9;i++){const dx=-80+i*20,y=30+((i*67)%300);
+      t+=w===1?(dx<0?`<path class="flick" d="M${x+dx} ${y-4}v8M${x+dx-4} ${y}h8" stroke="#e8f6ff" stroke-width="1.4" opacity=".75"/>`:`<circle class="flick" cx="${x+dx}" cy="${y}" r="1.8" fill="#ff8a3a" opacity=".8"/>`)
+              :(dx<0?`<circle class="flick" cx="${x+dx}" cy="${y}" r="2" fill="#c77dff" opacity=".8"/>`:`<path class="flick" d="M${x+dx} ${y-4}v8M${x+dx-4} ${y}h8" stroke="#bfe6ff" stroke-width="1.4" opacity=".6"/>`)}
+    return t}).join("")+
+  `<rect x="4" y="4" width="${640*3-8}" height="352" fill="none" stroke="url(#frameG)" stroke-width="2" rx="6"/><rect x="9" y="9" width="${640*3-18}" height="342" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="1" rx="4"/>`;
 
 const FRIEND_COL=["#6aa6ff","#5aff9a","#c77dff","#ff7ab8","#40e0d0","#e6e66a"];let friendsOnMap=[];
 
