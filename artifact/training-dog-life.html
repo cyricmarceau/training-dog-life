@@ -984,7 +984,8 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .cr-sub{font-size:11px;letter-spacing:.12em;color:#c9a24a}
 .cr-copy{font-size:10px;letter-spacing:.08em;color:var(--bone-dim);opacity:.7;margin-top:6px}
 .cdead{font-style:normal;font-size:11px;font-weight:700;color:#ff4a3a;margin-left:5px;letter-spacing:.04em}.chatp li.dead b{text-decoration:line-through;text-decoration-color:rgba(255,74,58,.6)}
-.mapwrap.animoff *,.mapwrap.animoff *::before,.mapwrap.animoff *::after{animation-play-state:paused!important}
+.mapwrap.animoff *,.mapwrap.animoff *::before,.mapwrap.animoff *::after,.mapwrap.busy #map *{animation-play-state:paused!important}
+.mapwrap.busy #map .dust,.mapwrap.busy #map .kmpop,.mapwrap.busy #map .goldpop,.mapwrap.busy #map .coinpop{animation-play-state:running!important}
 .invmodal[hidden]{display:none}
 .invmodal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));background:rgba(0,0,0,.72)}
 .invbox{width:min(380px,100%);background:linear-gradient(180deg,#24120e,#120807);border:2px solid #c9a24a;border-radius:6px;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center;animation:vsPop .35s ease-out}
@@ -1034,6 +1035,8 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .mapdragon{position:absolute;left:0;top:18%;width:150px;pointer-events:none;z-index:1;opacity:0}
 .mapdragon.fly{animation:dragon 7s linear forwards}
 @media (prefers-reduced-motion:reduce){#map *,.mapdragon{animation:none!important}.mapfx{display:none}}
+/* téléphone : on garde les flammes, la lave et le chemin ; les petits effets décoratifs restent figés */
+@media (pointer:coarse){#map .spk,#map .crow,#map .smoke,#map .blinker,#map .aurora,#map .mistdrift,#map .rose,#map .halo,#map .breathe,#map .aurap,#map .glowp,#map .fogcl{animation:none!important}}
 </style>
 
 
@@ -1564,7 +1567,7 @@ try{new IntersectionObserver(es=>{houndVis=es[0].isIntersecting;houndWake()}).ob
 /* ===== Atelier de la carte : premier plan en parallaxe (7), particules et dragon (11), jour/nuit (12) ===== */
 function buildMapFore(){const g=$("mapFore");if(!g||g.dataset.ok)return;g.dataset.ok="1";
   let s="";for(let i=0;i<14;i++){const x=i*170+40,y=40+((i*97)%260),r=60+((i*37)%50);s+=`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.36}" fill="#000" opacity="0"/>`}
-  g.innerHTML=`<g id="foreClouds" filter="url(#mapBlur)">${s}</g>`;mapParallax()}
+  g.innerHTML=`<g id="foreClouds">${s}</g>`;mapParallax()}
 function mapParallax(){const sc=document.querySelector(".mapscroll"),fc=$("foreClouds");if(!sc||!fc)return;
   const f=sc.scrollWidth>sc.clientWidth+4?sc.scrollLeft/sc.scrollWidth*1920:0;fc.setAttribute("transform",`translate(${(-f*.35).toFixed(1)} 0)`)}
 (()=>{const sc=document.querySelector(".mapscroll");if(sc)sc.addEventListener("scroll",()=>requestAnimationFrame(mapParallax),{passive:true})})();
@@ -1576,7 +1579,7 @@ mapDayNight();setInterval(mapDayNight,5*60000);
   const dg=document.createElement("div");dg.className="mapdragon";dg.setAttribute("aria-hidden","true");
   dg.innerHTML='<svg viewBox="0 0 150 60"><path d="M0 34q22-26 50-8 14-22 30-6-16 2-22 12 14 6 30 2-20 16-44 6-22 18-44 0z" fill="#000"/><path d="M60 30l40-6 30 4-30 6z" fill="#000"/></svg>';mb.appendChild(dg);
   const x=cv.getContext("2d");let W=0,H=0,P=[],vis=true,last=0;
-  const rs=()=>{const d=Math.min(1.5,devicePixelRatio||1);W=mb.clientWidth;H=mb.clientHeight;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0)};rs();addEventListener("resize",rs);
+  const coarse=matchMedia("(pointer:coarse)").matches;const rs=()=>{const d=coarse?1:Math.min(1.5,devicePixelRatio||1);W=mb.clientWidth;H=mb.clientHeight;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0)};rs();addEventListener("resize",rs);
   try{new IntersectionObserver(e=>{vis=e[0].isIntersecting;if(vis)requestAnimationFrame(loop)}).observe(mb)}catch(_){}
   const mk=(w,init)=>w===1?{x:Math.random()*W,y:init?Math.random()*H:-4,vx:(Math.random()-.5)*.25,vy:.25+Math.random()*.5,r:.7+Math.random()*1.6,l:1,d:0,c:"#ffffff"}
     :w===2?{x:Math.random()*W,y:init?Math.random()*H:H+4,vx:(Math.random()-.5)*.3,vy:-(.15+Math.random()*.3),r:.8+Math.random()*1.8,l:1,d:.003+Math.random()*.004,c:["#f0c8ff","#c77dff"][(Math.random()*2)|0]}
@@ -1584,13 +1587,19 @@ mapDayNight();setInterval(mapDayNight,5*60000);
   let cw=-1;
   function loop(t){if(!vis||document.hidden)return;if(t-last<33){requestAnimationFrame(loop);return}last=t;
     if(W!==mb.clientWidth||H!==mb.clientHeight)rs();
-    const w=(()=>{try{return mapWorldInView()}catch(_){return 0}})();if(w!==cw){cw=w;P=[];for(let i=0;i<34;i++)P.push(mk(w,true))}
+    const w=(()=>{try{return mapWorldInView()}catch(_){return 0}})();if(w!==cw){cw=w;P=[];for(let i=0;i<(coarse?18:34);i++)P.push(mk(w,true))}
     x.clearRect(0,0,W,H);
     P.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.l-=p.d;if(p.l<=0||p.y<-8||p.y>H+8)P[i]=mk(cw,false);x.globalAlpha=Math.max(0,Math.min(.85,p.l));x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()});
     x.globalAlpha=1;requestAnimationFrame(loop)}
   requestAnimationFrame(loop);document.addEventListener("visibilitychange",()=>{if(!document.hidden)requestAnimationFrame(loop)});
   (function fly(){setTimeout(()=>{if(vis&&!document.hidden&&cw!==1){dg.classList.remove("fly");void dg.offsetWidth;dg.classList.add("fly")}fly()},25000+Math.random()*30000)})();
 })();
+/* décors animés en pause pendant le défilement, le toucher et la marche : défilement fluide sur téléphone */
+let mapBusyT=0,mapWalking=false;
+function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;if(on===true){mapWalking=true;mw.classList.add("busy");return}if(on===false){mapWalking=false}
+  clearTimeout(mapBusyT);if(!mapWalking)mapBusyT=setTimeout(()=>{if(!mapWalking)mw.classList.remove("busy")},900)}
+(()=>{const sc=document.querySelector(".mapscroll"),mw=document.querySelector(".mapwrap");if(!sc||!mw)return;
+  const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 /* animations de la carte en pause quand elle est hors écran ou l'onglet caché */
 (()=>{const mw=document.querySelector(".mapwrap");if(!mw)return;let vis=true;const upd=()=>mw.classList.toggle("animoff",!vis||document.hidden);
   try{new IntersectionObserver(es=>{vis=es[0].isIntersecting;upd()},{rootMargin:"120px"}).observe(mw)}catch(_){}document.addEventListener("visibilitychange",upd)})();
@@ -1875,11 +1884,11 @@ function mapDeco(w){let s="";
     [[470,96,0],[40,196,1.7]].forEach(([x,y,d])=>{s+=`<g transform="translate(${x} ${y})"><ellipse rx="7" ry="3" fill="#2a0806"/><path class="geyser" style="animation-delay:${d}s" d="M-5 0Q-8 -34 0 -54Q8 -34 5 0Z" fill="#ffb347"/></g>`});
   }
   if(w===1){
-    s+=`<g class="aurora" opacity=".55"><path d="M-20 34Q140 6 320 30T660 22" stroke="#5aff9a" stroke-width="16" fill="none" opacity=".35" filter="url(#mapBlur)"/><path d="M0 50Q160 26 330 48T660 40" stroke="#6aa6ff" stroke-width="12" fill="none" opacity=".35" filter="url(#mapBlur)"/></g>`;
+    s+=`<g class="aurora" opacity=".55"><path d="M-20 34Q140 6 320 30T660 22" stroke="#5aff9a" stroke-width="22" fill="none" opacity=".16" stroke-linecap="round"/><path d="M0 50Q160 26 330 48T660 40" stroke="#6aa6ff" stroke-width="16" fill="none" opacity=".16" stroke-linecap="round"/></g>`;
   }
   if(w===2){
     [[180,300],[420,150],[600,330],[250,40],[30,330]].forEach(([x,y],i)=>{s+=`<g transform="translate(${x} ${y})"><g class="blinker" style="animation-delay:${i*.9}s"><ellipse rx="8" ry="4.5" fill="#f0c8ff"/><circle r="3" fill="#c77dff"/><ellipse rx="1" ry="2.6" fill="#0a0412"/></g></g>`});
-    s+=`<g class="mistdrift" opacity=".35" filter="url(#mapBlur)"><ellipse cx="140" cy="300" rx="120" ry="16" fill="#c77dff"/><ellipse cx="460" cy="200" rx="110" ry="14" fill="#a070d8"/><ellipse cx="300" cy="90" rx="90" ry="12" fill="#c77dff"/></g>`;
+    s+=`<g class="mistdrift" opacity=".18"><ellipse cx="140" cy="300" rx="120" ry="16" fill="#c77dff"/><ellipse cx="460" cy="200" rx="110" ry="14" fill="#a070d8"/><ellipse cx="300" cy="90" rx="90" ry="12" fill="#c77dff"/></g>`;
   }
   return s}
 /* boss visible sur sa case (10) */
@@ -1896,6 +1905,7 @@ const MAP_BG=`<defs>
   <filter id="burnF"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="9"/><feDisplacementMap in="SourceGraphic" scale="10"/></filter>
   <radialGradient id="bossAura"><stop offset="0" stop-color="#ff3a2a" stop-opacity=".55"/><stop offset="1" stop-color="#ff3a2a" stop-opacity="0"/></radialGradient>
   <radialGradient id="chestGlow"><stop offset="0" stop-color="#ffe08a" stop-opacity=".75"/><stop offset="1" stop-color="#ffe08a" stop-opacity="0"/></radialGradient>
+  <radialGradient id="fogG"><stop offset="0" stop-color="#0a0505" stop-opacity=".42"/><stop offset=".6" stop-color="#0a0505" stop-opacity=".25"/><stop offset="1" stop-color="#0a0505" stop-opacity="0"/></radialGradient>
   <radialGradient id="haloG"><stop offset="0" stop-color="#ffb347" stop-opacity=".42"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
   <pattern id="pave" width="16" height="11" patternUnits="userSpaceOnUse"><rect width="16" height="11" fill="#3a2c28"/><path d="M0 .5h16M0 5.5h16M8 .5v5M0 5.5v5" stroke="#170c0a" stroke-width="1.3"/><path d="M1 2h5M10 7h4" stroke="#5a4a40" stroke-width=".8"/></pattern>
   ${[["#ffe08a","#ff6a1a","#b3141b"],["#ffffff","#9fd8ff","#2a6a9a"],["#f0c8ff","#c77dff","#5a1a8a"]].map((c,w)=>`<linearGradient id="flow${w}" x1="0" x2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset=".5" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></linearGradient>`).join("")}
@@ -1911,7 +1921,7 @@ const MAP_BG=`<defs>
               :(dx<0?`<circle class="flick" cx="${x+dx}" cy="${y}" r="2" fill="#c77dff" opacity=".8"/>`:`<path class="flick" d="M${x+dx} ${y-4}v8M${x+dx-4} ${y}h8" stroke="#bfe6ff" stroke-width="1.4" opacity=".6"/>`)}
     return t}).join("")+
   `<rect id="mapNight" width="1920" height="360" fill="#020210" opacity="0" pointer-events="none"/>
-   <rect x="3" y="3" width="${640*3-6}" height="354" fill="none" stroke="#3a2414" stroke-width="9" filter="url(#burnF)"/>
+   <rect x="3" y="3" width="${640*3-6}" height="354" fill="none" stroke="#3a2414" stroke-width="9" rx="5"/><rect x="3" y="3" width="${640*3-6}" height="354" fill="none" stroke="#1a0c06" stroke-width="3" stroke-dasharray="9 5 3 7" rx="5"/>
    <rect x="8" y="8" width="${640*3-16}" height="344" fill="none" stroke="url(#frameG)" stroke-width="1.8" rx="3"/><rect x="12" y="12" width="${640*3-24}" height="336" fill="none" stroke="url(#frameG)" stroke-width=".7" stroke-opacity=".55" rx="2"/>
    <g transform="translate(1872 316)"><circle r="22" fill="#0a0406" opacity=".6"/><g class="rose"><path d="M0 -20l4 16-4 4-4-4zM0 20l4-16-4-4-4 4zM-20 0l16 4 4-4-4-4zM20 0l-16 4-4-4 4-4z" fill="#c9a24a"/><path d="M-11 -11l9 6-2 3zM11 11l-9-6 2-3zM11 -11l-6 9-3-2zM-11 11l6-9 3 2z" fill="#7a5a20"/></g><text y="-25" text-anchor="middle" font-family="Pirata One,serif" font-size="10" fill="#c9a24a">N</text></g>`;
 
@@ -1979,10 +1989,9 @@ function renderMap(xp,km){
      <path d="${path}" stroke="url(#pave)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g id="mapDyn"></g><g id="mapFore" pointer-events="none"></g>`;dy=$("mapDyn");buildMapFore()}
     let flows="";[0,1,2].forEach(w=>{let d="";for(let i=0;i<pr.idx;i++){const a=NODES[i],b=NODES[i+1];if(b.w===w)d+=`M${a.x} ${a.y}L${b.x} ${b.y}`}
       if(pr.frac&&NODES[pr.idx+1]&&NODES[pr.idx+1].w===w){const a=NODES[pr.idx];d+=`M${a.x} ${a.y}L${px} ${py}`}
-      if(d)flows+=`<path d="${d}" stroke="#000" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/><path class="donepath" d="${d}" stroke="url(#flow${w})" stroke-width="3.6" stroke-dasharray="13 6" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 0 3px ${WORLDS[w].path})"/>`});
-    const lastRev=Math.min(NODES.length-1,(pr.blocked>=0?pr.blocked:pr.idx)+2);let holes="";for(let i=0;i<=lastRev;i++)holes+=`<circle cx="${NODES[i].x}" cy="${NODES[i].y}" r="${i===lastRev?62:84}"/>`;
-    const fog=`<mask id="fogM" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="360"><rect width="1920" height="360" fill="#fff"/><g fill="#000" filter="url(#fogBlur)">${holes}</g></mask>
-      <g mask="url(#fogM)" pointer-events="none"><rect width="1920" height="360" fill="#060203" opacity=".32"/><g class="fogcl" fill="#4a3a36" opacity=".22">${[[200,80,120],[620,250,140],[1000,120,150],[1350,280,130],[1700,100,150],[1500,180,110],[860,320,120]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.32}"/>`).join("")}</g></g>`;
+      if(d)flows+=`<path d="${d}" stroke="#000" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/><path class="donepath" d="${d}" stroke="url(#flow${w})" stroke-width="3.6" stroke-dasharray="13 6" fill="none" stroke-linecap="round"/>`});
+    const lastRev=Math.min(NODES.length-1,(pr.blocked>=0?pr.blocked:pr.idx)+2);let fogs="";for(let i=lastRev+1;i<NODES.length;i++)fogs+=`<circle cx="${NODES[i].x}" cy="${NODES[i].y}" r="92" fill="url(#fogG)"/>`;
+    const fog=`<g pointer-events="none">${fogs}</g>`;
     const html=flows+NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+fog+others+tok;
     if(dy._h!==html||!$("tok")){dy.innerHTML=html;dy._h=html}}
   if(walkHold){const t=$("tok");if(t){t.style.transition="none";t.style.transform=`translate(${walkHold[0]}px,${walkHold[1]-20}px)`}}
@@ -2322,7 +2331,7 @@ async function walkMap(fromKm,toKm){
   const {pts,nodes}=walkPoints(fromKm,toKm);
   let L=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);L+=d}
   if(reduce||L<2){render();await focusMap();return}
-  walkHold=pts[0];render();
+  walkHold=pts[0];render();mapBusy(true);
   sec.scrollIntoView({behavior:"smooth",block:"center"});
   const tok=++camTok,Z=2.3,W2=MAPW/Z,H2=360/Z;
   const boxAt=([x,y])=>[Math.max(0,Math.min(MAPW-W2,x-W2/2)),Math.max(0,Math.min(360-H2,y-20-H2/2)),W2,H2];
@@ -2347,7 +2356,7 @@ async function walkMap(fromKm,toKm){
     }
   {const tt=$("tok");if(tt)tt.classList.remove("hopping")}
   const tt=$("tok");if(tt)tt.classList.remove("walking");
-  walkHold=null;prevTok=null;render();
+  walkHold=null;prevTok=null;render();mapBusy(false);
   if(tok!==camTok)return;
   {const end=pts[pts.length-1],m=$("map");if(m&&toKm>fromKm){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",end[0]);tx.setAttribute("y",end[1]-48);tx.setAttribute("class","kmpop");tx.setAttribute("text-anchor","middle");tx.textContent=`+${(Math.round((toKm-fromKm)*10)/10).toLocaleString("fr-CA")} km`;m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}
   await wait(1100);if(tok!==camTok)return;
