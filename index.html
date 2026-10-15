@@ -727,7 +727,7 @@ header.top{padding-block:16px 14px;border-bottom:0}
 .pceq{display:flex;flex-wrap:wrap;gap:6px}.pceq span{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:var(--abyss);border:1px solid var(--ash);padding:4px 7px}
 .pceq svg{width:18px;height:18px}
 #map .tok{cursor:pointer}
-#map .tok.walking .bob{animation-duration:.18s}
+#map .tok.walking .bob,#map .tok.hopping .bob{animation-duration:.18s}
 #map .dust{fill:#d9ccb5;opacity:.55;animation:dust .9s ease-out forwards;pointer-events:none}
 @keyframes dust{to{opacity:0;transform:translateY(-6px)}}
 #map .node.passed .ring{animation:npass .6s ease-out}
@@ -1911,6 +1911,13 @@ function animVB(a,b,dur){return new Promise(res=>{cancelAnimationFrame(camAnim);
   const step=now=>{const t=Math.min(1,(now-t0)/dur),e=ease(t);setVB(a.map((v,i)=>v+(b[i]-v)*e));if(t<1)camAnim=requestAnimationFrame(step);else{camRes=null;res()}};camAnim=requestAnimationFrame(step)})}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 /* ---------- le personnage marche le long du chemin après une course ---------- */
+/* son de battement d'aile (original, synthétisé) à chaque saut */
+function hopSound(i){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();const A=actx,t=A.currentTime;
+  const o=A.createOscillator(),g=A.createGain();o.type="square";o.frequency.setValueAtTime(380,t);o.frequency.exponentialRampToValueAtTime(980,t+.07);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.11);o.connect(g).connect(A.destination);o.start(t);o.stop(t+.13);
+  const len=.08,buf=A.createBuffer(1,A.sampleRate*len,A.sampleRate),d=buf.getChannelData(0);for(let q=0;q<d.length;q++)d[q]=(Math.random()*2-1)*(1-q/d.length);
+  const n=A.createBufferSource(),f=A.createBiquadFilter(),g2=A.createGain();n.buffer=buf;f.type="bandpass";f.frequency.value=1800;g2.gain.value=.06;n.connect(f).connect(g2).connect(A.destination);n.start(t)}catch(_){}}
+function coinSound(){tone(988,0,.06,"square",.035);tone(1319,.05,.1,"square",.035)}
 let walkHold=null;
 function walkPoints(fromKm,toKm){const a=progressOf(fromKm,player.bosses),b=progressOf(Math.max(fromKm,toKm),player.bosses);
   const pts=[posOf(a)],nodes=[];for(let i=a.idx+1;i<=b.idx;i++){pts.push([NODES[i].x,NODES[i].y]);nodes.push(i)}
@@ -1927,16 +1934,22 @@ async function walkMap(fromKm,toKm){
   await wait(450);if(tok!==camTok){walkHold=null;render();return}
   camFX=pts[0][0];await animVB([0,0,MAPW,360],boxAt(pts[0]),650);if(tok!==camTok){walkHold=null;render();return}
   const t=$("tok");if(t){t.style.transition="none";t.classList.add("walking")}
-  const dur=Math.max(1400,Math.min(7000,L/110*1000)),t0=performance.now();let lastDust=0,passed=0;
-  await new Promise(res=>{const step=now=>{if(tok!==camTok){res();return}
-    const k=Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;let d=e*L,i=0;while(i<seg.length-1&&d>seg[i]){d-=seg[i];i++}
-    const a=pts[i],b=pts[i+1]||a,f=seg[i]?Math.min(1,d/seg[i]):1,x=a[0]+(b[0]-a[0])*f,y=a[1]+(b[1]-a[1])*f;
-    const tt=$("tok");if(tt){tt.style.transition="none";tt.style.transform=`translate(${x}px,${y-20}px)`;tt.classList.add("walking")}
-    camFX=x;setVB(boxAt([x,y]));
-    if(now-lastDust>110){lastDust=now;const m=$("map");if(m){const g=document.createElementNS("http://www.w3.org/2000/svg","circle");g.setAttribute("cx",x+(Math.random()*6-3));g.setAttribute("cy",y+2);g.setAttribute("r",2.5+Math.random()*2);g.setAttribute("class","dust");m.appendChild(g);setTimeout(()=>g.remove(),900)}}
-    while(passed<nodes.length&&i>=passed+1){const n=document.querySelector(`#map .node[data-i="${nodes[passed]}"]`);if(n){n.classList.add("passed");tone(988,0,.06,"square",.035);tone(1319,.05,.08,"square",.035);n.querySelector(".coin")?.remove();
-      const m=$("map"),nd=NODES[nodes[passed]];if(m&&nd){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",nd.x+12);tx.setAttribute("y",nd.y-18);tx.setAttribute("class","kmpop coinpop");tx.setAttribute("text-anchor","middle");tx.textContent="+1 or";m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}passed++}
-    if(k<1)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
+  /* saut de case en case le long du tracé */
+  const dust=(x,y,n)=>{const m=$("map");if(!m)return;for(let q=0;q<n;q++){const g=document.createElementNS("http://www.w3.org/2000/svg","circle");g.setAttribute("cx",x+(Math.random()*10-5));g.setAttribute("cy",y+2);g.setAttribute("r",2+Math.random()*2);g.setAttribute("class","dust");m.appendChild(g);setTimeout(()=>g.remove(),900)}};
+  for(let si=0;si<seg.length;si++){if(tok!==camTok)break;
+    const a=pts[si],b=pts[si+1],len=seg[si],dur=Math.max(260,Math.min(620,len*3.4)),H=Math.max(10,Math.min(28,len*.28)),t0=performance.now();
+    hopSound(si);
+    await new Promise(res=>{const step=now=>{if(tok!==camTok){res();return}
+      const k=Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,x=a[0]+(b[0]-a[0])*e,yb=a[1]+(b[1]-a[1])*e,y=yb-Math.sin(Math.PI*k)*H;
+      const tt=$("tok");if(tt){tt.style.transition="none";tt.style.transform=`translate(${x}px,${y-20}px)`;tt.classList.add("hopping")}
+      camFX=x;setVB(boxAt([x,yb]));
+      if(k<1)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
+    dust(b[0],b[1],4);
+    const ni=nodes.indexOf(nodes[si]);if(si<nodes.length){const n=document.querySelector(`#map .node[data-i="${nodes[si]}"]`);
+      if(n){n.classList.add("passed");n.querySelector(".coin")?.remove();coinSound();
+        const m=$("map"),nd=NODES[nodes[si]];if(m&&nd){const tx=document.createElementNS("http://www.w3.org/2000/svg","text");tx.setAttribute("x",nd.x+12);tx.setAttribute("y",nd.y-18);tx.setAttribute("class","kmpop coinpop");tx.setAttribute("text-anchor","middle");tx.textContent="+1 or";m.appendChild(tx);setTimeout(()=>tx.remove(),1800)}}}
+    await wait(70)}
+  {const tt=$("tok");if(tt)tt.classList.remove("hopping")}
   const tt=$("tok");if(tt)tt.classList.remove("walking");
   walkHold=null;prevTok=null;render();
   if(tok!==camTok)return;
