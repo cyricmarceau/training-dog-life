@@ -2196,12 +2196,12 @@ function tone(f,t,d,type="square",v=.05){try{actx=actx||new (window.AudioContext
 function victoryTheme(){
   /* Applaudissements de foule (synthèse originale) */
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){return}
-  const A=actx,t0=A.currentTime+.05,DUR=4.2,master=A.createGain();master.gain.value=.5;master.connect(A.destination);
+  const A=actx,t0=A.currentTime+.05,DUR=3.2,master=A.createGain(),soft=A.createBiquadFilter();master.gain.value=.2;soft.type="lowpass";soft.frequency.value=2400;master.connect(soft).connect(A.destination);
   const nb=A.createBuffer(1,A.sampleRate*.06,A.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=(Math.random()*2-1)*Math.pow(1-i/nd.length,3);
   const env=x=>x<.25?x/.25:x<.55?1:Math.pow(1-(x-.55)/.45,1.6);
-  for(let t=0;t<DUR;){const x=t/DUR,dens=8+70*env(x);
+  for(let t=0;t<DUR;){const x=t/DUR,dens=6+38*env(x);
     const s=A.createBufferSource(),f=A.createBiquadFilter(),g=A.createGain(),p=A.createStereoPanner?A.createStereoPanner():null;
-    s.buffer=nb;s.playbackRate.value=.75+Math.random()*.6;f.type="bandpass";f.frequency.value=900+Math.random()*1900;f.Q.value=.9+Math.random()*1.2;
+    s.buffer=nb;s.playbackRate.value=.75+Math.random()*.6;f.type="bandpass";f.frequency.value=700+Math.random()*900;f.Q.value=.9+Math.random()*1.2;
     g.gain.value=(.25+Math.random()*.75)*(.25+.75*env(x));s.connect(f).connect(g);
     if(p){p.pan.value=Math.random()*1.6-.8;g.connect(p).connect(master)}else g.connect(master);
     s.start(t0+t);t+=(.4+Math.random()*1.2)/dens}
@@ -2209,12 +2209,11 @@ function victoryTheme(){
   const rb=A.createBuffer(1,A.sampleRate*DUR,A.sampleRate),rd=rb.getChannelData(0);let last=0;
   for(let i=0;i<rd.length;i++){last=last*.97+(Math.random()*2-1)*.03;rd[i]=last*6}
   const r=A.createBufferSource(),rf=A.createBiquadFilter(),rg=A.createGain();r.buffer=rb;rf.type="bandpass";rf.frequency.value=520;rf.Q.value=.6;
-  rg.gain.setValueAtTime(0,t0);rg.gain.linearRampToValueAtTime(.28,t0+.9);rg.gain.setValueAtTime(.28,t0+2.2);rg.gain.linearRampToValueAtTime(0,t0+DUR);
+  rg.gain.setValueAtTime(0,t0);rg.gain.linearRampToValueAtTime(.12,t0+.9);rg.gain.setValueAtTime(.12,t0+1.8);rg.gain.linearRampToValueAtTime(0,t0+DUR);
   r.connect(rf).connect(rg).connect(master);r.start(t0);
-  // quelques sifflets d'encouragement
-  [[.5,1900],[1.3,2300],[2.1,2050]].forEach(([d,fq])=>{const o=A.createOscillator(),g=A.createGain();o.type="sine";const st=t0+d;
-    o.frequency.setValueAtTime(fq,st);o.frequency.linearRampToValueAtTime(fq*1.35,st+.18);o.frequency.linearRampToValueAtTime(fq*1.05,st+.4);
-    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.05,st+.04);g.gain.linearRampToValueAtTime(0,st+.42);o.connect(g).connect(master);o.start(st);o.stop(st+.45)});
+  // carillon doux
+  [[72,0],[76,.18],[79,.36],[84,.6]].forEach(([m,d])=>{const st=t0+d,fq=440*Math.pow(2,(m-69)/12);[[1,.09],[2,.025]].forEach(([h,v])=>{const o=A.createOscillator(),g=A.createGain();o.type="sine";o.frequency.value=fq*h;
+    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(v,st+.02);g.gain.exponentialRampToValueAtTime(.0001,st+1.8);o.connect(g).connect(A.destination);o.start(st);o.stop(st+1.9)})});
   setTimeout(()=>{try{master.disconnect()}catch(e){}},(DUR+1)*1000);
 }
 
@@ -2340,11 +2339,16 @@ function equipFlash(before,after,names,keys){
     d.style.left=(r.left-c.left+r.width/2)+"px";d.style.top=(r.top-c.top+r.height*.3+i*34)+"px";d.style.animationDelay=(.5+i*.25)+"s";card.appendChild(d);setTimeout(()=>d.remove(),3200)});
   $("punchMsg").textContent=`Équipé : ${names.join(", ")}`;
 }
-async function checkNewChests(){
-  const km=charOf(keyOf(me)).km;
-  const pr=progressOf(km,player.bosses);
-  for(let i=0;i<NODES.length;i++){const n=NODES[i];if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<=pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i)}}
+let chestBusy=false;
+async function checkNewChests(){if(chestBusy||!me)return;chestBusy=true;
+  try{for(let i=0;i<NODES.length;i++){const km=charOf(keyOf(me)).km,pr=progressOf(km,player.bosses),n=NODES[i];
+    if(n.t==="item"&&km>=n.km&&(pr.blocked<0||i<pr.blocked)&&!(player.chests||[]).includes(i)){selAuto=false;selNode=i;await openMapChest(i)}}}
+  finally{chestBusy=false}
 }
+/* coffres dépassés pendant qu'un boss bloquait la route : on les ouvre dès que la voie est libre */
+let chestLaterT=0;function chestsLater(ms=900){clearTimeout(chestLaterT);chestLaterT=setTimeout(async()=>{
+  if(!me||!$("fight").hidden||!$("vs").hidden||walkHold||chestBusy){chestsLater(1500);return}
+  await checkNewChests();checkMandatoryBoss()},ms)}
 
 /* ================= Combat d'arène (Swords & Sandals) · permadeath · équipe ================= */
 const isAct=p=>p.type!=="death"&&p.type!=="victory";
@@ -2621,7 +2625,7 @@ $("fEnter").addEventListener("click",()=>{if(F&&!F.training)F=buildF(F.bi,false)
   setTimeout(()=>{const m=F&&F.team.find(x=>x.me);if(m&&m.alive)setTurn(m.key)},50);flog(F.training?`Entraînement contre ${F.b.n}. Rien n'est en jeu.`:`Les portes de l'arène s'ouvrent. ${F.b.n} entre sous les huées.`,"");arenaRender();
   if(!F.team.find(m=>m.me).alive)autoPlay()});
 $("fFlee").addEventListener("click",()=>{$("fight").hidden=true;F=null});
-$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render()});
+$("fClose").addEventListener("click",()=>{clearTimeout(autoT);if(F&&F.mp&&mpDoc){mpDismissed[mpDoc.bi+":"+mpDoc.at]=true;if(mpDoc.status==="fight"&&fCol){try{fCol.doc("b"+mpDoc.bi).update({[autoKey(keyOf(me))]:true})}catch(_){}}if(mpDoc.status==="fight")$("punchMsg").textContent="Le combat continue : l'IA jouera tes tours. Retourne dans l'arène depuis le boss sur la carte.";mpDoc=null}$("fight").hidden=true;F=null;render();chestsLater()});
 $("fActs").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b&&!b.disabled)act(b.dataset.act)});
 document.addEventListener("click",async e=>{const r=e.target.closest("[data-raid]");if(!r)return;r.disabled=true;
   try{if(r.dataset.raid==="join")await raidJoin(+r.dataset.b);else if(r.dataset.raid==="help"){await raidJoin(+r.dataset.b,true);$("punchMsg").textContent="Tu es en renfort. Tu combattras quand ton ami lancera le combat."}else await raidLeave(+r.dataset.b)}catch(_){$("punchMsg").textContent="Impossible de modifier le groupe."}render()});
@@ -3107,7 +3111,7 @@ async function mpSelf(S){const k=keyOf(me),fk="tdl_fin_"+k+"_"+S.bi+"_"+S.at;if(
   if(!player.bosses.includes(S.bi)){player.bosses=[...player.bosses,S.bi];$("punchMsg").textContent=`${BOSSES[S.bi].n} est vaincu : la route est ouverte !`}
   else{const rw=rollLoot(1)[0];player.loot=player.loot||{};player.loot[rw]=(player.loot[rw]||0)+1;$("punchMsg").textContent=`Renfort récompensé : ${LOOT[rw].n}.`}
   try{await savePlayer()}catch(_){}
-  selAuto=true;render()}
+  selAuto=true;render();chestsLater(1500)}
 /* tâches communes (hôte) : cimetière, boss des absents, annonce, groupe */
 async function mpFinish(S){if(mpFinished[S.at])return;mpFinished[S.at]=1;const won=S.result==="win",now=Date.now(),b=BOSSES[S.bi],k=keyOf(me);
   for(const m of S.team){if(m.key===k)continue;const c=charOf(m.key);
@@ -3152,7 +3156,7 @@ function enter(name){
   $("authForm").reset();
   name=name.trim().slice(0,30);if(!name)return;
   me=name;LS.set("tdl_name",me);selNode=null;selAuto=true;loadPlayerLocal();if(playersAll[keyOf(me)])player=normPlayer(playersAll[keyOf(me)]);
-  $("gate").hidden=true;$("app").hidden=false;$("mapTop").hidden=false;$("hud").hidden=false;$("who").hidden=false;setSync();render();
+  $("gate").hidden=true;$("app").hidden=false;$("mapTop").hidden=false;$("hud").hidden=false;$("who").hidden=false;setSync();render();chestsLater(3000);
 }
 $("gateForm").addEventListener("submit",e=>{e.preventDefault();enter($("gateName").value)});
 $("switchBtn").addEventListener("click",()=>{if(myAcc){openDrawer();const d=$("acctPanel");d.open=true;d.scrollIntoView({block:"start"});return}showGate("gateLocal");$("gateName").value="";$("gateName").focus()});
