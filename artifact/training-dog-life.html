@@ -1078,6 +1078,18 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .card.red{color:#9a0f14!important}.card i{font-size:24px!important;text-shadow:0 1px 0 rgba(255,255,255,.4)}
 .card.back{background:radial-gradient(circle at 50% 50%,#5c0a0d 0 30%,#2a0505 31% 100%)!important;border:2px solid #c9a24a!important;position:relative}
 .card.back::after{content:"☠";position:absolute;inset:0;display:grid;place-items:center;color:#c9a24a;font-size:22px}
+/* cartes à jouer traditionnelles */
+.card:not(.back){display:block!important;position:relative;width:68px!important;height:94px!important;padding:0!important;background:#fbf6ea!important;border:1px solid #6b4a24!important;border-radius:6px;color:#14100e!important;font:700 15px/1 Georgia,"Times New Roman",serif!important;box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 0 0 2px #fbf6ea,inset 0 0 0 3px rgba(107,74,36,.25)}
+.card.red:not(.back){color:#c0121a!important}
+.card .ix{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1;font-weight:700}
+.card .ix b{font:700 15px/1 Georgia,"Times New Roman",serif}.card .ix u{text-decoration:none;font-size:12px;margin-top:1px}
+.card .ix.tl{left:4px;top:4px}.card .ix.br{right:4px;bottom:4px;transform:rotate(180deg)}
+.card .pp{position:absolute;left:25px;right:25px;top:12px;bottom:12px}
+.card .pp span{position:absolute;transform:translate(-50%,-50%);font-size:13px;line-height:1}
+.card .pp span.pf{transform:translate(-50%,-50%) rotate(180deg)}
+.card .pp span.big{font-size:32px}
+.card .face{position:absolute;left:20px;right:20px;top:10px;bottom:10px;border:1.5px solid currentColor;border-radius:3px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(201,162,74,.22),rgba(201,162,74,.05))}
+.card .face b{font:700 28px/1 Georgia,"Times New Roman",serif}.card .face u{position:absolute;text-decoration:none;font-size:11px;left:2px;top:1px}.card .face u+u{left:auto;right:2px;top:auto;bottom:1px;transform:rotate(180deg)}
 .casmsg{font-family:var(--display);font-weight:400!important;font-size:19px;letter-spacing:.02em}
 .chip{border:2px solid #0c0606!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 2px 6px rgba(0,0,0,.6)!important;font-family:var(--body)}
 .chip[data-v="1"]{background:radial-gradient(circle,#d9ccb5 0 40%,#8a7a68 41%)!important;color:#1a0a08!important}
@@ -1703,7 +1715,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261015-2350";
+const TDL_BUILD="b20261016-0015";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1810,11 +1822,17 @@ $("ctBJ").addEventListener("click",()=>{CAS.tab="bj";casRender()});$("ctRou").ad
 document.addEventListener("click",e=>{const c=e.target.closest("[data-chip]");if(!c||c.disabled)return;if(c.dataset.chip==="bj")CAS.bjBet=+c.dataset.v;else CAS.rouBet=+c.dataset.v;sfx("coin");casRender()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("casP").hidden)$("casP").hidden=true});
 /* --- blackjack --- */
-const SUITS=[["♠",0],["♥",1],["♦",1],["♣",0]],RANKS_C=["A","2","3","4","5","6","7","8","9","10","V","D","R"];
+const SUITS=[["♠︎",0],["♥︎",1],["♦︎",1],["♣︎",0]],RANKS_C=["A","2","3","4","5","6","7","8","9","10","V","D","R"];
 function bjDraw(){if(CAS.deck.length<15){CAS.deck=[];for(let d=0;d<4;d++)for(const s of SUITS)for(const r of RANKS_C)CAS.deck.push({r,s:s[0],red:s[1]});}
   return CAS.deck.splice(rnd(CAS.deck.length),1)[0]}
 function hv(h){let t=0,a=0;h.forEach(c=>{if(c.r==="A"){a++;t+=11}else t+=["V","D","R"].includes(c.r)?10:+c.r});while(t>21&&a){t-=10;a--}return t}
-const cardHtml=(c,hide)=>hide?`<div class="card back" aria-label="carte cachée"></div>`:`<div class="card ${c.red?"red":""}" aria-label="${c.r}${c.s}"><span>${c.r}${c.s}</span><i>${c.s}</i><span class="bt">${c.r}${c.s}</span></div>`;
+const PIPS={A:[[1,3]],"2":[[1,0],[1,6]],"3":[[1,0],[1,3],[1,6]],"4":[[0,0],[2,0],[0,6],[2,6]],"5":[[0,0],[2,0],[1,3],[0,6],[2,6]],"6":[[0,0],[2,0],[0,3],[2,3],[0,6],[2,6]],"7":[[0,0],[2,0],[1,1.5],[0,3],[2,3],[0,6],[2,6]],"8":[[0,0],[2,0],[1,1.5],[0,3],[2,3],[1,4.5],[0,6],[2,6]],"9":[[0,0],[2,0],[0,2],[2,2],[1,3],[0,4],[2,4],[0,6],[2,6]],"10":[[0,0],[2,0],[1,1],[0,2],[2,2],[0,4],[2,4],[1,5],[0,6],[2,6]]};
+const FACE={V:"J",D:"Q",R:"K"};
+const cardHtml=(c,hide)=>{if(hide)return `<div class="card back" aria-label="carte cachée"></div>`;
+  const r=FACE[c.r]||c.r,ix=cl=>`<div class="ix ${cl}"><b>${r}</b><u>${c.s}</u></div>`;let mid;
+  if(FACE[c.r])mid=`<div class="face"><u>${c.s}</u><b>${r}</b><u>${c.s}</u></div>`;
+  else mid=`<div class="pp">${PIPS[c.r].map(([x,y])=>`<span class="${c.r==="A"?"big":""}" style="left:${x*50}%;top:${y/6*100}%">${c.s}</span>`).join("")}</div>`;
+  return `<div class="card ${c.red?"red":""}" aria-label="${r}${c.s}">${ix("tl")}${mid}${ix("br")}</div>`};
 function bjShow(hideHole){$("bjPlayer").innerHTML=CAS.ph.map(c=>cardHtml(c)).join("");$("bjDealer").innerHTML=CAS.dh.map((c,i)=>cardHtml(c,hideHole&&i===1)).join("");
   $("bjPv").textContent=CAS.ph.length?hv(CAS.ph):"";$("bjDv").textContent=CAS.dh.length?(hideHole?hv([CAS.dh[0]]):hv(CAS.dh)):""}
 function bjMsg(t,c){const m=$("bjMsg");m.textContent=t;m.className="casmsg "+(c||"")}
