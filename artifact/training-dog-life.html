@@ -1758,7 +1758,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0225";
+const TDL_BUILD="b20261016-0310";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1770,7 +1770,7 @@ document.addEventListener("visibilitychange",houndWake);
 requestAnimationFrame(draw);
 
 /* ================= Punch ================= */
-const RANKS=[[0,"Damné"],[60,"Âme errante"],[240,"Chasseur de démons"],[600,"Croisé"],[1200,"Nécromancien"],[2400,"Démon majeur"],[4800,"Prince des Enfers"],[9000,"Seigneur de la Terreur"]];
+const RANKS=[[0,"Damné"],[5,"Âme errante"],[240,"Chasseur de démons"],[600,"Croisé"],[1200,"Nécromancien"],[2400,"Démon majeur"],[4800,"Prince des Enfers"],[9000,"Seigneur de la Terreur"]];
 const CAP_MIN=240; // une séance oubliée ouverte rapporte au maximum 4 h
 const minsOf=p=>Math.min(CAP_MIN,Math.max(0,Math.floor(((p.end||Date.now())-p.at)/60000)));
 const isOpen=p=>!p.end&&(Date.now()-p.at)<CAP_MIN*60000;
@@ -2564,7 +2564,7 @@ function renderInv(){
   $("slotsR").innerHTML=ls("cuir","Armure","cuir")+ms("bouclier","Bouclier","epique","Bouclier d'os · +45 PV")+ms("potion","Ceinture","rare","Potion de sang · soigne 50 PV une fois par combat")+(()=>{const bt=myBoot(player),own=(player.boots||[]).filter(x=>BOOTS[x]);return bt?slot(bt,"Bottes",BOOTS[bt].i,1,1,BOOTS[bt].r,`${BOOTS[bt].n} · ${bootDesc(bt)}`):slot(own[0]||"bottes_vide","Bottes",BOOTS.sandales.i,0,1,"","Bottes · vide").replace('class="slot empty','class="slot empty'+(own.length?" stash":""))})()+ls("croc","Talisman","croc")+slot("trophy","Trophées",TROPHY,beat>0,beat,"",`${beat} boss vaincu${beat>1?"s":""}`);
   $("invRank").textContent=`Rang ${ri+1} · ${RANKS[ri][1]}`;
   $("invName").textContent=me;
-  const base={hp:60+Math.floor(lastXp/8),atk:8+Math.floor(lastXp/25)};
+  const base={hp:60+Math.floor(lastXp/8)+rankIdx(lastXp)*10,atk:8+Math.floor(lastXp/25)+rankIdx(lastXp)*2};
   const gym=mine.filter(p=>p.type==="gym").length,runs=mine.filter(p=>p.type!=="gym"&&p.end).length;
   $("statGrid").innerHTML=[
     ["big","Points de vie",`${st.hp}<small>+${st.hp-base.hp}</small>`],
@@ -3007,7 +3007,7 @@ function charOf(k){const pl=k===keyOf(me)?player:normCached(playersAll[k]);const
 function lootBonusOf(loot){let atk=0,hp=0;Object.entries(loot||{}).forEach(([k,c])=>{const v=LOOT[k];if(v){atk+=(v.atk||0)*c;hp+=(v.hp||0)*c}});return{atk,hp}}
 function eqItems(pl){const off=pl.unequip||[];return(pl.items||[]).filter(x=>!off.includes(x))}
 function eqLoot(pl){const o={},off=pl.lootOff||{};Object.entries(pl.loot||{}).forEach(([k,c])=>{o[k]=Math.max(0,c-(off[k]||0))});return o}
-function statsFrom(pl,xp){const it=eqItems(pl),lb=lootBonusOf(eqLoot(pl)),bt=myBoot(pl);return{bt,hp:60+Math.floor(xp/8)+(it.includes("bouclier")?45:0)+lb.hp+(bt?BOOTS[bt].hp||0:0),atk:8+Math.floor(xp/25)+(it.includes("epee")?12:0)+lb.atk,potion:it.includes("potion")}}
+function statsFrom(pl,xp){const it=eqItems(pl),lb=lootBonusOf(eqLoot(pl)),bt=myBoot(pl),rk=rankIdx(xp);return{bt,hp:60+Math.floor(xp/8)+rk*10+(it.includes("bouclier")?45:0)+lb.hp+(bt?BOOTS[bt].hp||0:0),atk:8+Math.floor(xp/25)+rk*2+(it.includes("epee")?12:0)+lb.atk,potion:it.includes("potion")}}
 function nameOf(k){if(k===keyOf(me))return me;const p=playersAll[k];if(p&&p.name)return p.name;const q=punches.find(x=>x.key===k);return q?q.name:k}
 /* qui est bloqué au même boss */
 function atBoss(bi){const out=[];const keys=new Set(punches.map(p=>p.key));Object.keys(playersAll).forEach(k=>keys.add(k));keys.add(keyOf(me));
