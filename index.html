@@ -1706,7 +1706,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0410";
+const TDL_BUILD="b20261016-0620";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1800,7 +1800,7 @@ $("shopClose").addEventListener("click",closeShop);
 const CAS={slBet:1,slBusy:false,tab:"bj",bjBet:1,rouBet:1,rouPick:null,busy:false,deck:[],ph:[],dh:[],inHand:false,doubled:false};
 const rnd=n=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}catch(_){return Math.floor(Math.random()*n)}};
 const CHIPV=[1,2,5,10,25];
-async function casPay(delta,why){player.gold=(player.gold||0)+delta;try{await savePlayer()}catch(_){}render();casRender()}
+async function casPay(delta,why){if(DEAD)return;player.gold=(player.gold||0)+delta;try{await savePlayer()}catch(_){}render();casRender()}
 function casRender(){if($("casP").hidden)return;const g=goldOf();$("casGold").textContent=g.toLocaleString("fr-CA");
   $("ctBJ").setAttribute("aria-selected",String(CAS.tab==="bj"));$("ctRou").setAttribute("aria-selected",String(CAS.tab==="rou"));$("ctSlot").setAttribute("aria-selected",String(CAS.tab==="slot"));$("slotPane").hidden=CAS.tab!=="slot";$("bjPane").hidden=CAS.tab!=="bj";$("rouPane").hidden=CAS.tab!=="rou";
   document.querySelectorAll("#casP .chips").forEach(c=>{const k=c.dataset.for,cur=k==="bj"?CAS.bjBet:k==="sl"?CAS.slBet:CAS.rouBet,lock=CAS.busy||CAS.slBusy||(k==="bj"&&CAS.inHand);
@@ -2090,7 +2090,8 @@ const ICON={
 let player={items:[],bosses:[],loot:{}}, playersAll={}, pCol=null, selNode=null, lastXp=0;
 const slug=k=>k.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"anon";
 function loadPlayerLocal(){try{player=normPlayer(JSON.parse(LS.get("tdl_player_"+keyOf(me))||"null"))}catch(e){player=normPlayer()}}
-async function savePlayer(){
+var DEAD=false;
+async function savePlayer(){if(DEAD)return;
   player.name=me;player.key=keyOf(me);
   if(pCol){await pCol.doc(slug(keyOf(me))).set({name:me,key:keyOf(me),items:player.items,bosses:player.bosses,loot:player.loot||{},chests:player.chests||[],unequip:player.unequip||[],lootOff:player.lootOff||{},xpOff:player.xpOff||0,kmOff:player.kmOff||0,deaths:player.deaths||0,gold:player.gold||0,boots:player.boots||[],boot:player.boot||""})}
   else LS.set("tdl_player_"+keyOf(me),JSON.stringify(player));
@@ -3331,23 +3332,27 @@ async function triggerMyDeath(bossName){if(deathHandled||!me)return;deathHandled
     const ev={name:me,key:k,type:"death",boss:bossName,at:now,end:now,km:0,lvl:ri+1,rank:RANKS[ri][1],xp:c.xp,kmChar:Math.round(c.km*10)/10,bosses:c.pl.bosses.length};
     try{if(mode==="db"&&col)await col.add(ev);else{ev.id="x"+now+k;punches.push(ev);saveLocal()}}catch(_){}}
   showDeath({boss:bossName})}
-function showDeath(d){const sc=$("deathScr");clearTimeout(autoT);$("fight").hidden=true;
+let deathDel=null;const withTO=(p,ms)=>Promise.race([Promise.resolve(p),new Promise(r=>setTimeout(()=>r("timeout"),ms))]);
+function showDeath(d){const sc=$("deathScr");DEAD=true;clearTimeout(autoT);$("fight").hidden=true;
+  ["casP","shopP","chatP"].forEach(i=>{const e=$(i);if(e)e.hidden=true});try{closeDrawer()}catch(_){}try{$("itip").hidden=true}catch(_){}
   $("dzName").textContent=me;$("dzSub").textContent=`${me} est tombé${d&&d.boss?` face à ${d.boss}`:""}. Ton compte et ta progression sont effacés.`;
   sc.hidden=false;tone(196,0,.5,"sawtooth",.05);tone(147,.45,.7,"sawtooth",.05);tone(98,1.05,1.2,"triangle",.07);
-  deleteMyAccount().then(ok=>{$("dzNote").textContent=ok?"Compte supprimé. Ton nom reste gravé au cimetière. Tu peux recréer un compte.":"Compte effacé de ce jeu. Ton nom reste gravé au cimetière.";$("dzOk").disabled=false;$("dzOk").focus()})}
+  deathDel=deleteMyAccount();
+  const fin=ok=>{$("dzNote").textContent=ok===true?"Compte supprimé. Ton nom reste gravé au cimetière. Tu peux recréer un compte.":"Compte effacé de ce jeu. Ton nom reste gravé au cimetière.";$("dzOk").disabled=false;try{$("dzOk").focus()}catch(_){}};
+  deathDel.then(fin,()=>fin(false));setTimeout(()=>{if($("dzOk").disabled)fin(false)},3500)}
 async function deleteMyAccount(){const k=keyOf(me),sl=slug(k);let ok=true;
-  try{if(mode==="db"&&col){for(const p of punches.filter(p=>p.key===k&&p.type!=="death"&&p.id))await col.doc(p.id).delete()}
+  try{if(mode==="db"&&col){await withTO(Promise.all(punches.filter(p=>p.key===k&&p.type!=="death"&&p.id).map(p=>col.doc(p.id).delete())),6000)}
     else{punches=punches.filter(p=>!(p.key===k&&p.type!=="death"));saveLocal()}}catch(_){ok=false}
-  try{if(pCol)await pCol.doc(sl).delete()}catch(_){ok=false}
-  try{if(rCol)for(const r of Object.values(raids))if(r&&(r.members||[]).includes(k)){const m=(r.members||[]).filter(x=>x!==k);if(m.length)await rCol.doc("b"+r.boss).set({...r,members:m,helpers:(r.helpers||[]).filter(x=>x!==k),leader:m.includes(r.leader)?r.leader:m[0]});else await rCol.doc("b"+r.boss).delete()}}catch(_){}
-  try{if(aCol&&uid)await aCol.doc(uid).delete()}catch(_){ok=false}
+  try{if(pCol)await withTO(pCol.doc(sl).delete(),4000)}catch(_){ok=false}
+  try{if(rCol)for(const r of Object.values(raids))if(r&&(r.members||[]).includes(k)){const m=(r.members||[]).filter(x=>x!==k);if(m.length)await withTO(rCol.doc("b"+r.boss).set({...r,members:m,helpers:(r.helpers||[]).filter(x=>x!==k),leader:m.includes(r.leader)?r.leader:m[0]}),4000);else await withTO(rCol.doc("b"+r.boss).delete(),4000)}}catch(_){}
+  try{if(aCol&&uid)await withTO(aCol.doc(uid).delete(),4000)}catch(_){ok=false}
   /* ne supprime QUE le mot secret de ce personnage (un autre gladiateur a pu se connecter sur ce même appareil) */
   try{if(sCol){const ids=[...new Set([LS.get("tdl_sid"),myAcc&&myAcc.sid].filter(Boolean))];
-    for(const sid of ids){const d=await sCol.doc(sid).get();if(d.exists&&uid&&d.data().uid===uid)await sCol.doc(sid).delete()}}LS.set("tdl_sid","")}catch(_){}
+    for(const sid of ids){const d=await withTO(sCol.doc(sid).get(),4000);if(d&&d.exists&&uid&&d.data().uid===uid)await withTO(sCol.doc(sid).delete(),4000)}}LS.set("tdl_sid","")}catch(_){}
   try{LS.set("tdl_player_"+k,"");LS.set("tdl_name","");LS.set(chatSeenKey(),"")}catch(_){}
-  try{const u=auth&&auth.currentUser;if(u&&u.delete)await u.delete();else if(auth)await auth.signOut()}catch(_){try{await auth.signOut()}catch(__){}}
+  try{const u=auth&&auth.currentUser;if(u&&u.delete)await withTO(u.delete(),4000);else if(auth)await withTO(auth.signOut(),3000)}catch(_){try{await withTO(auth.signOut(),3000)}catch(__){}}
   return ok}
-$("dzOk").addEventListener("click",async()=>{try{if(auth)await auth.signOut()}catch(_){};location.reload()});
+$("dzOk").addEventListener("click",async()=>{$("dzOk").disabled=true;try{if(deathDel)await withTO(deathDel,5000)}catch(_){}try{if(auth)await withTO(auth.signOut(),2500)}catch(_){};location.reload()});
 function renderClan(){
   const keys=new Set();punches.forEach(p=>{if(isAct(p))keys.add(p.key)});Object.keys(playersAll).forEach(k=>keys.add(k));if(me)keys.add(keyOf(me));
   const ws=weekStart();
