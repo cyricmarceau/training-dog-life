@@ -923,13 +923,14 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .bosscta{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-bottom:10px;padding:12px 10px;border:3px solid #ff5a3a;border-radius:6px;
   font-family:var(--display);font-size:34px;line-height:1;color:#fff3e6;letter-spacing:1px;
   background:radial-gradient(120% 160% at 50% 0%,#ff3a1a 0%,#8a0b0b 55%,#2a0304 100%);
-  box-shadow:0 0 0 4px #1d0405,0 0 40px rgba(255,58,26,.6),inset 0 2px 0 rgba(255,220,180,.35);animation:ctapulse 1.4s ease-in-out infinite}
+  box-shadow:0 0 0 4px #1d0405,0 0 40px rgba(255,58,26,.6),inset 0 2px 0 rgba(255,220,180,.35);position:relative;isolation:isolate}
+.bosscta::after{content:"";position:absolute;inset:-4px;border-radius:8px;box-shadow:0 0 70px rgba(255,58,26,.95);opacity:0;animation:ctapulse 1.4s ease-in-out infinite;pointer-events:none;z-index:-1}
 .bosscta small{font-family:var(--body);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ffd9a8;margin-top:4px}
 .bosscta:hover{filter:brightness(1.12)}
 .bosscta:active{transform:scale(.98)}
-@keyframes ctapulse{50%{box-shadow:0 0 0 4px #1d0405,0 0 70px rgba(255,58,26,.95),inset 0 2px 0 rgba(255,220,180,.35)}}
+@keyframes ctapulse{50%{opacity:1}}
 @media (max-width:520px){.bosscta{font-size:28px}}
-@media (prefers-reduced-motion:reduce){.bosscta{animation:none}}
+@media (prefers-reduced-motion:reduce){.bosscta::after{animation:none}}
 
 /* ===== Chien qui court en mode course ===== */
 .runstrip{grid-column:1/-1;width:100%;border:1px solid #4a1a14;border-radius:4px;overflow:hidden;height:76px;margin-bottom:8px;background:#1a0404}
@@ -1050,7 +1051,9 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .mapdragon.fly{animation:dragon 7s linear forwards}
 @media (prefers-reduced-motion:reduce){#map *,.mapdragon{animation:none!important}.mapfx{display:none}}
 /* téléphone : on garde les flammes, la lave et le chemin ; les petits effets décoratifs restent figés */
-@media (pointer:coarse){#map .spk,#map .crow,#map .smoke,#map .blinker,#map .aurora,#map .mistdrift,#map .rose,#map .halo,#map .breathe,#map .aurap,#map .glowp,#map .fogcl{animation:none!important}}
+@media (pointer:coarse){#map .spk,#map .crow,#map .smoke,#map .blinker,#map .aurora,#map .mistdrift,#map .rose,#map .halo,#map .breathe,#map .aurap,#map .glowp,#map .fogcl,#map .geyser,#map .pulseg{animation:none!important}
+  /* flammes de décor : 8 images/s au lieu de 60 (même rendu à l'œil, 5× moins de recalculs de style) */
+  #map .wbg .flick{animation:none!important}#map .wbg.cur .flick{animation:flick 1.6s steps(4,end) infinite alternate!important}#map .tflame{animation-timing-function:steps(3,end);animation-duration:.6s}#map .bob{animation-timing-function:steps(4,end)}}
 
 /* ===== Casino des Damnés : blackjack et roulette ===== */
 .ccbtns{flex-wrap:wrap;justify-content:flex-end}
@@ -1758,7 +1761,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0620";
+const TDL_BUILD="b20261016-0730";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -2226,13 +2229,13 @@ const MAP_BG=`<defs>
   ${[1,2].map(w=>`<linearGradient id="seam${w}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${MAP_TILE[w-1]}" stop-opacity="0"/><stop offset=".42" stop-color="${MAP_TILE[w-1]}" stop-opacity=".95"/><stop offset=".58" stop-color="${MAP_TILE[w]}" stop-opacity=".95"/><stop offset="1" stop-color="${MAP_TILE[w]}" stop-opacity="0"/></linearGradient>
   <radialGradient id="mist${w}"><stop offset="0" stop-color="${w===1?"#d8ecff":"#c9a0ff"}" stop-opacity=".22"/><stop offset="1" stop-color="${w===1?"#d8ecff":"#c9a0ff"}" stop-opacity="0"/></radialGradient>`).join("")}
  </defs>`+
-  MAP_BGS.map((b,w)=>{const nm=WORLDS[w].n,wd=nm.length*7.4+30,x0=w?30:16;return `<g transform="translate(${w*640} 0)">${b}<g transform="translate(${x0} 18)"><path d="M0 0h${wd}l-7 9 7 9H0l7-9Z" fill="#2a0c08" stroke="${WORLDS[w].frame}" stroke-width="1.2" opacity=".92"/><text x="${wd/2}" y="13.5" text-anchor="middle" font-family="Pirata One,serif" font-size="14" fill="${WORLDS[w].frame}">${nm}</text></g></g>`}).join("")+
-  [1,2].map(w=>{const x=w*640;let t=`<rect x="${x-110}" y="0" width="220" height="360" fill="url(#seam${w})"/>`;
+  MAP_BGS.map((b,w)=>{const nm=WORLDS[w].n,wd=nm.length*7.4+30,x0=w?30:16;return `<g class="wbg w${w}" transform="translate(${w*640} 0)">${b}<g transform="translate(${x0} 18)"><path d="M0 0h${wd}l-7 9 7 9H0l7-9Z" fill="#2a0c08" stroke="${WORLDS[w].frame}" stroke-width="1.2" opacity=".92"/><text x="${wd/2}" y="13.5" text-anchor="middle" font-family="Pirata One,serif" font-size="14" fill="${WORLDS[w].frame}">${nm}</text></g></g>`}).join("")+
+  [1,2].map(w=>{const x=w*640;let t=`<g class="wbg seam w${w-1} w${w}"><rect x="${x-110}" y="0" width="220" height="360" fill="url(#seam${w})"/>`;
     [[-40,70,70],[10,180,90],[-20,300,80],[30,40,60]].forEach(([dx,y,r])=>{t+=`<ellipse cx="${x+dx}" cy="${y}" rx="${r}" ry="${r*.55}" fill="url(#mist${w})"/>`});
     for(let i=0;i<9;i++){const dx=-80+i*20,y=30+((i*67)%300);
       t+=w===1?(dx<0?`<path class="flick" d="M${x+dx} ${y-4}v8M${x+dx-4} ${y}h8" stroke="#e8f6ff" stroke-width="1.4" opacity=".75"/>`:`<circle class="flick" cx="${x+dx}" cy="${y}" r="1.8" fill="#ff8a3a" opacity=".8"/>`)
               :(dx<0?`<circle class="flick" cx="${x+dx}" cy="${y}" r="2" fill="#c77dff" opacity=".8"/>`:`<path class="flick" d="M${x+dx} ${y-4}v8M${x+dx-4} ${y}h8" stroke="#bfe6ff" stroke-width="1.4" opacity=".6"/>`)}
-    return t}).join("")+
+    return t+"</g>"}).join("")+
   `<rect id="mapNight" width="1920" height="360" fill="#020210" opacity="0" pointer-events="none"/>
    <rect x="3" y="3" width="${640*3-6}" height="354" fill="none" stroke="#3a2414" stroke-width="9" rx="5"/><rect x="3" y="3" width="${640*3-6}" height="354" fill="none" stroke="#1a0c06" stroke-width="3" stroke-dasharray="9 5 3 7" rx="5"/>
    <rect x="8" y="8" width="${640*3-16}" height="344" fill="none" stroke="url(#frameG)" stroke-width="1.8" rx="3"/><rect x="12" y="12" width="${640*3-24}" height="336" fill="none" stroke="url(#frameG)" stroke-width=".7" stroke-opacity=".55" rx="2"/>
@@ -2307,6 +2310,7 @@ function renderMap(xp,km){
     const fog=`<g pointer-events="none">${fogs}</g>`;
     const html=flows+NODES.map((n,i)=>nodeSvg(n,i,pr)).join("")+fog+others+tok;
     if(dy._h!==html||!$("tok")){dy.innerHTML=html;dy._h=html}}
+  {const M=$("map");if(M._curW!==pw){M._curW=pw;M.querySelectorAll(".wbg").forEach(e=>e.classList.toggle("cur",e.classList.contains("w"+pw)))}}
   if(walkHold){const t=$("tok");if(t){t.style.transition="none";t.style.transform=`translate(${walkHold[0]}px,${walkHold[1]-20}px)`}}
   else if(prevTok&&(prevTok[0]!==px||prevTok[1]!==py)){const t=$("tok");requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transform=`translate(${px}px,${py-20}px)`}))}
   prevTok=[px,py];
@@ -3561,13 +3565,13 @@ $("authForm").addEventListener("submit",async e=>{e.preventDefault();
       enter(name);$("punchMsg").textContent=`Bienvenue dans le clan, ${name} ! 🔥`;
     }else if(!needName){
       const d=sCol?await sCol.doc(await secretId(pass)).get():null;
-      if(!d||!d.exists){needName=true;$("nameField").hidden=false;msg.textContent="Mot secret introuvable. Entre aussi le nom de ton gladiateur : ton mot secret sera relié à nouveau.";$("cBtn").disabled=false;setTimeout(()=>$("cName").focus(),30);return}
+      if(!d||!d.exists){msg.textContent="Mot secret incorrect.";$("cBtn").disabled=false;return}
       LS.set("tdl_sid",d.id);const cr=await auth.signInWithEmailAndPassword(d.data().email,pass);try{if(aCol&&cr&&cr.user)await aCol.doc(cr.user.uid).update({sid:d.id})}catch(_){}
     }else{
       const cred=await auth.signInWithEmailAndPassword(emailOf(name),pass);
       await saveSecret(pass,name,cred&&cred.user?cred.user.uid:uid);needName=false;
     }
-  }catch(err){creating=false;msg.textContent=AUTH_ERR[err&&err.code]||"Ça n'a pas fonctionné. Réessaie dans un instant."}
+  }catch(err){creating=false;const bad=err&&(err.code==="auth/invalid-credential"||err.code==="auth/wrong-password"||err.code==="auth/user-not-found");msg.textContent=(!signup&&!needName&&bad)?"Mot secret incorrect.":(AUTH_ERR[err&&err.code]||"Ça n'a pas fonctionné. Réessaie dans un instant.")}
   $("cBtn").disabled=false});
 
 /* ================= Fiche d'item ================= */
