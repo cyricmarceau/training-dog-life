@@ -1548,6 +1548,13 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   clearTimeout(mapBusyT);if(!mapWalking)mapBusyT=setTimeout(()=>{if(!mapWalking)mw.classList.remove("busy")},900)}
 (()=>{const sc=document.querySelector(".mapscroll"),mw=document.querySelector(".mapwrap");if(!sc||!mw)return;
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
+
+/* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
+const TDL_BUILD="b20261015-2005";
+(()=>{if(!/onrender\.com$/.test(location.hostname))return;
+  const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
+    if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});setInterval(check,10*60000)})();
 /* animations de la carte en pause quand elle est hors écran ou l'onglet caché */
 (()=>{const mw=document.querySelector(".mapwrap");if(!mw)return;let vis=true;const upd=()=>mw.classList.toggle("animoff",!vis||document.hidden);
   try{new IntersectionObserver(es=>{vis=es[0].isIntersecting;upd()},{rootMargin:"120px"}).observe(mw)}catch(_){}document.addEventListener("visibilitychange",upd)})();
