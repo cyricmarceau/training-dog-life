@@ -1109,6 +1109,8 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .rt.r{background:#b3141b}.rt.k{background:#141010}.rt.g{background:#1a7a42;font-size:15px;border-radius:40px 0 0 40px / 50% 0 0 50%}
 .rt.o{font-size:10px;letter-spacing:.3px;color:#f1e4c2}.rt.col{writing-mode:vertical-rl;font-size:9px}.rt sup{font-size:7px}
 .rt:active{filter:brightness(1.3)}.rt.on{box-shadow:inset 0 0 0 2px #ffe08a,0 0 10px #ffcf5a;position:relative;z-index:1;color:#ffe08a}
+#rouSpin{background:transparent!important;border:1px solid #6b3a30!important;color:#cdbba8!important;font-size:12px!important;padding:9px!important;box-shadow:none!important}#rouSpin:disabled{opacity:.45}
+.rt[data-amt]::after{content:attr(data-amt);position:absolute;right:-2px;top:-2px;min-width:15px;padding:1px 3px;border-radius:9px;background:#ffcf5a;color:#1a0a08;font:800 9px/12px var(--body);text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}.rt{position:relative}
 .rt.hit{animation:rtHit 1s ease-in-out 3}@keyframes rtHit{50%{box-shadow:inset 0 0 0 3px #fff,0 0 16px #fff}}
 .dia{display:block;width:13px;height:13px;transform:rotate(45deg);border:1px solid #e8d4a0}.dia.r{background:#d01c22}.dia.k{background:#111}
 @media(max-width:360px){.rtable{grid-template-rows:repeat(3,30px) 26px 26px}.rt{font-size:10px}}
@@ -1362,10 +1364,10 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
     <section id="rouPane" hidden>
       <div class="wheelbox"><svg class="wheel" id="rouWheel" viewBox="-110 -110 220 220" aria-hidden="true"></svg><div class="wheelptr"></div><div class="rouball" id="rouRes">?</div></div>
       <div class="routimer"><span id="rouPhase">Mises ouvertes</span><b id="rouLeft">30 s</b><i><i id="rouBar"></i></i></div>
-      <p class="casmsg" id="rouMsg">Table partagée : choisis un pari et ta mise avant la fin du compte à rebours.</p>
+      <p class="casmsg" id="rouMsg">Choisis ta mise puis touche la table : chaque case touchée mise. Tu peux miser sur plusieurs cases.</p>
       <div class="rtable" id="rouBets" role="group" aria-label="Table de roulette"></div>
       <div class="betrow"><span>Mise</span><div class="chips" data-for="rou"></div><b class="betv" id="rouBet">1</b><small>or</small></div>
-      <div class="casacts"><button type="button" class="btn" id="rouSpin">Miser</button></div>
+      <div class="casacts"><button type="button" class="btn" id="rouSpin" disabled>Annuler mes mises</button></div>
       <h5 class="sh" style="margin:4px 0 0">Mises de la table · ce tour</h5><ul class="roulist" id="rouList"><li class="none">Aucune mise pour l'instant.</li></ul>
       <p class="shopnote" style="margin:10px 0 0">Table partagée par tout le clan : un tour toutes les 40 s (30 s de mises, puis la bille). Roulette européenne (0 à 36). Rouge/noir, pair/impair, manque/passe : 1 pour 1 · douzaine : 2 pour 1 · numéro plein : 35 pour 1.</p>
     </section>
@@ -1663,7 +1665,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0015";
+const TDL_BUILD="b20261016-0040";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1762,7 +1764,7 @@ function casRender(){if($("casP").hidden)return;const g=goldOf();$("casGold").te
     c.innerHTML=CHIPV.map(v=>`<button type="button" class="chip ${v===cur?"on":""}" data-chip="${k}" data-v="${v}" ${lock||v>g?"disabled":""} aria-label="Miser ${v} or">${v}</button>`).join("")});
   $("bjBet").textContent=CAS.bjBet;$("rouBet").textContent=CAS.rouBet;
   $("bjDeal").hidden=CAS.inHand;$("bjHit").hidden=$("bjStand").hidden=!CAS.inHand;$("bjDouble").hidden=!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.bjBet;
-  $("bjDeal").disabled=g<CAS.bjBet||g<1;$("rouSpin").disabled=CAS.busy||!CAS.rouPick||g<CAS.rouBet||g<1;
+  $("bjDeal").disabled=g<CAS.bjBet||g<1;$("rouSpin").disabled=Date.now()%ROU_MS>=ROU_BET||!rouMine(rouRound()).some(x=>!x.paid);
   document.querySelectorAll("#rouBets [data-rb]").forEach(b=>b.classList.toggle("on",!!CAS.rouPick&&CAS.rouPick===b.dataset.rb))}
 function openCasino(){$("casP").hidden=false;if(!$("rouWheel").innerHTML)drawWheel();if(!$("rouBets").innerHTML)drawRouBets();casRender();sfx("open")}
 $("ccCasino").addEventListener("click",openCasino);document.addEventListener("click",e=>{const b=e.target.closest("[data-casino]");if(!b)return;try{closeDrawer()}catch(_){}CAS.tab=b.dataset.casino;openCasino()});$("casClose").addEventListener("click",()=>{$("casP").hidden=true});
@@ -1818,9 +1820,7 @@ function drawRouBets(){const cell=(k,l,c,col,row,ex="")=>`<button type="button" 
   [["d1","1<sup>re</sup> 12","2/6"],["d2","2<sup>e</sup> 12","6/10"],["d3","3<sup>e</sup> 12","10/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,4));
   [["low","1–18","2/4"],["even","PAIR","4/6"],["red",'<i class="dia r"></i>',"6/8"],["black",'<i class="dia k"></i>',"8/10"],["odd","IMPAIR","10/12"],["high","19–36","12/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,5,k==="red"||k==="black"?` aria-label="${k==="red"?"Rouge":"Noir"}"`:""));
   $("rouBets").innerHTML=s}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;
-  if(b.dataset.rb==="num"){const v=parseInt($("rouNum").value,10);if(!(v>=0&&v<=36)){$("rouMsg").textContent="Entre un numéro entre 0 et 36.";$("rouMsg").className="casmsg lose";return}CAS.rouPick="n"+v}else CAS.rouPick=b.dataset.rb;
-  $("rouMsg").className="casmsg";$("rouMsg").textContent=`Pari : ${rouLabel(CAS.rouPick)}`;sfx("equip");casRender()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;rouPlace(b.dataset.rb)});
 const rouLabel=k=>/^n\d+$/.test(k)?`numéro ${k.slice(1)}`:(RB.find(x=>x[0]===k)||[,k])[1];
 function rouWin(k,n){if(/^n\d+$/.test(k))return +k.slice(1)===n?36:0;if(n===0)return 0;
   return{red:REDS.has(n)?2:0,black:!REDS.has(n)?2:0,even:n%2===0?2:0,odd:n%2?2:0,low:n<=18?2:0,high:n>=19?2:0,d1:n<=12?3:0,d2:n>12&&n<=24?3:0,d3:n>24?3:0,c1:n%3===1?3:0,c2:n%3===2?3:0,c3:n%3===0?3:0}[k]||0}
@@ -1829,19 +1829,25 @@ const ROU_MS=40000,ROU_BET=30000,ROU_SALT="tdl-roulette-v1";let rbCol=null,rbets
 const rouRound=()=>Math.floor(Date.now()/ROU_MS);
 async function rouResult(r){const t=ROU_SALT+":"+r;try{const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)));return((b[0]<<24|b[1]<<16|b[2]<<8|b[3])>>>0)%37}catch(_){let h=2166136261;for(const c of t)h=Math.imul(h^c.charCodeAt(0),16777619);return(h>>>0)%37}}
 const rouMine=r=>Object.values(rbets).filter(x=>x&&x.round===r&&x.key===keyOf(me));
-$("rouSpin").addEventListener("click",async()=>{const bet=CAS.rouBet,k=CAS.rouPick,r=rouRound(),ph=Date.now()%ROU_MS;
-  if(!k||goldOf()<bet)return;if(ph>=ROU_BET){$("rouMsg").textContent="Les mises sont fermées : attends le prochain tour.";$("rouMsg").className="casmsg lose";return}
-  const id=`rb_${r}_${slug(keyOf(me))}_${k}`,prev=rbets[id];const doc={round:r,key:keyOf(me),name:me,col:myColor(),pick:k,bet:(prev?prev.bet:0)+bet,at:Date.now()};
-  await casPay(-bet);rbets[id]=doc;rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Misé : ${bet} or sur ${rouLabel(k)}. Bonne chance !`;
-  try{if(rbCol)await rbCol.doc(id).set(doc);else{LS.set("tdl_rbets",JSON.stringify(rbets))}}catch(_){}});
-function rouList(){const L=$("rouList");if(!L)return;const r=rouRound(),settled=Date.now()%ROU_MS>=ROU_BET+5200,res=CAS.lastRes&&CAS.lastRes.r===r?CAS.lastRes.n:null;
+async function rouPlace(k){const bet=CAS.rouBet,r=rouRound(),ph=Date.now()%ROU_MS;
+  if(!k||goldOf()<bet){$("rouMsg").textContent="Pas assez d'or pour cette mise.";$("rouMsg").className="casmsg lose";return}
+  if(ph>=ROU_BET){$("rouMsg").textContent="Les mises sont fermées : attends le prochain tour.";$("rouMsg").className="casmsg lose";return}
+  const id=`rb_${r}_${slug(keyOf(me))}_${k}`,prev=rbets[id];const doc={round:r,key:keyOf(me),name:me,col:myColor(),pick:k,bet:(prev?prev.bet:0)+bet,at:prev?prev.at:Date.now()};
+  await casPay(-bet);rbets[id]=doc;rouList();sfx("coin");const tot=rouMine(r).reduce((a,x)=>a+x.bet,0);$("rouMsg").className="casmsg";$("rouMsg").textContent=`+${bet} or sur ${rouLabel(k)} · total misé : ${tot} or`;
+  try{if(rbCol)await rbCol.doc(id).set(doc);else{LS.set("tdl_rbets",JSON.stringify(rbets))}}catch(_){}}
+$("rouSpin").addEventListener("click",async()=>{const r=rouRound();if(Date.now()%ROU_MS>=ROU_BET)return;const mine=rouMine(r).filter(x=>!x.paid);if(!mine.length)return;
+  let back=0;for(const x of mine){const id=`rb_${r}_${slug(keyOf(me))}_${x.pick}`;back+=x.bet;delete rbets[id];try{if(rbCol)await rbCol.doc(id).delete();else LS.set("tdl_rbets",JSON.stringify(rbets))}catch(_){}}
+  await casPay(back);rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Mises annulées : ${back} or remboursés.`});
+function rouMarks(){const r=rouRound(),m={};rouMine(r).forEach(x=>m[x.pick]=x.bet);document.querySelectorAll("#rouBets [data-rb]").forEach(b=>{const v=m[b.dataset.rb];if(v)b.setAttribute("data-amt",v);else b.removeAttribute("data-amt")});
+  const btn=$("rouSpin");if(btn)btn.textContent=Object.keys(m).length?`Annuler mes mises (${Object.values(m).reduce((a,b)=>a+b,0)} or)`:"Annuler mes mises"}
+function rouList(){const L=$("rouList");if(!L)return;rouMarks();const r=rouRound(),settled=Date.now()%ROU_MS>=ROU_BET+5200,res=CAS.lastRes&&CAS.lastRes.r===r?CAS.lastRes.n:null;
   const list=Object.values(rbets).filter(x=>x&&x.round===r).sort((a,b)=>a.at-b.at);
   L.innerHTML=list.length?list.map(x=>{const w=res!=null&&settled?rouWin(x.pick,res)*x.bet:null;
     return `<li class="${w==null?"":w?"win":"lose"}"><i style="background:${esc(x.col||"#a8988a")}"></i><b>${esc(x.name)}${x.key===keyOf(me)?" (toi)":""}</b><em>${esc(rouLabel(x.pick))}</em><span>${w==null?x.bet+" or":w?"+"+(w-x.bet)+" or":"−"+x.bet+" or"}</span></li>`}).join(""):`<li class="none">Aucune mise pour l'instant. Sois le premier !</li>`}
 async function rouTick(){const now=Date.now(),r=rouRound(),ph=now%ROU_MS,open=ph<ROU_BET,left=Math.ceil(((open?ROU_BET:ROU_MS)-ph)/1000);
   if($("casP").hidden||CAS.tab!=="rou"){/* paiement même si le casino est fermé */}
   else{$("rouPhase").textContent=open?"Mises ouvertes":ph<ROU_BET+5200?"La bille tourne…":"Résultat";$("rouLeft").textContent=open?`${left} s`:`prochain tour ${left} s`;
-    $("rouBar").style.width=(open?(ROU_BET-ph)/ROU_BET*100:0)+"%";$("rouSpin").disabled=!open||!CAS.rouPick||goldOf()<CAS.rouBet}
+    $("rouBar").style.width=(open?(ROU_BET-ph)/ROU_BET*100:0)+"%";$("rouSpin").disabled=!open||!rouMine(r).some(x=>!x.paid)}
   if(!open&&rouSpun!==r){rouSpun=r;const n=await rouResult(r);CAS.lastRes={r,n};const i=WHEEL.indexOf(n),a=360/37;
     if(!$("rouWheel").innerHTML)drawWheel();CAS.rot=(CAS.rot||0)+360*5+((360-i*a)-((CAS.rot||0)%360)+360)%360;$("rouWheel").style.transform=`rotate(${CAS.rot}deg)`;
     $("rouRes").textContent="…";$("rouRes").className="rouball";if(!$("casP").hidden&&CAS.tab==="rou")sfx("chest")}
