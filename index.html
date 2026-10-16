@@ -78,6 +78,7 @@ button{font:inherit;cursor:pointer;border-radius:3px}
 .counter b{font-family:var(--display);font-weight:400;font-size:clamp(84px,18vw,132px);font-variant-numeric:tabular-nums;
   background:linear-gradient(180deg,#ffe0b0 0%,var(--ember) 50%,var(--blood) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 18px rgba(255,106,26,.45))}
+.hgold{font-style:normal;margin-top:8px;padding:3px 11px;border:1px solid #c9a24a;border-radius:14px;background:rgba(20,8,4,.7);color:#ffe08a;font:800 14px/1.2 var(--body);letter-spacing:.04em;font-variant-numeric:tabular-nums}
 .counter span{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--bone-dim);margin-top:4px}
 .counter b.pop{animation:pop .45s ease-out}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.3)}100%{transform:scale(1)}}
@@ -1110,6 +1111,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .rt.o{font-size:10px;letter-spacing:.3px;color:#f1e4c2}.rt.col{writing-mode:vertical-rl;font-size:9px}.rt sup{font-size:7px}
 .rt:active{filter:brightness(1.3)}.rt.on{box-shadow:inset 0 0 0 2px #ffe08a,0 0 10px #ffcf5a;position:relative;z-index:1;color:#ffe08a}
 #rouSpin{background:transparent!important;border:1px solid #6b3a30!important;color:#cdbba8!important;font-size:12px!important;padding:9px!important;box-shadow:none!important}#rouSpin:disabled{opacity:.45}
+.rouacts{display:flex;gap:8px}.rouacts .btn{flex:1}#rouUndo{background:transparent!important;border:1px solid #c9a24a!important;color:#ffe08a!important;font-size:12px!important;padding:9px!important;box-shadow:none!important}#rouUndo:disabled{opacity:.4}
 .rt[data-amt]::after{content:attr(data-amt);position:absolute;right:-2px;top:-2px;min-width:15px;padding:1px 3px;border-radius:9px;background:#ffcf5a;color:#1a0a08;font:800 9px/12px var(--body);text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}.rt{position:relative}
 .rt.hit{animation:rtHit 1s ease-in-out 3}@keyframes rtHit{50%{box-shadow:inset 0 0 0 3px #fff,0 0 16px #fff}}
 .dia{display:block;width:13px;height:13px;transform:rotate(45deg);border:1px solid #e8d4a0}.dia.r{background:#d01c22}.dia.k{background:#111}
@@ -1156,7 +1158,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
         <div class="xpbar"><i id="xpfill" style="width:0"></i></div>
         <div class="xpmeta" id="xpmeta"></div>
       </div>
-      <div class="counter"><b id="counter">0</b><span>punchs</span></div>
+      <div class="counter"><b id="counter">0</b><span>punchs</span><em class="hgold" id="hudGold" title="Ton or">0 or</em></div>
     </div>
   </div>
 
@@ -1367,7 +1369,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       <p class="casmsg" id="rouMsg">Choisis ta mise puis touche la table : chaque case touchée mise. Tu peux miser sur plusieurs cases.</p>
       <div class="rtable" id="rouBets" role="group" aria-label="Table de roulette"></div>
       <div class="betrow"><span>Mise</span><div class="chips" data-for="rou"></div><b class="betv" id="rouBet">1</b><small>or</small></div>
-      <div class="casacts"><button type="button" class="btn" id="rouSpin" disabled>Annuler mes mises</button></div>
+      <div class="casacts rouacts"><button type="button" class="btn" id="rouUndo" disabled>↶ Retirer la dernière mise</button><button type="button" class="btn" id="rouSpin" disabled>Tout annuler</button></div>
       <h5 class="sh" style="margin:4px 0 0">Mises de la table · ce tour</h5><ul class="roulist" id="rouList"><li class="none">Aucune mise pour l'instant.</li></ul>
       <p class="shopnote" style="margin:10px 0 0">Table partagée par tout le clan : un tour toutes les 40 s (30 s de mises, puis la bille). Roulette européenne (0 à 36). Rouge/noir, pair/impair, manque/passe : 1 pour 1 · douzaine : 2 pour 1 · numéro plein : 35 pour 1.</p>
     </section>
@@ -1665,7 +1667,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0040";
+const TDL_BUILD="b20261016-0105";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1833,13 +1835,18 @@ async function rouPlace(k){const bet=CAS.rouBet,r=rouRound(),ph=Date.now()%ROU_M
   if(!k||goldOf()<bet){$("rouMsg").textContent="Pas assez d'or pour cette mise.";$("rouMsg").className="casmsg lose";return}
   if(ph>=ROU_BET){$("rouMsg").textContent="Les mises sont fermées : attends le prochain tour.";$("rouMsg").className="casmsg lose";return}
   const id=`rb_${r}_${slug(keyOf(me))}_${k}`,prev=rbets[id];const doc={round:r,key:keyOf(me),name:me,col:myColor(),pick:k,bet:(prev?prev.bet:0)+bet,at:prev?prev.at:Date.now()};
-  await casPay(-bet);rbets[id]=doc;rouList();sfx("coin");const tot=rouMine(r).reduce((a,x)=>a+x.bet,0);$("rouMsg").className="casmsg";$("rouMsg").textContent=`+${bet} or sur ${rouLabel(k)} · total misé : ${tot} or`;
+  (CAS.stk=CAS.stk||[]).push({r,k,amt:bet});await casPay(-bet);rbets[id]=doc;rouList();sfx("coin");const tot=rouMine(r).reduce((a,x)=>a+x.bet,0);$("rouMsg").className="casmsg";$("rouMsg").textContent=`+${bet} or sur ${rouLabel(k)} · total misé : ${tot} or`;
   try{if(rbCol)await rbCol.doc(id).set(doc);else{LS.set("tdl_rbets",JSON.stringify(rbets))}}catch(_){}}
+$("rouUndo").addEventListener("click",async()=>{const r=rouRound();if(Date.now()%ROU_MS>=ROU_BET)return;const st=CAS.stk=(CAS.stk||[]).filter(x=>x.r===r);const l=st.pop();CAS.stk=st;if(!l)return;
+  const id=`rb_${r}_${slug(keyOf(me))}_${l.k}`,cur=rbets[id];if(!cur||cur.paid)return;const left=cur.bet-l.amt;
+  if(left>0){cur.bet=left;try{if(rbCol)await rbCol.doc(id).update({bet:left});else LS.set("tdl_rbets",JSON.stringify(rbets))}catch(_){}}
+  else{delete rbets[id];try{if(rbCol)await rbCol.doc(id).delete();else LS.set("tdl_rbets",JSON.stringify(rbets))}catch(_){}}
+  await casPay(l.amt);rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Mise retirée : ${l.amt} or sur ${rouLabel(l.k)}.`});
 $("rouSpin").addEventListener("click",async()=>{const r=rouRound();if(Date.now()%ROU_MS>=ROU_BET)return;const mine=rouMine(r).filter(x=>!x.paid);if(!mine.length)return;
   let back=0;for(const x of mine){const id=`rb_${r}_${slug(keyOf(me))}_${x.pick}`;back+=x.bet;delete rbets[id];try{if(rbCol)await rbCol.doc(id).delete();else LS.set("tdl_rbets",JSON.stringify(rbets))}catch(_){}}
   await casPay(back);rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Mises annulées : ${back} or remboursés.`});
 function rouMarks(){const r=rouRound(),m={};rouMine(r).forEach(x=>m[x.pick]=x.bet);document.querySelectorAll("#rouBets [data-rb]").forEach(b=>{const v=m[b.dataset.rb];if(v)b.setAttribute("data-amt",v);else b.removeAttribute("data-amt")});
-  const btn=$("rouSpin");if(btn)btn.textContent=Object.keys(m).length?`Annuler mes mises (${Object.values(m).reduce((a,b)=>a+b,0)} or)`:"Annuler mes mises"}
+  const un=$("rouUndo");if(un)un.disabled=!(CAS.stk||[]).some(x=>x.r===r&&rbets[`rb_${r}_${slug(keyOf(me))}_${x.k}`])||Date.now()%ROU_MS>=ROU_BET;const btn=$("rouSpin");if(btn)btn.textContent=Object.keys(m).length?`Tout annuler (${Object.values(m).reduce((a,b)=>a+b,0)} or)`:"Tout annuler"}
 function rouList(){const L=$("rouList");if(!L)return;rouMarks();const r=rouRound(),settled=Date.now()%ROU_MS>=ROU_BET+5200,res=CAS.lastRes&&CAS.lastRes.r===r?CAS.lastRes.n:null;
   const list=Object.values(rbets).filter(x=>x&&x.round===r).sort((a,b)=>a.at-b.at);
   L.innerHTML=list.length?list.map(x=>{const w=res!=null&&settled?rouWin(x.pick,res)*x.bet:null;
@@ -1904,6 +1911,7 @@ function render(){try{checkMyDeath()}catch(_){}try{if(!$("chatP").hidden)renderC
   const ws=weekStart();
   $("sCount").textContent=n;
   $("sXp").textContent=xp.toLocaleString("fr-CA");
+  {const hg=$("hudGold");if(hg)hg.textContent=goldOf().toLocaleString("fr-CA")+" or"}
   const c=$("counter");
   if(c.textContent!==String(n)){const up=+c.textContent<n&&c.dataset.ready;c.textContent=n;c.dataset.ready="1";
     if(up){c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop")}}
