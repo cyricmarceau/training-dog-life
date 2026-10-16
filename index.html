@@ -1709,7 +1709,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0840";
+const TDL_BUILD="b20261016-1420";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1887,18 +1887,19 @@ function rouDots(){const T=$("rouBets");if(!T||!T.getBoundingClientRect().width)
   const add=(k,x,y,tip)=>{const d=document.createElement("button");d.type="button";d.className="rd";d.dataset.rb=k;d.style.left=x.toFixed(1)+"px";d.style.top=y.toFixed(1)+"px";d.title=tip;d.setAttribute("aria-label",tip);T.appendChild(d)};
   for(let n=1;n<=36;n++){const b=box(n),nx=box(n+3),up=box(n+1);if(!b)continue;
     if(nx)add(`s${n}-${n+3}`,b.r,b.cy,`Cheval ${n}-${n+3} · 17 pour 1`);
-    if(n%3!==0&&up){add(`s${n}-${n+1}`,b.cx,b.t,`Cheval ${n}-${n+1} · 17 pour 1`);if(nx)add(`c${n}`,b.r,b.t,`Carré ${n}-${n+1}-${n+3}-${n+4} · 8 pour 1`)}
+    if(n%3!==0&&up){add(`s${n}-${n+1}`,b.cx,b.t,`Cheval ${n}-${n+1} · 17 pour 1`);if(nx)add(`q${n}`,b.r,b.t,`Carré ${n}-${n+1}-${n+3}-${n+4} · 8 pour 1`)}
     if(n%3===1){add(`t${n}`,b.cx,b.b,`Transversale ${n}-${n+1}-${n+2} · 11 pour 1`);if(nx)add(`l${n}`,b.r,b.b,`Sixain ${n} à ${n+5} · 5 pour 1`)}}
-  const z=box(0);[1,2,3].forEach(n=>{const b=box(n);if(z&&b)add(`s0-${n}`,z.r,b.cy,`Cheval 0-${n} · 17 pour 1`)});const b1=box(1);if(z&&b1)add("c0",z.r,b1.b,"Carré 0-1-2-3 · 8 pour 1");
+  const z=box(0);[1,2,3].forEach(n=>{const b=box(n);if(z&&b)add(`s0-${n}`,z.r,b.cy,`Cheval 0-${n} · 17 pour 1`)});const b1=box(1);if(z&&b1)add("q0",z.r,b1.b,"Carré 0-1-2-3 · 8 pour 1");
   _rmSig="";rouMarks()}
 addEventListener("resize",()=>{try{if($("rouBets").dataset.w&&Math.abs(+$("rouBets").dataset.w-$("rouBets").getBoundingClientRect().width)>2)rouDots()}catch(_){}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;rouPlace(b.dataset.rb)});
-const rouNums=k=>{let m;if(m=/^s(\d+)-(\d+)$/.exec(k))return[+m[1],+m[2]];if(m=/^c(\d+)$/.exec(k)){const n=+m[1];return n===0?[0,1,2,3]:[n,n+1,n+3,n+4]}if(m=/^t(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2]}if(m=/^l(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2,n+3,n+4,n+5]}return null};
+const rouNums=k=>{let m;if(m=/^s(\d+)-(\d+)$/.exec(k))return[+m[1],+m[2]];if(m=/^q(\d+)$/.exec(k)){const n=+m[1];return n===0?[0,1,2,3]:[n,n+1,n+3,n+4]}if(m=/^t(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2]}if(m=/^l(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2,n+3,n+4,n+5]}return null};
 const INSIDE={2:"cheval",3:"transversale",4:"carré",6:"sixain"};
 const rouLabel=k=>{if(/^n\d+$/.test(k))return`numéro ${k.slice(1)}`;const ns=rouNums(k);if(ns)return`${INSIDE[ns.length]} ${ns.join("-")}`;return(RB.find(x=>x[0]===k)||[,k])[1]};
 function rouWin(k,n){if(/^n\d+$/.test(k))return +k.slice(1)===n?36:0;const ins=rouNums(k);if(ins)return ins.includes(n)?36/ins.length:0;if(n===0)return 0;
   return{red:REDS.has(n)?2:0,black:!REDS.has(n)?2:0,even:n%2===0?2:0,odd:n%2?2:0,low:n<=18?2:0,high:n>=19?2:0,d1:n<=12?3:0,d2:n>12&&n<=24?3:0,d3:n>24?3:0,c1:n%3===1?3:0,c2:n%3===2?3:0,c3:n%3===0?3:0}[k]||0}
 /* --- table partagée : tours synchronisés sur l'horloge, résultat identique pour tous --- */
+let rouSettling=false;
 const ROU_MS=40000,ROU_BET=30000,ROU_SALT="tdl-roulette-v1";let rbCol=null,rbets={},rouShown=-1,rouSpun=-1;
 const rouRound=()=>Math.floor(Date.now()/ROU_MS);
 async function rouResult(r){const t=ROU_SALT+":"+r;try{const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)));return((b[0]<<24|b[1]<<16|b[2]<<8|b[3])>>>0)%37}catch(_){let h=2166136261;for(const c of t)h=Math.imul(h^c.charCodeAt(0),16777619);return(h>>>0)%37}}
@@ -1933,13 +1934,16 @@ async function rouTick(){const now=Date.now(),r=rouRound(),ph=now%ROU_MS,open=ph
     $("rouRes").textContent="…";$("rouRes").className="rouball";if(!$("casP").hidden&&CAS.tab==="rou")sfx("chest")}
   if(ph>=ROU_BET+5200&&rouShown!==r&&CAS.lastRes&&CAS.lastRes.r===r){rouShown=r;const n=CAS.lastRes.n,c=colOf(n),cn=c==="r"?"rouge":c==="n"?"noir":"vert";
     $("rouRes").textContent=n;$("rouRes").className="rouball "+c;document.querySelectorAll("#rouBets .rt.hit").forEach(x=>x.classList.remove("hit"));const hc=document.querySelector(`#rouBets [data-rb="n${n}"]`);if(hc)hc.classList.add("hit");document.querySelectorAll("#rouBets .rt.hit").forEach(x=>x.classList.remove("hit"));const _h=document.querySelector(`#rouBets [data-rb="n${n}"]`);if(_h)_h.classList.add("hit");
-    const mine=rouMine(r),pk="tdl_roupaid_"+keyOf(me)+"_"+r;let won=0,lost=0;mine.forEach(x=>{const w=rouWin(x.pick,n)*x.bet;if(w)won+=w;else lost+=x.bet});
-    const unpaid=mine.filter(x=>!x.paid);
-    if(unpaid.length&&!LS.get(pk)){LS.set(pk,"1");let gain=0;unpaid.forEach(x=>{gain+=rouWin(x.pick,n)*x.bet;x.paid=true;
-        const id=`rb_${r}_${slug(keyOf(me))}_${x.pick}`;try{if(rbCol)rbCol.doc(id).update({paid:true}).catch(()=>{})}catch(_){}});
-      if(gain){await casPay(gain);sfx(gain>=36?"legend":"buy");celebrate("leg",innerWidth/2,innerHeight/3)}else sfx("miss")}
+    const mine=rouMine(r);let won=0,lost=0;mine.forEach(x=>{const w=rouWin(x.pick,n)*x.bet;if(w)won+=w;else lost+=x.bet});
+    await rouSettle(r,n);
     if(!$("casP").hidden&&CAS.tab==="rou"){$("rouMsg").textContent=mine.length?(won?`${n} ${cn} : tu gagnes ${won} or !`:`${n} ${cn} : perdu (${lost} or).`):`${n} ${cn}.`;$("rouMsg").className="casmsg "+(mine.length?(won?"win":"lose"):"")}}
+  /* filet de sécurité : mises des tours précédents jamais réglées (téléphone en veille, page rechargée pendant le tirage) */
+  if(me&&!rouSettling){const past=Object.values(rbets).filter(x=>x&&x.key===keyOf(me)&&!x.paid&&x.round<r);if(past.length){rouSettling=true;try{for(const r0 of [...new Set(past.map(x=>x.round))])await rouSettle(r0,await rouResult(r0))}finally{rouSettling=false}}}
   if(!$("casP").hidden&&CAS.tab==="rou")rouList()}
+async function rouSettle(r0,n){if(DEAD||!me)return 0;const pk="tdl_roupaid_"+keyOf(me)+"_"+r0;const unpaid=Object.values(rbets).filter(x=>x&&x.key===keyOf(me)&&x.round===r0&&!x.paid);
+  if(!unpaid.length||LS.get(pk))return 0;LS.set(pk,"1");let gain=0;
+  unpaid.forEach(x=>{gain+=rouWin(x.pick,n)*x.bet;x.paid=true;const id=`rb_${r0}_${slug(keyOf(me))}_${x.pick}`;try{if(rbCol)rbCol.doc(id).update({paid:true}).catch(()=>{})}catch(_){}});
+  if(gain){await casPay(gain);sfx(gain>=36?"legend":"buy");if(!$("casP").hidden)celebrate("leg",innerWidth/2,innerHeight/3);if(r0!==rouRound()){$("punchMsg").textContent=`Roulette (tour précédent) : +${gain} or`}}else sfx("miss");return gain}
 setInterval(rouTick,500);
 
 $("stBuy").addEventListener("click",()=>{shopTab="buy";renderShop()});
