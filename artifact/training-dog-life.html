@@ -1571,6 +1571,7 @@ const subs=[];const clone=v=>JSON.parse(JSON.stringify(v));
 const snap=c=>({docs:Object.entries(D.db[c]||{}).map(([id,v])=>({id,data:()=>clone(v)}))});
 const notify=c=>subs.filter(s=>s.c===c).forEach(s=>setTimeout(()=>s.fn(snap(c)),0));
 const coll=c=>({onSnapshot(fn){const s={c,fn};subs.push(s);setTimeout(()=>fn(snap(c)),0);return()=>{subs.splice(subs.indexOf(s),1)}},
+  where:(f,op,v)=>({get:async()=>{const d=snap(c).docs.filter(x=>x.data()[f]===v);return{docs:d,empty:!d.length,size:d.length}}}),
   add:async v=>{const id="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);(D.db[c]=D.db[c]||{})[id]=clone(v);save();notify(c);return{id}},
   doc:id=>({get:async()=>({exists:!!(D.db[c]&&D.db[c][id]),data:()=>clone(D.db[c][id])}),
     set:async v=>{(D.db[c]=D.db[c]||{})[id]=clone(v);save();notify(c)},
@@ -1761,7 +1762,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0730";
+const TDL_BUILD="b20261016-0840";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -3406,7 +3407,9 @@ async function deleteMyAccount(){const k=keyOf(me),sl=slug(k);let ok=true;
   try{if(sCol){const ids=[...new Set([LS.get("tdl_sid"),myAcc&&myAcc.sid].filter(Boolean))];
     for(const sid of ids){const d=await withTO(sCol.doc(sid).get(),4000);if(d&&d.exists&&uid&&d.data().uid===uid)await withTO(sCol.doc(sid).delete(),4000)}}LS.set("tdl_sid","")}catch(_){}
   try{LS.set("tdl_player_"+k,"");LS.set("tdl_name","");LS.set(chatSeenKey(),"")}catch(_){}
-  try{const u=auth&&auth.currentUser;if(u&&u.delete)await withTO(u.delete(),4000);else if(auth)await withTO(auth.signOut(),3000)}catch(_){try{await withTO(auth.signOut(),3000)}catch(__){}}
+  try{const u=auth&&auth.currentUser;if(u&&u.delete){
+      try{await withTO(u.delete(),4000)}catch(e){if(e&&e.code==="auth/requires-recent-login"&&sessPass&&u.email&&u.reauthenticateWithCredential&&firebase.auth.EmailAuthProvider){const cr=firebase.auth.EmailAuthProvider.credential(u.email,sessPass);await withTO(u.reauthenticateWithCredential(cr),5000);await withTO(u.delete(),4000)}else throw e}}
+    else if(auth)await withTO(auth.signOut(),3000)}catch(_){try{await withTO(auth.signOut(),3000)}catch(__){}}
   return ok}
 $("dzOk").addEventListener("click",async()=>{$("dzOk").disabled=true;try{if(deathDel)await withTO(deathDel,5000)}catch(_){}try{if(auth)await withTO(auth.signOut(),2500)}catch(_){};location.reload()});
 function renderClan(){
@@ -3451,13 +3454,13 @@ function renderClan(){
 }
 
 /* ================= Comptes (Firebase) ================= */
-let uid=null,accounts={},aCol=null,myAcc=null,auth=null,signup=false,creating=false;
+let uid=null,accounts={},aCol=null,myAcc=null,auth=null,signup=false,creating=false,sessPass="";/* mot secret de la session (mémoire seulement) : sert à ré-authentifier avant la suppression du compte à la mort */
 const ACC_COLS=["#ff6a1a","#6aa6ff","#5aff9a","#c77dff","#ff7ab8","#40e0d0","#e6e66a","#ff4a3a"];
 const EMAIL_DOMAIN="joueurs.trainingdoglife.app";
 const emailOf=name=>`${slug(keyOf(name))}@${EMAIL_DOMAIN}`;
 let sCol=null,needName=false,probing=false;
 async function secretId(pass){const t="tdl-secret:"+pass;try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=0;for(const c of t)h=(h*31+c.charCodeAt(0))|0;return"h"+(h>>>0).toString(16)+t.length}}
-async function saveSecret(pass,name,id){if(!sCol)return;const sid=await secretId(pass);try{await sCol.doc(sid).set({email:emailOf(name),name,uid:id,at:Date.now()});LS.set("tdl_sid",sid)}catch(_){}
+async function saveSecret(pass,name,id,email){if(!sCol)return;const sid=await secretId(pass);try{await sCol.doc(sid).set({email:email||emailOf(name),name,uid:id,at:Date.now()});LS.set("tdl_sid",sid)}catch(_){}
   if(myAcc&&myAcc.uid===id)myAcc.sid=sid;try{if(aCol&&id)await aCol.doc(id).update({sid})}catch(_){}}
 function myColor(){return(myAcc&&myAcc.color)||"#ff6a1a"}
 function colorOf(k,fallback){const a=Object.values(accounts).find(x=>x.key===k);return a&&a.color||fallback}
@@ -3553,22 +3556,30 @@ $("authForm").addEventListener("submit",async e=>{e.preventDefault();
         if(d.exists){let alive=false;probing=true;try{await auth.signInWithEmailAndPassword(d.data().email,pass);alive=true;await auth.signOut()}catch(_){}await new Promise(r=>setTimeout(r,60));probing=false;
           if(alive){msg.textContent="Ce mot secret est déjà pris par un autre gladiateur. Choisis-en un autre.";$("cBtn").disabled=false;return}}}
       creating=true;
-      const cred=await auth.createUserWithEmailAndPassword(emailOf(name),pass);
+      /* l'adresse interne peut rester prise par le compte d'un gladiateur mort (suppression Auth refusée sans connexion récente) : on prend la suivante libre, puis on vérifie qu'aucun gladiateur VIVANT ne porte ce nom */
+      let cred=null,em=emailOf(name);
+      for(let i=0;i<8&&!cred;i++){try{cred=await auth.createUserWithEmailAndPassword(em,pass)}catch(err){
+        if(err&&err.code==="auth/email-already-in-use"){em=`${slug(keyOf(name))}+${i+2}@${EMAIL_DOMAIN}`;continue}throw err}}
+      if(!cred)throw Object.assign(new Error("full"),{code:"auth/email-already-in-use"});
+      sessPass=pass;
+      {let taken=false;try{const q=await withTO(aCol.where("key","==",keyOf(name)).get(),6000);taken=!!(q&&q.docs&&q.docs.some(d=>d.id!==cred.user.uid))}catch(_){}
+        if(taken){probing=true;try{await cred.user.delete()}catch(_){try{await auth.signOut()}catch(__){}}await new Promise(r=>setTimeout(r,80));probing=false;uid=null;creating=false;
+          showGate("gateAuth");openAuthPane(true);$("cName").value=name;msg.textContent=AUTH_ERR["auth/email-already-in-use"];$("cBtn").disabled=false;return}}
       try{await cred.user.updateProfile({displayName:name})}catch(_){}
       const color=(document.querySelector('input[name="cCol"]:checked')||{}).value||ACC_COLS[0];
       uid=cred.user.uid;myAcc={uid,name,key:keyOf(name),color,look:normLook(signupLook),photo:okPhoto(signupPhoto)?signupPhoto:"",bio:(($("cBio")||{}).value||"").trim().replace(/\s+/g," ").slice(0,160),at:Date.now()};
       await aCol.doc(uid).set(myAcc);accounts[uid]=myAcc;
       player=normPlayer({});delete playersAll[keyOf(name)];LS.set("tdl_player_"+keyOf(name),"");
       try{if(pCol)await pCol.doc(slug(keyOf(name))).set({name,key:keyOf(name),items:[],bosses:[],loot:{},chests:[],unequip:[],lootOff:{},xpOff:0,kmOff:0,deaths:0})}catch(_){}
-      await saveSecret(pass,name,uid);
+      await saveSecret(pass,name,uid,em);
       creating=false;
       enter(name);$("punchMsg").textContent=`Bienvenue dans le clan, ${name} ! 🔥`;
     }else if(!needName){
       const d=sCol?await sCol.doc(await secretId(pass)).get():null;
       if(!d||!d.exists){msg.textContent="Mot secret incorrect.";$("cBtn").disabled=false;return}
-      LS.set("tdl_sid",d.id);const cr=await auth.signInWithEmailAndPassword(d.data().email,pass);try{if(aCol&&cr&&cr.user)await aCol.doc(cr.user.uid).update({sid:d.id})}catch(_){}
+      LS.set("tdl_sid",d.id);const cr=await auth.signInWithEmailAndPassword(d.data().email,pass);sessPass=pass;try{if(aCol&&cr&&cr.user)await aCol.doc(cr.user.uid).update({sid:d.id})}catch(_){}
     }else{
-      const cred=await auth.signInWithEmailAndPassword(emailOf(name),pass);
+      const cred=await auth.signInWithEmailAndPassword(emailOf(name),pass);sessPass=pass;
       await saveSecret(pass,name,cred&&cred.user?cred.user.uid:uid);needName=false;
     }
   }catch(err){creating=false;const bad=err&&(err.code==="auth/invalid-credential"||err.code==="auth/wrong-password"||err.code==="auth/user-not-found");msg.textContent=(!signup&&!needName&&bad)?"Mot secret incorrect.":(AUTH_ERR[err&&err.code]||"Ça n'a pas fonctionné. Réessaie dans un instant.")}
