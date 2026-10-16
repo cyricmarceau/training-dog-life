@@ -1092,6 +1092,14 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 .chip[data-v="25"]{background:radial-gradient(circle,#ffcf4a 0 40%,#a05a10 41%)!important;color:#1a0a08!important}
 .chip.on{outline:2px solid #ffe08a!important;transform:translateY(-3px)}
 .wheel circle:first-child{filter:none}
+.rtable{display:grid;grid-template-columns:1.15fr repeat(12,1fr) 1.35fr;grid-template-rows:repeat(3,34px) 28px 28px;gap:0;padding:8px 6px;background:radial-gradient(ellipse at 50% 40%,#1d5a34,#0d2e1a 80%);border:2px solid #c9a24a;border-radius:8px;box-shadow:inset 0 0 18px rgba(0,0,0,.6),0 0 0 1px #3a2414}
+.rt{min-width:0;padding:0;border:1px solid rgba(232,212,160,.75);background:transparent;color:#fff;font:700 11px var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:box-shadow .15s,filter .15s}
+.rt.r{background:#b3141b}.rt.k{background:#141010}.rt.g{background:#1a7a42;font-size:15px;border-radius:40px 0 0 40px / 50% 0 0 50%}
+.rt.o{font-size:10px;letter-spacing:.3px;color:#f1e4c2}.rt.col{writing-mode:vertical-rl;font-size:9px}.rt sup{font-size:7px}
+.rt:active{filter:brightness(1.3)}.rt.on{box-shadow:inset 0 0 0 2px #ffe08a,0 0 10px #ffcf5a;position:relative;z-index:1;color:#ffe08a}
+.rt.hit{animation:rtHit 1s ease-in-out 3}@keyframes rtHit{50%{box-shadow:inset 0 0 0 3px #fff,0 0 16px #fff}}
+.dia{display:block;width:13px;height:13px;transform:rotate(45deg);border:1px solid #e8d4a0}.dia.r{background:#d01c22}.dia.k{background:#111}
+@media(max-width:360px){.rtable{grid-template-rows:repeat(3,30px) 26px 26px}.rt{font-size:10px}}
 .rb{background:linear-gradient(180deg,#2a1210,#170a08)!important;border-color:#5a2a20!important;font-family:var(--body)}
 .rb.on{background:linear-gradient(180deg,#5c2a0e,#2a1206)!important;border-color:#ffe08a!important}
 .routimer #rouPhase{font-family:var(--display);font-size:16px;color:#e8b060}
@@ -1343,8 +1351,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       <div class="wheelbox"><svg class="wheel" id="rouWheel" viewBox="-110 -110 220 220" aria-hidden="true"></svg><div class="wheelptr"></div><div class="rouball" id="rouRes">?</div></div>
       <div class="routimer"><span id="rouPhase">Mises ouvertes</span><b id="rouLeft">30 s</b><i><i id="rouBar"></i></i></div>
       <p class="casmsg" id="rouMsg">Table partagée : choisis un pari et ta mise avant la fin du compte à rebours.</p>
-      <div class="rbets" id="rouBets"></div>
-      <div class="rnum"><label for="rouNum">Numéro plein (0 à 36)</label><input id="rouNum" type="number" min="0" max="36" inputmode="numeric" placeholder="ex. 17"><button type="button" class="rb" data-rb="num">Miser sur ce numéro</button></div>
+      <div class="rtable" id="rouBets" role="group" aria-label="Table de roulette"></div>
       <div class="betrow"><span>Mise</span><div class="chips" data-for="rou"></div><b class="betv" id="rouBet">1</b><small>or</small></div>
       <div class="casacts"><button type="button" class="btn" id="rouSpin">Miser</button></div>
       <h5 class="sh" style="margin:4px 0 0">Mises de la table · ce tour</h5><ul class="roulist" id="rouList"><li class="none">Aucune mise pour l'instant.</li></ul>
@@ -1520,6 +1527,7 @@ function leg(x,y,a,len,lower,bend){ // upper + lower segment
 let _hLast=0,hPh=0,hOff=0;
 function draw(now){
   if(now-_hLast<31){if(houndVis&&!document.hidden)requestAnimationFrame(draw);else houndRun=false;return}_hLast=now;
+  if(cv.clientWidth!==W||cv.clientHeight!==H)resize();
   const dt=Math.min(.05,(now-t0)/1000);t0=now;
   boost=Math.max(0,boost-dt*0.6);
   const speed=(hound.active?1.7:1)+boost*2.2, time=now/1000;
@@ -1643,7 +1651,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261015-2325";
+const TDL_BUILD="b20261015-2350";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1743,7 +1751,7 @@ function casRender(){if($("casP").hidden)return;const g=goldOf();$("casGold").te
   $("bjBet").textContent=CAS.bjBet;$("rouBet").textContent=CAS.rouBet;
   $("bjDeal").hidden=CAS.inHand;$("bjHit").hidden=$("bjStand").hidden=!CAS.inHand;$("bjDouble").hidden=!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.bjBet;
   $("bjDeal").disabled=g<CAS.bjBet||g<1;$("rouSpin").disabled=CAS.busy||!CAS.rouPick||g<CAS.rouBet||g<1;
-  document.querySelectorAll("#rouBets .rb,.rnum .rb").forEach(b=>b.classList.toggle("on",!!CAS.rouPick&&(CAS.rouPick===b.dataset.rb||(b.dataset.rb==="num"&&/^n\d+$/.test(CAS.rouPick)))))}
+  document.querySelectorAll("#rouBets [data-rb]").forEach(b=>b.classList.toggle("on",!!CAS.rouPick&&CAS.rouPick===b.dataset.rb))}
 function openCasino(){$("casP").hidden=false;if(!$("rouWheel").innerHTML)drawWheel();if(!$("rouBets").innerHTML)drawRouBets();casRender();sfx("open")}
 $("ccCasino").addEventListener("click",openCasino);document.addEventListener("click",e=>{const b=e.target.closest("[data-casino]");if(!b)return;try{closeDrawer()}catch(_){}CAS.tab=b.dataset.casino;openCasino()});$("casClose").addEventListener("click",()=>{$("casP").hidden=true});
 $("ctBJ").addEventListener("click",()=>{CAS.tab="bj";casRender()});$("ctRou").addEventListener("click",()=>{CAS.tab="rou";casRender()});
@@ -1751,7 +1759,7 @@ document.addEventListener("click",e=>{const c=e.target.closest("[data-chip]");if
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("casP").hidden)$("casP").hidden=true});
 /* --- blackjack --- */
 const SUITS=[["♠",0],["♥",1],["♦",1],["♣",0]],RANKS_C=["A","2","3","4","5","6","7","8","9","10","V","D","R"];
-function draw(){if(CAS.deck.length<15){CAS.deck=[];for(let d=0;d<4;d++)for(const s of SUITS)for(const r of RANKS_C)CAS.deck.push({r,s:s[0],red:s[1]});}
+function bjDraw(){if(CAS.deck.length<15){CAS.deck=[];for(let d=0;d<4;d++)for(const s of SUITS)for(const r of RANKS_C)CAS.deck.push({r,s:s[0],red:s[1]});}
   return CAS.deck.splice(rnd(CAS.deck.length),1)[0]}
 function hv(h){let t=0,a=0;h.forEach(c=>{if(c.r==="A"){a++;t+=11}else t+=["V","D","R"].includes(c.r)?10:+c.r});while(t>21&&a){t-=10;a--}return t}
 const cardHtml=(c,hide)=>hide?`<div class="card back" aria-label="carte cachée"></div>`:`<div class="card ${c.red?"red":""}" aria-label="${c.r}${c.s}"><span>${c.r}${c.s}</span><i>${c.s}</i><span class="bt">${c.r}${c.s}</span></div>`;
@@ -1759,10 +1767,10 @@ function bjShow(hideHole){$("bjPlayer").innerHTML=CAS.ph.map(c=>cardHtml(c)).joi
   $("bjPv").textContent=CAS.ph.length?hv(CAS.ph):"";$("bjDv").textContent=CAS.dh.length?(hideHole?hv([CAS.dh[0]]):hv(CAS.dh)):""}
 function bjMsg(t,c){const m=$("bjMsg");m.textContent=t;m.className="casmsg "+(c||"")}
 async function bjDeal(){const bet=CAS.bjBet;if(CAS.inHand||goldOf()<bet)return;CAS.inHand=true;CAS.doubled=false;CAS.stake=bet;
-  await casPay(-bet);CAS.ph=[draw(),draw()];CAS.dh=[draw(),draw()];bjShow(true);sfx("reveal");bjMsg(`Mise : ${bet} or. Tirer ou rester ?`);
+  await casPay(-bet);CAS.ph=[bjDraw(),bjDraw()];CAS.dh=[bjDraw(),bjDraw()];bjShow(true);sfx("reveal");bjMsg(`Mise : ${bet} or. Tirer ou rester ?`);
   const p=hv(CAS.ph),d=hv(CAS.dh);if(p===21||d===21)return bjEnd()}
 async function bjEnd(){CAS.inHand=false;bjShow(false);let p=hv(CAS.ph),d=hv(CAS.dh);const bj=p===21&&CAS.ph.length===2&&!CAS.doubled,dbj=d===21&&CAS.dh.length===2;
-  if(p<=21&&!bj&&!dbj){while(d<17){CAS.dh.push(draw());d=hv(CAS.dh)}bjShow(false)}
+  if(p<=21&&!bj&&!dbj){while(d<17){CAS.dh.push(bjDraw());d=hv(CAS.dh)}bjShow(false)}
   const s=CAS.stake;let back=0,msg,cls;
   if(p>21){msg=`Tu sautes (${p}). Le croupier garde ${s} or.`;cls="lose"}
   else if(bj&&!dbj){back=s+Math.floor(s*1.5);msg=`BLACKJACK ! +${back-s} or`;cls="win"}
@@ -1773,9 +1781,9 @@ async function bjEnd(){CAS.inHand=false;bjShow(false);let p=hv(CAS.ph),d=hv(CAS.
   else{msg=`${p} contre ${d} : perdu.`;cls="lose"}
   bjMsg(msg,cls);if(back)await casPay(back);else casRender();sfx(cls==="win"?(bj?"legend":"buy"):cls==="lose"?"miss":"coin");if(bj&&!dbj)celebrate("leg",innerWidth/2,innerHeight/2)}
 $("bjDeal").addEventListener("click",bjDeal);
-$("bjHit").addEventListener("click",()=>{if(!CAS.inHand)return;CAS.ph.push(draw());bjShow(true);sfx("reveal");const p=hv(CAS.ph);if(p>=21)bjEnd();else casRender()});
+$("bjHit").addEventListener("click",()=>{if(!CAS.inHand)return;CAS.ph.push(bjDraw());bjShow(true);sfx("reveal");const p=hv(CAS.ph);if(p>=21)bjEnd();else casRender()});
 $("bjStand").addEventListener("click",()=>{if(CAS.inHand)bjEnd()});
-$("bjDouble").addEventListener("click",async()=>{if(!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.stake)return;await casPay(-CAS.stake);CAS.stake*=2;CAS.doubled=true;CAS.ph.push(draw());bjShow(true);sfx("reveal");bjEnd()});
+$("bjDouble").addEventListener("click",async()=>{if(!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.stake)return;await casPay(-CAS.stake);CAS.stake*=2;CAS.doubled=true;CAS.ph.push(bjDraw());bjShow(true);sfx("reveal");bjEnd()});
 /* --- roulette européenne --- */
 const WHEEL=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const REDS=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
@@ -1785,14 +1793,19 @@ function drawWheel(){const R=100,a=2*Math.PI/37;let s=`<circle r="106" fill="#3a
     s+=`<path d="M${p(R,a0)}A${R} ${R} 0 0 1 ${p(R,a1)}L${p(58,a1)}A58 58 0 0 0 ${p(58,a0)}Z" fill="${c==="g"?"#1a6a3a":c==="r"?"#b3141b":"#111"}" stroke="#c9a24a" stroke-width=".6"/>`;
     const am=(a0+a1)/2;s+=`<text x="${(86*Math.cos(am)).toFixed(1)}" y="${(86*Math.sin(am)).toFixed(1)}" transform="rotate(${(am*180/Math.PI+90).toFixed(1)} ${(86*Math.cos(am)).toFixed(1)} ${(86*Math.sin(am)).toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="800" fill="#fff">${n}</text>`});
   s+=`<circle r="58" fill="#24140c" stroke="#c9a24a"/>`;$("rouWheel").innerHTML=s;CAS.rot=0}
-const RB=[["red","Rouge","red"],["black","Noir","blk"],["even","Pair",""],["odd","Impair",""],["low","1 à 18",""],["high","19 à 36",""],["d1","1re douzaine",""],["d2","2e douzaine",""],["d3","3e douzaine",""]];
-function drawRouBets(){$("rouBets").innerHTML=RB.map(([k,l,c])=>`<button type="button" class="rb ${c}" data-rb="${k}">${l}</button>`).join("")}
+const RB=[["red","Rouge"],["black","Noir"],["even","Pair"],["odd","Impair"],["low","1 à 18"],["high","19 à 36"],["d1","1re douzaine"],["d2","2e douzaine"],["d3","3e douzaine"],["c1","colonne 1-34"],["c2","colonne 2-35"],["c3","colonne 3-36"]];
+function drawRouBets(){const cell=(k,l,c,col,row,ex="")=>`<button type="button" class="rt ${c}" data-rb="${k}" style="grid-column:${col};grid-row:${row}"${ex}>${l}</button>`;let s=cell("n0","0","g","1","1/4");
+  for(let n=1;n<=36;n++){const col=Math.ceil(n/3)+1,row=3-((n-1)%3);s+=cell("n"+n,n,REDS.has(n)?"r":"k",col,row)}
+  [["c3",1],["c2",2],["c1",3]].forEach(([k,r])=>s+=cell(k,"2:1","o col",14,r,` aria-label="Colonne, paie 2 pour 1"`));
+  [["d1","1<sup>re</sup> 12","2/6"],["d2","2<sup>e</sup> 12","6/10"],["d3","3<sup>e</sup> 12","10/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,4));
+  [["low","1–18","2/4"],["even","PAIR","4/6"],["red",'<i class="dia r"></i>',"6/8"],["black",'<i class="dia k"></i>',"8/10"],["odd","IMPAIR","10/12"],["high","19–36","12/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,5,k==="red"||k==="black"?` aria-label="${k==="red"?"Rouge":"Noir"}"`:""));
+  $("rouBets").innerHTML=s}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;
   if(b.dataset.rb==="num"){const v=parseInt($("rouNum").value,10);if(!(v>=0&&v<=36)){$("rouMsg").textContent="Entre un numéro entre 0 et 36.";$("rouMsg").className="casmsg lose";return}CAS.rouPick="n"+v}else CAS.rouPick=b.dataset.rb;
   $("rouMsg").className="casmsg";$("rouMsg").textContent=`Pari : ${rouLabel(CAS.rouPick)}`;sfx("equip");casRender()});
 const rouLabel=k=>/^n\d+$/.test(k)?`numéro ${k.slice(1)}`:(RB.find(x=>x[0]===k)||[,k])[1];
 function rouWin(k,n){if(/^n\d+$/.test(k))return +k.slice(1)===n?36:0;if(n===0)return 0;
-  return{red:REDS.has(n)?2:0,black:!REDS.has(n)?2:0,even:n%2===0?2:0,odd:n%2?2:0,low:n<=18?2:0,high:n>=19?2:0,d1:n<=12?3:0,d2:n>12&&n<=24?3:0,d3:n>24?3:0}[k]||0}
+  return{red:REDS.has(n)?2:0,black:!REDS.has(n)?2:0,even:n%2===0?2:0,odd:n%2?2:0,low:n<=18?2:0,high:n>=19?2:0,d1:n<=12?3:0,d2:n>12&&n<=24?3:0,d3:n>24?3:0,c1:n%3===1?3:0,c2:n%3===2?3:0,c3:n%3===0?3:0}[k]||0}
 /* --- table partagée : tours synchronisés sur l'horloge, résultat identique pour tous --- */
 const ROU_MS=40000,ROU_BET=30000,ROU_SALT="tdl-roulette-v1";let rbCol=null,rbets={},rouShown=-1,rouSpun=-1;
 const rouRound=()=>Math.floor(Date.now()/ROU_MS);
@@ -1815,7 +1828,7 @@ async function rouTick(){const now=Date.now(),r=rouRound(),ph=now%ROU_MS,open=ph
     if(!$("rouWheel").innerHTML)drawWheel();CAS.rot=(CAS.rot||0)+360*5+((360-i*a)-((CAS.rot||0)%360)+360)%360;$("rouWheel").style.transform=`rotate(${CAS.rot}deg)`;
     $("rouRes").textContent="…";$("rouRes").className="rouball";if(!$("casP").hidden&&CAS.tab==="rou")sfx("chest")}
   if(ph>=ROU_BET+5200&&rouShown!==r&&CAS.lastRes&&CAS.lastRes.r===r){rouShown=r;const n=CAS.lastRes.n,c=colOf(n),cn=c==="r"?"rouge":c==="n"?"noir":"vert";
-    $("rouRes").textContent=n;$("rouRes").className="rouball "+c;
+    $("rouRes").textContent=n;$("rouRes").className="rouball "+c;document.querySelectorAll("#rouBets .rt.hit").forEach(x=>x.classList.remove("hit"));const hc=document.querySelector(`#rouBets [data-rb="n${n}"]`);if(hc)hc.classList.add("hit");document.querySelectorAll("#rouBets .rt.hit").forEach(x=>x.classList.remove("hit"));const _h=document.querySelector(`#rouBets [data-rb="n${n}"]`);if(_h)_h.classList.add("hit");
     const mine=rouMine(r),pk="tdl_roupaid_"+keyOf(me)+"_"+r;let won=0,lost=0;mine.forEach(x=>{const w=rouWin(x.pick,n)*x.bet;if(w)won+=w;else lost+=x.bet});
     const unpaid=mine.filter(x=>!x.paid);
     if(unpaid.length&&!LS.get(pk)){LS.set(pk,"1");let gain=0;unpaid.forEach(x=>{gain+=rouWin(x.pick,n)*x.bet;x.paid=true;
