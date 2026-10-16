@@ -845,7 +845,7 @@ body{padding-block:0 210px}
 .ccb:active{transform:translateY(1px) scale(.97)}
 .ccb svg{width:30px;height:30px;flex:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));transition:transform .25s}.ccb:hover svg{transform:rotate(-8deg) scale(1.08)}
 #ccBag{border-color:#c98a4a;background:linear-gradient(180deg,#4a2810,#1a0c05)}
-#ccCasino{border-color:#e0453a;background:linear-gradient(180deg,#5a1014,#1c0507);color:#ffd9b0;box-shadow:0 3px 10px rgba(0,0,0,.55),0 0 12px rgba(224,69,58,.35),inset 0 1px 0 rgba(255,160,140,.25);animation:casGlow 2.6s ease-in-out infinite}
+#ccCasino{border-color:#e0453a;background:linear-gradient(180deg,#5a1014,#1c0507);color:#ffd9b0;box-shadow:0 3px 10px rgba(0,0,0,.55),0 0 12px rgba(224,69,58,.35),inset 0 1px 0 rgba(255,160,140,.25);animation:casGlow 2.6s ease-in-out 4}
 @keyframes casGlow{50%{box-shadow:0 3px 10px rgba(0,0,0,.55),0 0 20px rgba(255,90,60,.65),inset 0 1px 0 rgba(255,160,140,.25)}}
 @media (prefers-reduced-motion:reduce){#ccCasino{animation:none}.ccb::before{display:none}}
 
@@ -1758,7 +1758,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261016-0350";
+const TDL_BUILD="b20261016-0410";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1930,7 +1930,7 @@ function drawRouBets(){const cell=(k,l,c,col,row,ex="")=>`<button type="button" 
   [["c3",1],["c2",2],["c1",3]].forEach(([k,r])=>s+=cell(k,"2:1","o col",14,r,` aria-label="Colonne, paie 2 pour 1"`));
   [["d1","1<sup>re</sup> 12","2/6"],["d2","2<sup>e</sup> 12","6/10"],["d3","3<sup>e</sup> 12","10/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,4));
   [["low","1–18","2/4"],["even","PAIR","4/6"],["red",'<i class="dia r"></i>',"6/8"],["black",'<i class="dia k"></i>',"8/10"],["odd","IMPAIR","10/12"],["high","19–36","12/14"]].forEach(([k,l,c])=>s+=cell(k,l,"o",c,5,k==="red"||k==="black"?` aria-label="${k==="red"?"Rouge":"Noir"}"`:""));
-  $("rouBets").innerHTML=s;rouDots()}
+  $("rouBets").innerHTML=s;_rmSig="";rouDots()}
 function rouDots(){const T=$("rouBets");if(!T||!T.getBoundingClientRect().width)return;T.querySelectorAll(".rd").forEach(x=>x.remove());const tr=T.getBoundingClientRect();T.dataset.w=Math.round(tr.width);
   const box=n=>{const e=T.querySelector(`[data-rb="n${n}"]`);if(!e)return null;const r=e.getBoundingClientRect();return{l:r.left-tr.left,r:r.right-tr.left,t:r.top-tr.top,b:r.bottom-tr.top,cx:(r.left+r.right)/2-tr.left,cy:(r.top+r.bottom)/2-tr.top}};
   const add=(k,x,y,tip)=>{const d=document.createElement("button");d.type="button";d.className="rd";d.dataset.rb=k;d.style.left=x.toFixed(1)+"px";d.style.top=y.toFixed(1)+"px";d.title=tip;d.setAttribute("aria-label",tip);T.appendChild(d)};
@@ -1939,7 +1939,7 @@ function rouDots(){const T=$("rouBets");if(!T||!T.getBoundingClientRect().width)
     if(n%3!==0&&up){add(`s${n}-${n+1}`,b.cx,b.t,`Cheval ${n}-${n+1} · 17 pour 1`);if(nx)add(`c${n}`,b.r,b.t,`Carré ${n}-${n+1}-${n+3}-${n+4} · 8 pour 1`)}
     if(n%3===1){add(`t${n}`,b.cx,b.b,`Transversale ${n}-${n+1}-${n+2} · 11 pour 1`);if(nx)add(`l${n}`,b.r,b.b,`Sixain ${n} à ${n+5} · 5 pour 1`)}}
   const z=box(0);[1,2,3].forEach(n=>{const b=box(n);if(z&&b)add(`s0-${n}`,z.r,b.cy,`Cheval 0-${n} · 17 pour 1`)});const b1=box(1);if(z&&b1)add("c0",z.r,b1.b,"Carré 0-1-2-3 · 8 pour 1");
-  rouMarks()}
+  _rmSig="";rouMarks()}
 addEventListener("resize",()=>{try{if($("rouBets").dataset.w&&Math.abs(+$("rouBets").dataset.w-$("rouBets").getBoundingClientRect().width)>2)rouDots()}catch(_){}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;rouPlace(b.dataset.rb)});
 const rouNums=k=>{let m;if(m=/^s(\d+)-(\d+)$/.exec(k))return[+m[1],+m[2]];if(m=/^c(\d+)$/.exec(k)){const n=+m[1];return n===0?[0,1,2,3]:[n,n+1,n+3,n+4]}if(m=/^t(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2]}if(m=/^l(\d+)$/.exec(k)){const n=+m[1];return[n,n+1,n+2,n+3,n+4,n+5]}return null};
@@ -1966,12 +1966,13 @@ $("rouUndo").addEventListener("click",async()=>{const r=rouRound();if(Date.now()
 $("rouSpin").addEventListener("click",async()=>{const r=rouRound();if(Date.now()%ROU_MS>=ROU_BET)return;const mine=rouMine(r).filter(x=>!x.paid);if(!mine.length)return;
   let back=0;for(const x of mine){const id=`rb_${r}_${slug(keyOf(me))}_${x.pick}`;back+=x.bet;delete rbets[id];try{if(rbCol)await rbCol.doc(id).delete();else LS.set("tdl_rbets",JSON.stringify(rbets))}catch(_){}}
   await casPay(back);rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Mises annulées : ${back} or remboursés.`});
-function rouMarks(){const r=rouRound(),m={};rouMine(r).forEach(x=>m[x.pick]=x.bet);document.querySelectorAll("#rouBets [data-rb]").forEach(b=>{const v=m[b.dataset.rb];if(v)b.setAttribute("data-amt",v);else b.removeAttribute("data-amt")});
+let _rmSig="";
+function rouMarks(force){const r=rouRound(),m={};rouMine(r).forEach(x=>m[x.pick]=x.bet);const sig=r+"|"+JSON.stringify(m)+"|"+((CAS.stk||[]).length)+"|"+(Date.now()%ROU_MS>=ROU_BET?1:0);if(!force&&sig===_rmSig)return;_rmSig=sig;document.querySelectorAll("#rouBets [data-rb]").forEach(b=>{const v=m[b.dataset.rb];if(v)b.setAttribute("data-amt",v);else b.removeAttribute("data-amt")});
   const un=$("rouUndo");if(un)un.disabled=!(CAS.stk||[]).some(x=>x.r===r&&rbets[`rb_${r}_${slug(keyOf(me))}_${x.k}`])||Date.now()%ROU_MS>=ROU_BET;const btn=$("rouSpin");if(btn)btn.textContent=Object.keys(m).length?`Tout annuler (${Object.values(m).reduce((a,b)=>a+b,0)} or)`:"Tout annuler"}
 function rouList(){const L=$("rouList");if(!L)return;rouMarks();const r=rouRound(),settled=Date.now()%ROU_MS>=ROU_BET+5200,res=CAS.lastRes&&CAS.lastRes.r===r?CAS.lastRes.n:null;
   const list=Object.values(rbets).filter(x=>x&&x.round===r).sort((a,b)=>a.at-b.at);
-  L.innerHTML=list.length?list.map(x=>{const w=res!=null&&settled?rouWin(x.pick,res)*x.bet:null;
-    return `<li class="${w==null?"":w?"win":"lose"}"><i style="background:${esc(x.col||"#a8988a")}"></i><b>${esc(x.name)}${x.key===keyOf(me)?" (toi)":""}</b><em>${esc(rouLabel(x.pick))}</em><span>${w==null?x.bet+" or":w?"+"+(w-x.bet)+" or":"−"+x.bet+" or"}</span></li>`}).join(""):`<li class="none">Aucune mise pour l'instant. Sois le premier !</li>`}
+  const _h=list.length?list.map(x=>{const w=res!=null&&settled?rouWin(x.pick,res)*x.bet:null;
+    return `<li class="${w==null?"":w?"win":"lose"}"><i style="background:${esc(x.col||"#a8988a")}"></i><b>${esc(x.name)}${x.key===keyOf(me)?" (toi)":""}</b><em>${esc(rouLabel(x.pick))}</em><span>${w==null?x.bet+" or":w?"+"+(w-x.bet)+" or":"−"+x.bet+" or"}</span></li>`}).join(""):`<li class="none">Aucune mise pour l'instant. Sois le premier !</li>`;if(L.dataset.h!==_h){L.dataset.h=_h;L.innerHTML=_h}}
 async function rouTick(){const now=Date.now(),r=rouRound(),ph=now%ROU_MS,open=ph<ROU_BET,left=Math.ceil(((open?ROU_BET:ROU_MS)-ph)/1000);
   if($("casP").hidden||CAS.tab!=="rou"){/* paiement même si le casino est fermé */}
   else{$("rouPhase").textContent=open?"Mises ouvertes":ph<ROU_BET+5200?"La bille tourne…":"Résultat";$("rouLeft").textContent=open?`${left} s`:`prochain tour ${left} s`;
