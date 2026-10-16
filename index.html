@@ -1042,6 +1042,61 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 @media (prefers-reduced-motion:reduce){#map *,.mapdragon{animation:none!important}.mapfx{display:none}}
 /* téléphone : on garde les flammes, la lave et le chemin ; les petits effets décoratifs restent figés */
 @media (pointer:coarse){#map .spk,#map .crow,#map .smoke,#map .blinker,#map .aurora,#map .mistdrift,#map .rose,#map .halo,#map .breathe,#map .aurap,#map .glowp,#map .fogcl{animation:none!important}}
+
+/* ===== Taverne des Damnés : blackjack et roulette ===== */
+.ccbtns{flex-wrap:wrap;justify-content:flex-end}
+.casp .shopbody{display:flex;flex-direction:column;gap:12px}
+.bjtable{background:radial-gradient(ellipse at 50% 30%,#1f4a2a,#0d2414 75%);border:3px solid #6b4a24;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px;box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
+.bjrow{display:flex;flex-direction:column;gap:6px}.bjlab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#cfe9c8}.bjlab b{color:#ffe08a;margin-left:6px;font-size:13px}
+.cards{display:flex;gap:6px;min-height:76px;flex-wrap:wrap}
+.card{width:52px;height:74px;border-radius:6px;background:#f7f0e2;border:1px solid #3a2a20;box-shadow:0 3px 8px rgba(0,0,0,.45);display:flex;flex-direction:column;justify-content:space-between;padding:4px 5px;font:800 15px/1 var(--body);color:#1a0a08;animation:cardin .3s ease-out}
+.card.red{color:#b3141b}.card i{font-style:normal;font-size:22px;align-self:center}.card .bt{align-self:flex-end;transform:rotate(180deg)}
+.card.back{background:repeating-linear-gradient(45deg,#5c0a0d 0 6px,#3a0505 6px 12px);border:2px solid #c9a24a}
+@keyframes cardin{from{transform:translateY(-16px) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+.casmsg{margin:0;text-align:center;font-weight:800;color:var(--bone);min-height:1.4em}.casmsg.win{color:#5aff9a}.casmsg.lose{color:#ff5a4a}
+.betrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.betrow>span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#c9a24a}.betv{font:800 20px var(--mono,monospace);color:#ffe08a;margin-left:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{width:36px;height:36px;border-radius:50%;border:3px dashed #fff3e6;font:800 12px var(--body);color:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.chip[data-v="1"]{background:#6b6055}.chip[data-v="2"]{background:#2a6a9a}.chip[data-v="5"]{background:#b3141b}.chip[data-v="10"]{background:#1a6a3a}.chip[data-v="25"]{background:#5a1a8a}.chip.on{outline:3px solid #ffe08a;outline-offset:2px}
+.chip:disabled{opacity:.35;cursor:not-allowed}
+.casacts{display:flex;gap:8px;flex-wrap:wrap}.casacts .btn{flex:1;min-width:90px}
+.wheelbox{position:relative;width:min(240px,80%);aspect-ratio:1;max-width:100%;margin:0 auto}
+.wheel{width:100%;height:100%;display:block;transition:transform 4.2s cubic-bezier(.12,.6,.1,1)}
+.wheelptr{position:absolute;left:50%;top:-4px;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:16px solid #ffe08a;transform:translateX(-50%);filter:drop-shadow(0 2px 2px #000)}
+.rouball{position:absolute;inset:38%;border-radius:50%;background:#140a08;border:3px solid #c9a24a;display:grid;place-items:center;font:800 20px var(--body);color:#fff3e6}
+.rouball.r{background:#b3141b}.rouball.n{background:#111}.rouball.g{background:#1a6a3a}
+.rbets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rb{padding:9px 4px;border:1px solid #5a3a30;border-radius:4px;background:#1c1210;color:var(--bone);font:700 12px var(--body);cursor:pointer}
+.rb.on{border-color:#ffe08a;color:#ffe08a;background:#2a1a0e}.rb.red{color:#ff6a5a}.rb.blk{color:#e8dccb}
+.rnum{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rnum label{font-size:12px;color:var(--bone-dim);width:100%}.rnum input{width:80px;padding:8px;background:#0f0807;border:1px solid #5a3a30;color:var(--bone);border-radius:4px;font:700 15px var(--body)}.rnum .rb{flex:1}
+.routimer{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--bone-dim);flex-wrap:wrap}.routimer b{color:#ffe08a;font:800 14px var(--body)}.routimer>i{flex:1 1 100%;height:5px;background:#2a1210;border-radius:3px;overflow:hidden}.routimer>i>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#b3141b,#ffb347)}
+.roulist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}.roulist li{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;gap:8px;align-items:center;background:#170c0a;border:1px solid #3a2420;border-radius:4px;padding:6px 9px;font-size:13px}
+.roulist li i{width:10px;height:10px;border-radius:50%}.roulist li b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roulist li em{font-style:normal;color:var(--bone-dim)}.roulist li span{font-weight:800;color:#ffe08a}.roulist li.win span{color:#5aff9a}.roulist li.lose span{color:#ff5a4a}.roulist li.none{display:block;color:var(--bone-dim)}
+
+/* ===== Taverne : habillage Training Dog Life ===== */
+.casp{background:linear-gradient(180deg,#1f0c08,#0b0504)!important;border-left:2px solid #6b2a14!important}
+.casp .dhead span{color:#ff6a1a;text-shadow:0 0 14px rgba(255,106,26,.35)}
+.bjtable{background:radial-gradient(ellipse at 50% 35%,#4a0d0b 0%,#2a0606 55%,#140303 100%)!important;border:2px solid #c9a24a!important;outline:1px solid #5c0a0d;outline-offset:3px;position:relative;overflow:hidden}
+.bjtable::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cpath d='M0-40 23.5 32.4-38 -12.4H38L-23.5 32.4Z' fill='none' stroke='%23ffb347' stroke-width='2'/%3E%3Ccircle r='42' fill='none' stroke='%23ffb347' stroke-width='2'/%3E%3C/svg%3E") center/170px no-repeat}
+.bjlab{color:#e8b060!important;font-family:var(--display);font-size:15px!important;letter-spacing:.04em!important;text-transform:none!important}
+.bjlab b{font-family:var(--body)}
+.card{background:linear-gradient(180deg,#f2e6cc,#d9c6a0)!important;border:1px solid #6b4a24!important;color:#1a0a08!important;font-family:var(--display)!important;font-weight:400!important;font-size:17px!important}
+.card.red{color:#9a0f14!important}.card i{font-size:24px!important;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.card.back{background:radial-gradient(circle at 50% 50%,#5c0a0d 0 30%,#2a0505 31% 100%)!important;border:2px solid #c9a24a!important;position:relative}
+.card.back::after{content:"☠";position:absolute;inset:0;display:grid;place-items:center;color:#c9a24a;font-size:22px}
+.casmsg{font-family:var(--display);font-weight:400!important;font-size:19px;letter-spacing:.02em}
+.chip{border:2px solid #0c0606!important;box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 2px 6px rgba(0,0,0,.6)!important;font-family:var(--body)}
+.chip[data-v="1"]{background:radial-gradient(circle,#d9ccb5 0 40%,#8a7a68 41%)!important;color:#1a0a08!important}
+.chip[data-v="2"]{background:radial-gradient(circle,#6aa6ff 0 40%,#2a4a7a 41%)!important}
+.chip[data-v="5"]{background:radial-gradient(circle,#ff3a2a 0 40%,#7d0b10 41%)!important}
+.chip[data-v="10"]{background:radial-gradient(circle,#c77dff 0 40%,#4a1a6a 41%)!important}
+.chip[data-v="25"]{background:radial-gradient(circle,#ffcf4a 0 40%,#a05a10 41%)!important;color:#1a0a08!important}
+.chip.on{outline:2px solid #ffe08a!important;transform:translateY(-3px)}
+.wheel circle:first-child{filter:none}
+.rb{background:linear-gradient(180deg,#2a1210,#170a08)!important;border-color:#5a2a20!important;font-family:var(--body)}
+.rb.on{background:linear-gradient(180deg,#5c2a0e,#2a1206)!important;border-color:#ffe08a!important}
+.routimer #rouPhase{font-family:var(--display);font-size:16px;color:#e8b060}
+.casgoods{display:flex;gap:6px;align-items:center;justify-content:center;color:var(--bone-dim);font-size:12px}
+.trainb .btn.taverne{border-color:#c9a24a;color:#ffe08a}
 </style>
 </head>
 <body>
@@ -1126,7 +1181,7 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
   <div id="mapTop" class="flow" hidden>
     <div class="scene">
       <section class="panel charcard" aria-label="Ton personnage">
-        <h3 class="cchead"><span>Ton personnage <small id="invSum"></small></span><span class="ccbtns"><button type="button" class="ccb" id="ccShop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#c9a24a" stroke="#7a5a20" stroke-width="1.5"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#3a2a10" stroke-width="1.6" fill="none"/></svg>Shop</button><button type="button" class="ccb" id="ccBag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l2 12H5Z" fill="#7a4a24" stroke="#3a1a10" stroke-width="1.4"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#c9a24a" stroke-width="1.6"/></svg>Sac</button></span></h3>
+        <h3 class="cchead"><span>Ton personnage <small id="invSum"></small></span><span class="ccbtns"><button type="button" class="ccb" id="ccShop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#c9a24a" stroke="#7a5a20" stroke-width="1.5"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#3a2a10" stroke-width="1.6" fill="none"/></svg>Shop</button><button type="button" class="ccb" id="ccBag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l2 12H5Z" fill="#7a4a24" stroke="#3a1a10" stroke-width="1.4"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#c9a24a" stroke-width="1.6"/></svg>Sac</button><button type="button" class="ccb" id="ccCasino"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="#e8dccb" stroke="#3a1a10" stroke-width="1.4"/><circle cx="8.5" cy="8.5" r="1.6" fill="#b3141b"/><circle cx="15.5" cy="15.5" r="1.6" fill="#b3141b"/><circle cx="12" cy="12" r="1.6" fill="#b3141b"/></svg>Taverne</button></span></h3>
         <div class="doll">
           <div class="slots" id="slotsL"></div>
           <svg class="hero-svg" id="heroSvg" viewBox="0 0 160 220" role="img" aria-label="Ton personnage"></svg>
@@ -1264,6 +1319,39 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
 </div>
 <button type="button" class="shoptab" id="shopTab" hidden aria-controls="shopP"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#c9a24a" stroke="#7a5a20" stroke-width="1.5"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" stroke="#3a2a10" stroke-width="1.6" fill="none"/></svg><span>SHOP</span></button>
 <button type="button" class="shoptab bagtab" id="bagTab" hidden aria-controls="shopP"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10l2 12H5Z" fill="#7a4a24" stroke="#3a1a10" stroke-width="1.4"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#c9a24a" stroke-width="1.6"/><path d="M9 13h6" stroke="#c9a24a" stroke-width="1.4"/></svg><span>SAC</span></button>
+<aside class="shopp casp" id="casP" aria-label="Taverne des Damnés" hidden>
+  <div class="dhead"><span>Taverne des Damnés</span><button type="button" class="dclose" id="casClose" aria-label="Fermer la taverne">✕</button></div>
+  <div class="shopgold"><span>Ta bourse</span><b id="casGold">0</b><small>or</small></div>
+  <div class="shoptabs" role="tablist"><button type="button" role="tab" id="ctBJ" aria-selected="true">Blackjack</button><button type="button" role="tab" id="ctRou" aria-selected="false">Roulette</button></div>
+  <div class="shopbody" id="casBody">
+    <section id="bjPane">
+      <div class="bjtable">
+        <div class="bjrow"><span class="bjlab">☠ Le Croupier Damné <b id="bjDv"></b></span><div class="cards" id="bjDealer"></div></div>
+        <div class="bjrow"><span class="bjlab">⚔ Ton gladiateur <b id="bjPv"></b></span><div class="cards" id="bjPlayer"></div></div>
+        <p class="casmsg" id="bjMsg">Mise ton or contre le Croupier Damné.</p>
+      </div>
+      <div class="betrow" id="bjBetRow"><span>Mise</span><div class="chips" data-for="bj"></div><b class="betv" id="bjBet">1</b><small>or</small></div>
+      <div class="casacts" id="bjActs">
+        <button type="button" class="btn" id="bjDeal">Distribuer</button>
+        <button type="button" class="btn" id="bjHit" hidden>Tirer</button>
+        <button type="button" class="btn ghost" id="bjStand" hidden>Rester</button>
+        <button type="button" class="btn ghost" id="bjDouble" hidden>Doubler</button>
+      </div>
+      <p class="shopnote" style="margin:10px 0 0">Blackjack paie 3 pour 2 · victoire 1 pour 1 · égalité remboursée · le croupier tire jusqu'à 17.</p>
+    </section>
+    <section id="rouPane" hidden>
+      <div class="wheelbox"><svg class="wheel" id="rouWheel" viewBox="-110 -110 220 220" aria-hidden="true"></svg><div class="wheelptr"></div><div class="rouball" id="rouRes">?</div></div>
+      <div class="routimer"><span id="rouPhase">Mises ouvertes</span><b id="rouLeft">30 s</b><i><i id="rouBar"></i></i></div>
+      <p class="casmsg" id="rouMsg">Table partagée : choisis un pari et ta mise avant la fin du compte à rebours.</p>
+      <div class="rbets" id="rouBets"></div>
+      <div class="rnum"><label for="rouNum">Numéro plein (0 à 36)</label><input id="rouNum" type="number" min="0" max="36" inputmode="numeric" placeholder="ex. 17"><button type="button" class="rb" data-rb="num">Miser sur ce numéro</button></div>
+      <div class="betrow"><span>Mise</span><div class="chips" data-for="rou"></div><b class="betv" id="rouBet">1</b><small>or</small></div>
+      <div class="casacts"><button type="button" class="btn" id="rouSpin">Miser</button></div>
+      <h5 class="sh" style="margin:4px 0 0">Mises de la table · ce tour</h5><ul class="roulist" id="rouList"><li class="none">Aucune mise pour l'instant.</li></ul>
+      <p class="shopnote" style="margin:10px 0 0">Table partagée par tout le clan : un tour toutes les 40 s (30 s de mises, puis la bille). Roulette européenne (0 à 36). Rouge/noir, pair/impair, manque/passe : 1 pour 1 · douzaine : 2 pour 1 · numéro plein : 35 pour 1.</p>
+    </section>
+  </div>
+</aside>
 <aside class="shopp" id="shopP" aria-label="Boutique" hidden>
   <div class="dhead"><span>Forge de Griswold</span><button type="button" class="dclose" id="shopClose" aria-label="Fermer la boutique">✕</button></div>
   <div class="shopgold"><span>Ta bourse</span><b id="shopGold">0</b><small>or</small></div>
@@ -1307,6 +1395,11 @@ body:has(#bossCta:not([hidden])){padding-bottom:300px}
       </div>
     </details>
 
+    <details class="panel fold" id="casPanel">
+      <summary><span>Taverne des Damnés</span><span class="pplsum">blackjack · roulette</span></summary>
+      <div class="menubody"><p class="pplsub" style="margin-top:0">Mise ton or au blackjack contre le Croupier Damné, ou à la roulette avec tout le clan (une bille toutes les 40 s).</p>
+        <div class="trainb"><button class="btn taverne" type="button" data-casino="bj">Blackjack</button><button class="btn taverne" type="button" data-casino="rou">Roulette du clan</button></div></div>
+    </details>
     <details class="panel fold" id="trainPanel">
       <summary><span>Arène d'entraînement</span><span class="pplsum">sans XP ni conséquence</span></summary>
       <div class="menubody">
@@ -1550,7 +1643,7 @@ function mapBusy(on){const mw=document.querySelector(".mapwrap");if(!mw)return;i
   const go=()=>{mw.classList.add("busy");mapBusy()};["touchstart","pointerdown","wheel"].forEach(e=>sc.addEventListener(e,go,{passive:true}));sc.addEventListener("scroll",go,{passive:true})})();
 
 /* ===== Mise à jour automatique (site) : recharge quand une nouvelle version est en ligne ===== */
-const TDL_BUILD="b20261015-2005";
+const TDL_BUILD="b20261015-2230";
 (()=>{if(!/onrender\.com$/.test(location.hostname))return;
   const check=async()=>{try{const t=await fetch("/?v="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=t.match(/TDL_BUILD="([^"]+)"/);
     if(m&&m[1]!==TDL_BUILD){const busy=!$("fight").hidden||(typeof active!=="undefined"&&active&&active.type==="course"&&$("kmIn")&&$("kmIn").value);if(!busy)location.reload()}}catch(_){}};
@@ -1638,6 +1731,100 @@ $("ccShop").addEventListener("click",()=>{shopTab="buy";openShop()});
 $("ccBag").addEventListener("click",()=>{shopTab="sell";openShop()});
 $("bagTab").addEventListener("click",()=>{if(!$("shopP").hidden&&shopTab==="sell")closeShop();else{shopTab="sell";openShop()}});
 $("shopClose").addEventListener("click",closeShop);
+/* ===== Taverne des Damnés : blackjack et roulette (l'or vient de la bourse du joueur) ===== */
+const CAS={tab:"bj",bjBet:1,rouBet:1,rouPick:null,busy:false,deck:[],ph:[],dh:[],inHand:false,doubled:false};
+const rnd=n=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}catch(_){return Math.floor(Math.random()*n)}};
+const CHIPV=[1,2,5,10,25];
+async function casPay(delta,why){player.gold=(player.gold||0)+delta;try{await savePlayer()}catch(_){}render();casRender()}
+function casRender(){if($("casP").hidden)return;const g=goldOf();$("casGold").textContent=g.toLocaleString("fr-CA");
+  $("ctBJ").setAttribute("aria-selected",String(CAS.tab==="bj"));$("ctRou").setAttribute("aria-selected",String(CAS.tab==="rou"));$("bjPane").hidden=CAS.tab!=="bj";$("rouPane").hidden=CAS.tab!=="rou";
+  document.querySelectorAll("#casP .chips").forEach(c=>{const k=c.dataset.for,cur=k==="bj"?CAS.bjBet:CAS.rouBet,lock=CAS.busy||(k==="bj"&&CAS.inHand);
+    c.innerHTML=CHIPV.map(v=>`<button type="button" class="chip ${v===cur?"on":""}" data-chip="${k}" data-v="${v}" ${lock||v>g?"disabled":""} aria-label="Miser ${v} or">${v}</button>`).join("")});
+  $("bjBet").textContent=CAS.bjBet;$("rouBet").textContent=CAS.rouBet;
+  $("bjDeal").hidden=CAS.inHand;$("bjHit").hidden=$("bjStand").hidden=!CAS.inHand;$("bjDouble").hidden=!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.bjBet;
+  $("bjDeal").disabled=g<CAS.bjBet||g<1;$("rouSpin").disabled=CAS.busy||!CAS.rouPick||g<CAS.rouBet||g<1;
+  document.querySelectorAll("#rouBets .rb,.rnum .rb").forEach(b=>b.classList.toggle("on",!!CAS.rouPick&&(CAS.rouPick===b.dataset.rb||(b.dataset.rb==="num"&&/^n\d+$/.test(CAS.rouPick)))))}
+function openCasino(){$("casP").hidden=false;if(!$("rouWheel").innerHTML)drawWheel();if(!$("rouBets").innerHTML)drawRouBets();casRender();sfx("open")}
+$("ccCasino").addEventListener("click",openCasino);document.addEventListener("click",e=>{const b=e.target.closest("[data-casino]");if(!b)return;try{closeDrawer()}catch(_){}CAS.tab=b.dataset.casino;openCasino()});$("casClose").addEventListener("click",()=>{$("casP").hidden=true});
+$("ctBJ").addEventListener("click",()=>{CAS.tab="bj";casRender()});$("ctRou").addEventListener("click",()=>{CAS.tab="rou";casRender()});
+document.addEventListener("click",e=>{const c=e.target.closest("[data-chip]");if(!c||c.disabled)return;if(c.dataset.chip==="bj")CAS.bjBet=+c.dataset.v;else CAS.rouBet=+c.dataset.v;sfx("coin");casRender()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("casP").hidden)$("casP").hidden=true});
+/* --- blackjack --- */
+const SUITS=[["♠",0],["♥",1],["♦",1],["♣",0]],RANKS_C=["A","2","3","4","5","6","7","8","9","10","V","D","R"];
+function draw(){if(CAS.deck.length<15){CAS.deck=[];for(let d=0;d<4;d++)for(const s of SUITS)for(const r of RANKS_C)CAS.deck.push({r,s:s[0],red:s[1]});}
+  return CAS.deck.splice(rnd(CAS.deck.length),1)[0]}
+function hv(h){let t=0,a=0;h.forEach(c=>{if(c.r==="A"){a++;t+=11}else t+=["V","D","R"].includes(c.r)?10:+c.r});while(t>21&&a){t-=10;a--}return t}
+const cardHtml=(c,hide)=>hide?`<div class="card back" aria-label="carte cachée"></div>`:`<div class="card ${c.red?"red":""}" aria-label="${c.r}${c.s}"><span>${c.r}${c.s}</span><i>${c.s}</i><span class="bt">${c.r}${c.s}</span></div>`;
+function bjShow(hideHole){$("bjPlayer").innerHTML=CAS.ph.map(c=>cardHtml(c)).join("");$("bjDealer").innerHTML=CAS.dh.map((c,i)=>cardHtml(c,hideHole&&i===1)).join("");
+  $("bjPv").textContent=CAS.ph.length?hv(CAS.ph):"";$("bjDv").textContent=CAS.dh.length?(hideHole?hv([CAS.dh[0]]):hv(CAS.dh)):""}
+function bjMsg(t,c){const m=$("bjMsg");m.textContent=t;m.className="casmsg "+(c||"")}
+async function bjDeal(){const bet=CAS.bjBet;if(CAS.inHand||goldOf()<bet)return;CAS.inHand=true;CAS.doubled=false;CAS.stake=bet;
+  await casPay(-bet);CAS.ph=[draw(),draw()];CAS.dh=[draw(),draw()];bjShow(true);sfx("reveal");bjMsg(`Mise : ${bet} or. Tirer ou rester ?`);
+  const p=hv(CAS.ph),d=hv(CAS.dh);if(p===21||d===21)return bjEnd()}
+async function bjEnd(){CAS.inHand=false;bjShow(false);let p=hv(CAS.ph),d=hv(CAS.dh);const bj=p===21&&CAS.ph.length===2&&!CAS.doubled,dbj=d===21&&CAS.dh.length===2;
+  if(p<=21&&!bj&&!dbj){while(d<17){CAS.dh.push(draw());d=hv(CAS.dh)}bjShow(false)}
+  const s=CAS.stake;let back=0,msg,cls;
+  if(p>21){msg=`Tu sautes (${p}). Le croupier garde ${s} or.`;cls="lose"}
+  else if(bj&&!dbj){back=s+Math.floor(s*1.5);msg=`BLACKJACK ! +${back-s} or`;cls="win"}
+  else if(dbj&&!bj){msg="Blackjack du croupier. Perdu.";cls="lose"}
+  else if(d>21){back=s*2;msg=`Le croupier saute (${d}) ! +${s} or`;cls="win"}
+  else if(p>d){back=s*2;msg=`${p} contre ${d} : gagné ! +${s} or`;cls="win"}
+  else if(p===d){back=s;msg=`Égalité (${p}). Mise remboursée.`;cls=""}
+  else{msg=`${p} contre ${d} : perdu.`;cls="lose"}
+  bjMsg(msg,cls);if(back)await casPay(back);else casRender();sfx(cls==="win"?(bj?"legend":"buy"):cls==="lose"?"miss":"coin");if(bj&&!dbj)celebrate("leg",innerWidth/2,innerHeight/2)}
+$("bjDeal").addEventListener("click",bjDeal);
+$("bjHit").addEventListener("click",()=>{if(!CAS.inHand)return;CAS.ph.push(draw());bjShow(true);sfx("reveal");const p=hv(CAS.ph);if(p>=21)bjEnd();else casRender()});
+$("bjStand").addEventListener("click",()=>{if(CAS.inHand)bjEnd()});
+$("bjDouble").addEventListener("click",async()=>{if(!CAS.inHand||CAS.ph.length!==2||goldOf()<CAS.stake)return;await casPay(-CAS.stake);CAS.stake*=2;CAS.doubled=true;CAS.ph.push(draw());bjShow(true);sfx("reveal");bjEnd()});
+/* --- roulette européenne --- */
+const WHEEL=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const REDS=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const colOf=n=>n===0?"g":REDS.has(n)?"r":"n";
+function drawWheel(){const R=100,a=2*Math.PI/37;let s=`<circle r="106" fill="#3a2414" stroke="#c9a24a" stroke-width="3"/>`;
+  WHEEL.forEach((n,i)=>{const a0=i*a-Math.PI/2-a/2,a1=a0+a,p=(r,t)=>`${(r*Math.cos(t)).toFixed(2)} ${(r*Math.sin(t)).toFixed(2)}`,c=colOf(n);
+    s+=`<path d="M${p(R,a0)}A${R} ${R} 0 0 1 ${p(R,a1)}L${p(58,a1)}A58 58 0 0 0 ${p(58,a0)}Z" fill="${c==="g"?"#1a6a3a":c==="r"?"#b3141b":"#111"}" stroke="#c9a24a" stroke-width=".6"/>`;
+    const am=(a0+a1)/2;s+=`<text x="${(86*Math.cos(am)).toFixed(1)}" y="${(86*Math.sin(am)).toFixed(1)}" transform="rotate(${(am*180/Math.PI+90).toFixed(1)} ${(86*Math.cos(am)).toFixed(1)} ${(86*Math.sin(am)).toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="800" fill="#fff">${n}</text>`});
+  s+=`<circle r="58" fill="#24140c" stroke="#c9a24a"/>`;$("rouWheel").innerHTML=s;CAS.rot=0}
+const RB=[["red","Rouge","red"],["black","Noir","blk"],["even","Pair",""],["odd","Impair",""],["low","1 à 18",""],["high","19 à 36",""],["d1","1re douzaine",""],["d2","2e douzaine",""],["d3","3e douzaine",""]];
+function drawRouBets(){$("rouBets").innerHTML=RB.map(([k,l,c])=>`<button type="button" class="rb ${c}" data-rb="${k}">${l}</button>`).join("")}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rb]");if(!b||CAS.busy)return;
+  if(b.dataset.rb==="num"){const v=parseInt($("rouNum").value,10);if(!(v>=0&&v<=36)){$("rouMsg").textContent="Entre un numéro entre 0 et 36.";$("rouMsg").className="casmsg lose";return}CAS.rouPick="n"+v}else CAS.rouPick=b.dataset.rb;
+  $("rouMsg").className="casmsg";$("rouMsg").textContent=`Pari : ${rouLabel(CAS.rouPick)}`;sfx("equip");casRender()});
+const rouLabel=k=>/^n\d+$/.test(k)?`numéro ${k.slice(1)}`:(RB.find(x=>x[0]===k)||[,k])[1];
+function rouWin(k,n){if(/^n\d+$/.test(k))return +k.slice(1)===n?36:0;if(n===0)return 0;
+  return{red:REDS.has(n)?2:0,black:!REDS.has(n)?2:0,even:n%2===0?2:0,odd:n%2?2:0,low:n<=18?2:0,high:n>=19?2:0,d1:n<=12?3:0,d2:n>12&&n<=24?3:0,d3:n>24?3:0}[k]||0}
+/* --- table partagée : tours synchronisés sur l'horloge, résultat identique pour tous --- */
+const ROU_MS=40000,ROU_BET=30000,ROU_SALT="tdl-roulette-v1";let rbCol=null,rbets={},rouShown=-1,rouSpun=-1;
+const rouRound=()=>Math.floor(Date.now()/ROU_MS);
+async function rouResult(r){const t=ROU_SALT+":"+r;try{const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)));return((b[0]<<24|b[1]<<16|b[2]<<8|b[3])>>>0)%37}catch(_){let h=2166136261;for(const c of t)h=Math.imul(h^c.charCodeAt(0),16777619);return(h>>>0)%37}}
+const rouMine=r=>Object.values(rbets).filter(x=>x&&x.round===r&&x.key===keyOf(me));
+$("rouSpin").addEventListener("click",async()=>{const bet=CAS.rouBet,k=CAS.rouPick,r=rouRound(),ph=Date.now()%ROU_MS;
+  if(!k||goldOf()<bet)return;if(ph>=ROU_BET){$("rouMsg").textContent="Les mises sont fermées : attends le prochain tour.";$("rouMsg").className="casmsg lose";return}
+  const id=`rb_${r}_${slug(keyOf(me))}_${k}`,prev=rbets[id];const doc={round:r,key:keyOf(me),name:me,col:myColor(),pick:k,bet:(prev?prev.bet:0)+bet,at:Date.now()};
+  await casPay(-bet);rbets[id]=doc;rouList();sfx("coin");$("rouMsg").className="casmsg";$("rouMsg").textContent=`Misé : ${bet} or sur ${rouLabel(k)}. Bonne chance !`;
+  try{if(rbCol)await rbCol.doc(id).set(doc);else{LS.set("tdl_rbets",JSON.stringify(rbets))}}catch(_){}});
+function rouList(){const L=$("rouList");if(!L)return;const r=rouRound(),settled=Date.now()%ROU_MS>=ROU_BET+5200,res=CAS.lastRes&&CAS.lastRes.r===r?CAS.lastRes.n:null;
+  const list=Object.values(rbets).filter(x=>x&&x.round===r).sort((a,b)=>a.at-b.at);
+  L.innerHTML=list.length?list.map(x=>{const w=res!=null&&settled?rouWin(x.pick,res)*x.bet:null;
+    return `<li class="${w==null?"":w?"win":"lose"}"><i style="background:${esc(x.col||"#a8988a")}"></i><b>${esc(x.name)}${x.key===keyOf(me)?" (toi)":""}</b><em>${esc(rouLabel(x.pick))}</em><span>${w==null?x.bet+" or":w?"+"+(w-x.bet)+" or":"−"+x.bet+" or"}</span></li>`}).join(""):`<li class="none">Aucune mise pour l'instant. Sois le premier !</li>`}
+async function rouTick(){const now=Date.now(),r=rouRound(),ph=now%ROU_MS,open=ph<ROU_BET,left=Math.ceil(((open?ROU_BET:ROU_MS)-ph)/1000);
+  if($("casP").hidden||CAS.tab!=="rou"){/* paiement même si la taverne est fermée */}
+  else{$("rouPhase").textContent=open?"Mises ouvertes":ph<ROU_BET+5200?"La bille tourne…":"Résultat";$("rouLeft").textContent=open?`${left} s`:`prochain tour ${left} s`;
+    $("rouBar").style.width=(open?(ROU_BET-ph)/ROU_BET*100:0)+"%";$("rouSpin").disabled=!open||!CAS.rouPick||goldOf()<CAS.rouBet}
+  if(!open&&rouSpun!==r){rouSpun=r;const n=await rouResult(r);CAS.lastRes={r,n};const i=WHEEL.indexOf(n),a=360/37;
+    if(!$("rouWheel").innerHTML)drawWheel();CAS.rot=(CAS.rot||0)+360*5+((360-i*a)-((CAS.rot||0)%360)+360)%360;$("rouWheel").style.transform=`rotate(${CAS.rot}deg)`;
+    $("rouRes").textContent="…";$("rouRes").className="rouball";if(!$("casP").hidden&&CAS.tab==="rou")sfx("chest")}
+  if(ph>=ROU_BET+5200&&rouShown!==r&&CAS.lastRes&&CAS.lastRes.r===r){rouShown=r;const n=CAS.lastRes.n,c=colOf(n),cn=c==="r"?"rouge":c==="n"?"noir":"vert";
+    $("rouRes").textContent=n;$("rouRes").className="rouball "+c;
+    const mine=rouMine(r),pk="tdl_roupaid_"+keyOf(me)+"_"+r;let won=0,lost=0;mine.forEach(x=>{const w=rouWin(x.pick,n)*x.bet;if(w)won+=w;else lost+=x.bet});
+    const unpaid=mine.filter(x=>!x.paid);
+    if(unpaid.length&&!LS.get(pk)){LS.set(pk,"1");let gain=0;unpaid.forEach(x=>{gain+=rouWin(x.pick,n)*x.bet;x.paid=true;
+        const id=`rb_${r}_${slug(keyOf(me))}_${x.pick}`;try{if(rbCol)rbCol.doc(id).update({paid:true}).catch(()=>{})}catch(_){}});
+      if(gain){await casPay(gain);sfx(gain>=36?"legend":"buy");celebrate("leg",innerWidth/2,innerHeight/3)}else sfx("miss")}
+    if(!$("casP").hidden&&CAS.tab==="rou"){$("rouMsg").textContent=mine.length?(won?`${n} ${cn} : tu gagnes ${won} or !`:`${n} ${cn} : perdu (${lost} or).`):`${n} ${cn}.`;$("rouMsg").className="casmsg "+(mine.length?(won?"win":"lose"):"")}}
+  if(!$("casP").hidden&&CAS.tab==="rou")rouList()}
+setInterval(rouTick,500);
+
 $("stBuy").addEventListener("click",()=>{shopTab="buy";renderShop()});
 $("stSell").addEventListener("click",()=>{shopTab="sell";renderShop()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("shopP").hidden&&$("itip").hidden)closeShop()});
@@ -3589,6 +3776,8 @@ showGate("gateLoading");
     fCol=db.collection("fights");
     let fSig="";fCol.onSnapshot(snap=>{fights={};snap.docs.forEach(d=>{fights[d.id]=d.data()});onFights();
       const sg=Object.values(fights).map(x=>x&&x.team?x.bi+x.status+x.at+x.team.length:"").join("|");if(sg!==fSig){fSig=sg;if(me&&$("fight").hidden)scheduleRender()}},()=>{fCol=null});
+    rbCol=db.collection("raids");rbCol.onSnapshot(snap=>{rbets={};snap.docs.forEach(d=>{if(d.id.startsWith("rb_"))rbets[d.id]=d.data()});if(!$("casP").hidden)rouList();
+      const old=rouRound()-15;snap.docs.forEach(d=>{if(!d.id.startsWith("rb_"))return;const x=d.data();if(x&&x.key===keyOf(me||"")&&x.round<old)d.ref?d.ref.delete().catch(()=>{}):rbCol.doc(d.id).delete().catch(()=>{})})},()=>{rbCol=null});
     chCol=db.collection("chat");
     chCol.onSnapshot(snap=>{chat=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m&&m.t&&m.at).sort((a,b)=>a.at-b.at);renderChat()},()=>{chCol=null});
     rCol=db.collection("raids");
